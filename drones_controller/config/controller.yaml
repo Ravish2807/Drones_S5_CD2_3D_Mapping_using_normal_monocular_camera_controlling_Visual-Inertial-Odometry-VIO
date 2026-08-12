@@ -1,0 +1,30 @@
+so3_controller:
+  ros__parameters:
+
+    pose_topic: "/ap/v1/pose/filtered"
+    twist_topic: "/ap/v1/twist/filtered"
+    cmd_vel_topic: "/ap/v1/cmd_vel"
+
+    control_rate: 25.0
+
+    desired_x: 0.0
+    desired_y: 0.0
+    desired_z: 2.0
+    desired_yaw: 0.0
+
+    mass: 1.5
+    gravity: 9.81
+
+    kp: [1.5, 1.5, 2.0]
+    kv: [1.2, 1.2, 1.5]
+
+    kR: [4.0, 4.0, 2.0]
+    kOmega: [0.8, 0.8, 0.5]
+
+    inertia: [0.02, 0.02, 0.04]
+
+    max_velocity: 1.0
+
+    state_timeout: 0.5
+
+    enable_command: false

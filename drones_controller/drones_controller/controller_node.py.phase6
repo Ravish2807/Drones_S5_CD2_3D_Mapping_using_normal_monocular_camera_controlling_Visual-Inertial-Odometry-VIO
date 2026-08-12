@@ -1,0 +1,715 @@
+import numpy as np
+
+import rclpy
+from rclpy.node import Node
+
+from geometry_msgs.msg import PoseStamped
+from geometry_msgs.msg import TwistStamped
+from geometry_msgs.msg import Vector3Stamped
+from rclpy.qos import QoSProfile
+from rclpy.qos import ReliabilityPolicy
+from rclpy.qos import DurabilityPolicy
+from rclpy.qos import HistoryPolicy
+
+
+from .state_adapter import (
+    quaternion_to_rotation_matrix,
+    rotation_matrix_to_quaternion,
+    validate_rotation_matrix
+)
+
+from .trajectory_generator import WaypointGenerator
+from .so3_controller import SO3Controller
+
+
+class ControllerNode(Node):
+
+    def __init__(self):
+
+        super().__init__(
+            "so3_controller"
+        )
+
+        # --------------------------------------------------
+        # Parameters
+        # --------------------------------------------------
+        state_qos = QoSProfile(
+            history=HistoryPolicy.KEEP_LAST,
+            depth=10,
+            reliability=ReliabilityPolicy.BEST_EFFORT,
+            durability=DurabilityPolicy.VOLATILE,
+        )
+        self.declare_parameter(
+            "pose_topic",
+            "/ap/v1/pose/filtered"
+        )
+
+        self.declare_parameter(
+            "twist_topic",
+            "/ap/v1/twist/filtered"
+        )
+
+        self.declare_parameter(
+            "cmd_vel_topic",
+            "/ap/v1/cmd_vel"
+        )
+
+        self.declare_parameter(
+            "control_rate",
+            50.0
+        )
+
+        self.declare_parameter(
+            "enable_command",
+            False
+        )
+
+        self.declare_parameter(
+            "desired_x",
+            0.0
+        )
+
+        self.declare_parameter(
+            "desired_y",
+            0.0
+        )
+
+        self.declare_parameter(
+            "desired_z",
+            2.0
+        )
+
+        self.declare_parameter(
+            "desired_yaw",
+            0.0
+        )
+
+        self.declare_parameter(
+            "mass",
+            1.5
+        )
+
+        self.declare_parameter(
+            "gravity",
+            9.81
+        )
+
+        self.declare_parameter(
+            "kp",
+            [1.5, 1.5, 2.0]
+        )
+
+        self.declare_parameter(
+            "kv",
+            [1.2, 1.2, 1.5]
+        )
+
+        self.declare_parameter(
+            "kR",
+            [4.0, 4.0, 2.0]
+        )
+
+        self.declare_parameter(
+            "kOmega",
+            [0.8, 0.8, 0.5]
+        )
+
+        self.declare_parameter(
+            "inertia",
+            [0.02, 0.02, 0.04]
+        )
+
+        self.declare_parameter(
+            "max_velocity",
+            1.0
+        )
+
+        self.declare_parameter(
+            "state_timeout",
+            0.5
+        )
+
+        # --------------------------------------------------
+        # Read parameters
+        # --------------------------------------------------
+
+        pose_topic = self.get_parameter(
+            "pose_topic"
+        ).value
+
+        twist_topic = self.get_parameter(
+            "twist_topic"
+        ).value
+
+        self.cmd_vel_topic = self.get_parameter(
+            "cmd_vel_topic"
+        ).value
+
+        self.control_rate = float(
+            self.get_parameter(
+                "control_rate"
+            ).value
+        )
+
+        self.enable_command = bool(
+            self.get_parameter(
+                "enable_command"
+            ).value
+        )
+
+        desired_position = [
+            self.get_parameter(
+                "desired_x"
+            ).value,
+
+            self.get_parameter(
+                "desired_y"
+            ).value,
+
+            self.get_parameter(
+                "desired_z"
+            ).value
+        ]
+
+        desired_yaw = float(
+            self.get_parameter(
+                "desired_yaw"
+            ).value
+        )
+
+        mass = float(
+            self.get_parameter(
+                "mass"
+            ).value
+        )
+
+        gravity = float(
+            self.get_parameter(
+                "gravity"
+            ).value
+        )
+
+        kp = self.get_parameter(
+            "kp"
+        ).value
+
+        kv = self.get_parameter(
+            "kv"
+        ).value
+
+        kR = self.get_parameter(
+            "kR"
+        ).value
+
+        kOmega = self.get_parameter(
+            "kOmega"
+        ).value
+
+        inertia = self.get_parameter(
+            "inertia"
+        ).value
+
+        self.max_velocity = float(
+            self.get_parameter(
+                "max_velocity"
+            ).value
+        )
+
+        self.state_timeout = float(
+            self.get_parameter(
+                "state_timeout"
+            ).value
+        )
+
+        # --------------------------------------------------
+        # State
+        # --------------------------------------------------
+
+        self.position = None
+        self.velocity = None
+        self.rotation = None
+        self.omega = None
+
+        self.last_pose_time = None
+        self.last_twist_time = None
+
+        # --------------------------------------------------
+        # Controller
+        # --------------------------------------------------
+
+        self.trajectory = WaypointGenerator(
+            desired_position,
+            desired_yaw
+        )
+
+        self.controller = SO3Controller(
+            mass=mass,
+            gravity=gravity,
+            inertia=inertia,
+            kp=kp,
+            kv=kv,
+            kR=kR,
+            kOmega=kOmega
+        )
+
+        # --------------------------------------------------
+        # Subscribers
+        # --------------------------------------------------
+
+        self.pose_sub = self.create_subscription(
+            PoseStamped,
+            pose_topic,
+            self.pose_callback,
+            state_qos
+        )
+
+        self.twist_sub = self.create_subscription(
+            TwistStamped,
+            twist_topic,
+            self.twist_callback,
+            state_qos
+        )
+
+        # --------------------------------------------------
+        # Publishers
+        # --------------------------------------------------
+
+        self.position_error_pub = self.create_publisher(
+            Vector3Stamped,
+            "/drones_controller/position_error",
+            10
+        )
+
+        self.velocity_error_pub = self.create_publisher(
+            Vector3Stamped,
+            "/drones_controller/velocity_error",
+            10
+        )
+
+        self.desired_force_pub = self.create_publisher(
+            Vector3Stamped,
+            "/drones_controller/desired_force",
+            10
+        )
+
+        self.desired_moment_pub = self.create_publisher(
+            Vector3Stamped,
+            "/drones_controller/desired_moment",
+            10
+        )
+
+        self.attitude_error_pub = self.create_publisher(
+            Vector3Stamped,
+            "/drones_controller/attitude_error",
+            10
+        )
+
+        self.angular_velocity_error_pub = self.create_publisher(
+            Vector3Stamped,
+            "/drones_controller/angular_velocity_error",
+            10
+        )
+
+        self.desired_attitude_pub = self.create_publisher(
+            PoseStamped,
+            "/drones_controller/desired_attitude",
+            10
+        )
+
+        cmd_qos = QoSProfile(
+            history=HistoryPolicy.KEEP_LAST,
+            depth=10,
+            reliability=ReliabilityPolicy.BEST_EFFORT,
+            durability=DurabilityPolicy.VOLATILE,
+        )
+
+        self.cmd_pub = self.create_publisher(
+            TwistStamped,
+            self.cmd_vel_topic,
+            cmd_qos
+        )
+
+        # --------------------------------------------------
+        # Timer
+        # --------------------------------------------------
+
+        period = 1.0 / self.control_rate
+
+        self.timer = self.create_timer(
+            period,
+            self.control_loop
+        )
+
+        self.get_logger().info(
+            "SO(3) controller started"
+        )
+
+        self.get_logger().info(
+            f"Pose topic: {pose_topic}"
+        )
+
+        self.get_logger().info(
+            f"Twist topic: {twist_topic}"
+        )
+
+        self.get_logger().info(
+            f"Command topic: {self.cmd_vel_topic}"
+        )
+
+        self.get_logger().info(
+            f"Command enabled: {self.enable_command}"
+        )
+
+    
+
+    # ==================================================
+    # State callbacks
+    # ==================================================
+
+    def pose_callback(self, msg):
+
+        self.position = np.array([
+            msg.pose.position.x,
+            msg.pose.position.y,
+            msg.pose.position.z
+        ])
+
+        try:
+
+            self.rotation = quaternion_to_rotation_matrix(
+                msg.pose.orientation.x,
+                msg.pose.orientation.y,
+                msg.pose.orientation.z,
+                msg.pose.orientation.w
+            )
+
+        except ValueError as exc:
+
+            self.get_logger().error(
+                f"Quaternion error: {exc}"
+            )
+
+            self.rotation = None
+
+            return
+
+        if not validate_rotation_matrix(
+            self.rotation
+        ):
+
+            self.get_logger().error(
+                "Invalid rotation matrix"
+            )
+
+            self.rotation = None
+
+            return
+
+        self.last_pose_time = self.get_clock().now()
+
+    def twist_callback(self, msg):
+
+        self.velocity = np.array([
+            msg.twist.linear.x,
+            msg.twist.linear.y,
+            msg.twist.linear.z
+        ])
+
+        self.omega = np.array([
+            msg.twist.angular.x,
+            msg.twist.angular.y,
+            msg.twist.angular.z
+        ])
+
+        self.last_twist_time = self.get_clock().now()
+
+    # ==================================================
+    # State validation
+    # ==================================================
+
+    def state_is_valid(self):
+
+        if (
+            self.position is None
+            or self.velocity is None
+            or self.rotation is None
+            or self.omega is None
+        ):
+
+            return False
+
+        if (
+            self.last_pose_time is None
+            or self.last_twist_time is None
+        ):
+
+            return False
+
+        now = self.get_clock().now()
+
+        pose_age = (
+            now - self.last_pose_time
+        ).nanoseconds * 1e-9
+
+        twist_age = (
+            now - self.last_twist_time
+        ).nanoseconds * 1e-9
+
+        if pose_age > self.state_timeout:
+            return False
+
+        if twist_age > self.state_timeout:
+            return False
+
+        if not np.all(
+            np.isfinite(self.position)
+        ):
+            return False
+
+        if not np.all(
+            np.isfinite(self.velocity)
+        ):
+            return False
+
+        if not np.all(
+            np.isfinite(self.omega)
+        ):
+            return False
+
+        return True
+
+    # ==================================================
+    # Publishing helpers
+    # ==================================================
+
+    def publish_vector(
+        self,
+        publisher,
+        vector
+    ):
+
+        msg = Vector3Stamped()
+
+        msg.header.stamp = (
+            self.get_clock().now().to_msg()
+        )
+
+        msg.header.frame_id = "controller"
+
+        msg.vector.x = float(vector[0])
+        msg.vector.y = float(vector[1])
+        msg.vector.z = float(vector[2])
+
+        publisher.publish(msg)
+
+    # ==================================================
+    # Controller loop
+    # ==================================================
+
+    def control_loop(self):
+
+        if not self.state_is_valid():
+
+            return
+
+        desired = (
+            self.trajectory
+            .get_desired_state()
+        )
+
+        result = self.controller.compute(
+            p=self.position,
+            v=self.velocity,
+            R=self.rotation,
+            omega=self.omega,
+            desired=desired
+        )
+
+        # ----------------------------------------------
+        # Publish diagnostic controller values
+        # ----------------------------------------------
+
+        self.publish_vector(
+            self.position_error_pub,
+            result["e_p"]
+        )
+
+        self.publish_vector(
+            self.velocity_error_pub,
+            result["e_v"]
+        )
+
+        self.publish_vector(
+            self.desired_force_pub,
+            result["F_d"]
+        )
+
+        self.publish_vector(
+            self.desired_moment_pub,
+            result["M_d"]
+        )
+
+        self.publish_vector(
+            self.attitude_error_pub,
+            result["e_R"]
+        )
+
+        self.publish_vector(
+            self.angular_velocity_error_pub,
+            result["e_omega"]
+        )
+
+        # ----------------------------------------------
+        # Desired attitude
+        # ----------------------------------------------
+
+        R_d = result["R_d"]
+
+        q_d = rotation_matrix_to_quaternion(
+            R_d
+        )
+
+        attitude_msg = PoseStamped()
+
+        attitude_msg.header.stamp = (
+            self.get_clock().now().to_msg()
+        )
+
+        attitude_msg.header.frame_id = "map"
+
+        attitude_msg.pose.orientation.x = float(
+            q_d[0]
+        )
+
+        attitude_msg.pose.orientation.y = float(
+            q_d[1]
+        )
+
+        attitude_msg.pose.orientation.z = float(
+            q_d[2]
+        )
+
+        attitude_msg.pose.orientation.w = float(
+            q_d[3]
+        )
+
+        self.desired_attitude_pub.publish(
+            attitude_msg
+        )
+
+        # ----------------------------------------------
+        # Command translator
+        # ----------------------------------------------
+
+        if self.enable_command:
+
+            self.publish_velocity_command(
+                result["e_p"],
+                result["e_v"]
+            )
+
+    # ==================================================
+    # Command translator
+    # ==================================================
+
+    def publish_velocity_command(
+        self,
+        e_p,
+        e_v
+    ):
+        """
+        Architecture-A command translator.
+
+        The SO(3) controller generates F_d and M_d.
+
+        /ap/cmd_vel is NOT a force/moment interface.
+        ArduPilot documents it as a REP-147 velocity
+        command interface.But in the package it is /ap/v1 for the drone,
+        so considerig the same notation for the controlling
+
+        Therefore we translate position/velocity intent
+        into a bounded velocity command.
+
+        This keeps the SO(3) quantities available for
+        research/logging without incorrectly putting
+        F_d/M_d into TwistStamped.
+        """
+
+        kp_cmd = np.array([
+            0.8,
+            0.8,
+            0.8
+        ])
+
+        kv_cmd = np.array([
+            0.2,
+            0.2,
+            0.2
+        ])
+
+        velocity_command = (
+            kp_cmd * e_p
+            +
+            kv_cmd * e_v
+        )
+
+        speed = np.linalg.norm(
+            velocity_command
+        )
+
+        if speed > self.max_velocity:
+
+            velocity_command *= (
+                self.max_velocity / speed
+            )
+
+        msg = TwistStamped()
+
+        msg.header.stamp = (
+            self.get_clock().now().to_msg()
+        )
+
+        # Earth-frame command assumption is configurable
+        # by changing this after validating the current
+        # ArduPilot vehicle interface.
+        msg.header.frame_id = "map"
+
+        msg.twist.linear.x = float(
+            velocity_command[0]
+        )
+
+        msg.twist.linear.y = float(
+            velocity_command[1]
+        )
+
+        msg.twist.linear.z = float(
+            velocity_command[2]
+        )
+
+        msg.twist.angular.x = 0.0
+        msg.twist.angular.y = 0.0
+        msg.twist.angular.z = 0.0
+
+        self.command_pub.publish(msg)
+
+
+def main(args=None):
+
+    rclpy.init(args=args)
+
+    node = ControllerNode()
+
+    try:
+
+        rclpy.spin(node)
+
+    except KeyboardInterrupt:
+
+        pass
+
+    finally:
+
+        node.destroy_node()
+
+        rclpy.shutdown()
+
