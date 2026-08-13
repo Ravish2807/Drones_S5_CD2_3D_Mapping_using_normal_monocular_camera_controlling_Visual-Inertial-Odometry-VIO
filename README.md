@@ -2,7 +2,7 @@
   <img src="https://github.com/user-attachments/assets/060f7774-a73f-4132-9413-36887ed09cfa" alt="Amrita Vishwa Vidyapeetham" width="430">
 </p>
 
-# $\color{#0B3D91}{\textsf{3D\ MAPPING\ USING\ NORMAL\ MONOCULAR\ CAMERA\ CONTROLLING\ VIO}}$
+# $\color{#9B2226}{\textsf{\textbf{3D\ MAPPING\ OF\ AN\ ENVIRONMENT\ USING\ NORMAL\ MONOCULAR}}}$ <br> $\color{#9B2226}{\textsf{\textbf{CAMERA\ AND\ CONTROLLING\ THE\ DRONE\ BY\ VISUAL-INERTIAL\ ODOMETRY\ (VIO)}}}$
 
 ### *A First-Principles, Euler-Angle-Free Approach for Autonomous Multirotor UAVs*
 
@@ -214,7 +214,7 @@ with practical simulation/control integration through Gazebo, ArduPilot SITL, RO
 
 1. **Base Paper (repository file):** [Base Paper.pdf](https://github.com/Ravish2807/Drones_S5_CD2_3D_Mapping_using_normal_monocular_camera_controlling_Visual-Inertial-Odometry-VIO/blob/main/Base%20Paper.pdf)
 2. Lee, T., Leok, M., McClamroch, N. H. *Geometric Tracking Control of a Quadrotor UAV on SE(3)* — [arXiv](https://arxiv.org/abs/1003.2005)
-3. Quaternion attitude representation overview — [Placeholder URL](<URL placeholder>)
+3. Quaternion attitude representation overview — [Link](https://arxiv.org/pdf/1708.08680)
 4. VIO literature (VINS-Mono) — [arXiv](https://arxiv.org/abs/1708.03852)
 5. SLAM literature (ORB-SLAM2) — [GitHub](https://github.com/raulmur/ORB_SLAM2)
 6. ArduPilot SITL documentation — [ardupilot.org](https://ardupilot.org/dev/docs/sitl-simulator-software-in-the-loop.html)
