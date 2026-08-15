@@ -1,45 +1,76 @@
-# Drones_S5_CD2_3D_Mapping_using_normal_monocular_camera_and_Visual-Inertial-Odometry-VIO
+<p align="center">
+  <img src="assets/amrita_logo.png" alt="Amrita Vishwa Vidyapeetham" width="420" />
+</p>
 
-# Autonomous GPS-Denied 3D Mapping & $SO(3)$ Quaternion Flight Control
+<div align="center">
 
-[![ROS 2](https://img.shields.io/badge/ROS2-Humble-blue.svg)](https://docs.ros.org/en/humble/index.html)
-[![C++](https://img.shields.io/badge/Language-C%2B%2B17-blue.svg)](https://isocpp.org/)
-[![Python](https://img.shields.io/badge/Language-Python%203.10-yellow.svg)](https://www.python.org/)
-[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+# Geometric (SO(3)) Quaternion Flight Controller
+### First-Principles Autonomous Multirotor Control
 
-An end-to-end autonomous, GPS-denied navigation and mapping pipeline for multirotor UAVs. This repository implements monocular Visual-Inertial Odometry (VIO) scale fusion, dynamic 3D voxel occupancy mapping, minimum-snap trajectory generation, and a from-scratch $SO(3)$ unit quaternion cascaded attitude and position controller.
+![ArduPilot SITL](https://img.shields.io/badge/ArduPilot-SITL-0A66C2?style=for-the-badge)
+![Gazebo](https://img.shields.io/badge/Gazebo-Simulation-5C2D91?style=for-the-badge)
+![ROS 2 Humble](https://img.shields.io/badge/ROS%202-Humble-22314E?style=for-the-badge)
+![DDS](https://img.shields.io/badge/ROS%202-DDS-0E7490?style=for-the-badge)
+![MATLAB ROS 2](https://img.shields.io/badge/MATLAB-ROS%202%20Toolbox-EA580C?style=for-the-badge)
 
----
-
-## 📌 Overview
-
-Commercial autopilots often rely on black-box state estimation, planar 2D grids, or Euler-angle flight controllers susceptible to gimbal lock. This project addresses these limitations by providing a fully transparent, first-principles robotics stack operating on ROS 2:
-
-* **Monocular VIO Pipeline:** Fuses a single 2D camera feed (30 FPS) with high-frequency IMU telemetry (200 Hz) to recover metric scale ($x, y, z$) without requiring heavy RGB-D or LiDAR payloads.
-* **3D Voxel Mapping:** Converts sparse point clouds into real-time 3D spatial occupancy grids (`OctoMap` / `Voxblox`) using ray-casting for obstacle detection and clearance inflation.
-* **Pure $SO(3)$ Dynamics:** Bypasses commercial flight boards by computing orientation errors directly on the Special Orthogonal Group $SO(3)$ via unit quaternions, ensuring global tracking stability across all flight envelopes ($360^\circ$).
+</div>
 
 ---
 
-## 📐 Cascaded Control Architecture
+## Team
 
-The flight controller is structured as a dual-loop cascaded system. The 6-DoF VIO state vector is decoupled into translational states ($\mathbf{p}, \mathbf{v}$) for the outer loop and rotational states ($q, \boldsymbol{\omega}$) for the inner loop.
+| Name | Roll Number |
+| --- | --- |
+| **Ravishanmugam K** | `CB.SC.U4AIE24347` |
+| **Ishwarya M** | `CB.SC.U4AIE24220` |
+| **Aparna B** | `CB.SC.U4AIE24304` |
+| **Cibikumar B** | `CB.SC.U4AIE24212` |
+| **Akhilan S** | `CB.SC.U4AIE24362` |
 
-```text
-[ Desired Waypoints (X,Y,Z) ] ──────┐
-                                    ▼
-[ VIO Pos/Vel (p, v) ] ───────► [ Outer Loop: Position ] ──► [ Desired Acceleration Vector ]
-                                                                      │
-[ Desired Yaw (ψd) ] ─────────────────────────────────────────────────┤
-                                                                      ▼
-                                                      [ Target Quaternion Extraction (qd) ]
-                                                                      │
-[ VIO Att/Rates (q, ω) ] ─────────────────────────────────────────────┤
-                                                                      ▼
-                                                           [ Inner Loop: Attitude ]
-                                                                      │
-                                                                      ▼
-                                                      [ Raw Torques & Thrust Output ]
-                                                                      │
-                                                                      ▼
-                                                            [ Motor Mixer / PWM ]
+**Institution:** Amrita Vishwa Vidyapeetham
+
+---
+
+## Abstract
+
+This project presents a first-principles nonlinear flight-control framework for autonomous multirotors based on geometric control on $SO(3)$ and unit-quaternion attitude representation. The formulation targets coupled position/velocity tracking and geometric attitude stabilization under nonlinear rigid-body dynamics, while keeping the controller structure compatible with simulation-centric validation workflows. The integration context combines ArduPilot SITL, Gazebo, ROS 2/DDS communication, and MATLAB ROS 2 interfacing for closed-loop analysis without claiming hardware-deployment outcomes.
+
+---
+
+## Introduction
+
+Quadrotors are nonlinear, strongly coupled, and underactuated systems, which makes reliable attitude and trajectory control nontrivial. Classical Euler-angle-based controllers can suffer from singularities (gimbal lock) and local-coordinate limitations during aggressive maneuvers. This project therefore adopts an $SO(3)$ geometric attitude representation with quaternion-based state information to support globally consistent attitude handling, with the immediate goal of simulation-first validation prior to broader deployment.
+
+---
+
+## Methodology
+
+```mermaid
+flowchart LR
+    G[Gazebo] --> A[ArduPilot SITL]
+    A --> E[State Estimation]
+    E --> R[ROS 2 / DDS]
+    R --> C[SO(3) Controller]
+    C --> A
+    M[MATLAB ROS 2] <--> R
+```
+
+Gazebo provides the physics and sensor simulation environment, while ArduPilot SITL acts as the flight-stack execution layer and source of estimator outputs. Estimated motion states are bridged through ROS 2/DDS, where the geometric controller computes thrust/moment commands from a quaternion-consistent state representation and feeds command signals back into SITL for closed-loop simulation.
+
+MATLAB ROS 2 integration is positioned on the same ROS 2/DDS backbone for analysis, rapid prototyping, and controller-side validation workflows. This architecture keeps simulator, estimator, controller, and analysis tooling modular while maintaining a single message-driven control loop.
+
+The controller primarily consumes:
+
+- `/ap/v1/pose/filtered`
+- `/ap/v1/twist/filtered`
+
+and maps them to
+
+$$
+\mathbf{x} = [\mathbf{p},\ \mathbf{v},\ \mathbf{q},\ \boldsymbol{\Omega}]
+$$
+
+where $\mathbf{p}$ and $\mathbf{q}$ are obtained from filtered pose, and $\mathbf{v}$ and $\boldsymbol{\Omega}$ are obtained from filtered twist.
+
+> [!NOTE]
+> This repository snapshot currently contains `README.md` and `LICENSE`; the document above captures the intended simulation architecture and control formulation without reporting unsupported implementation or performance claims.
