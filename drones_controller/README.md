@@ -1,8 +1,8 @@
-# 🚁 Drones Controller
+#  Drones Controller
 
 ROS 2 controller package for integrating the **SO(3) / Quaternion-based control algorithm** with the **ArduPilot + Gazebo** simulation environment.
 
-## 📂 File Descriptions & Use Cases
+##  File Descriptions & Use Cases
 
 | File Path            | Description                                                                                  |
 | -------------------- | -------------------------------------------------------------------------------------------- |
@@ -16,7 +16,7 @@ ROS 2 controller package for integrating the **SO(3) / Quaternion-based control 
 
 ---
 
-## 📡 ArduPilot Published Topics
+##  ArduPilot Published Topics
 
 **ArduPilot SITL acts as the main vehicle-state provider for the controller.**
 After enabling the ROS 2/DDS interface, ArduPilot publishes sensor, position, velocity, attitude and timing information that can be consumed by `drones_controller`.
@@ -35,7 +35,7 @@ After enabling the ROS 2/DDS interface, ArduPilot publishes sensor, position, ve
 | `/ap/time`                       | ⏱️ ArduPilot time — useful for timestamping and synchronization.                                               |
 | `/ap/clock`                      | 🕐 ROS clock — useful for simulation time synchronization.                                                     |
 
-### 🎯 Main Topics Used by This Controller
+###  Main Topics Used by This Controller
 
 For the **SO(3) / Quaternion controller**, the most important inputs are:
 
@@ -91,7 +91,7 @@ These inputs allow the controller to follow the general flow:
 
 ---
 
-## 🌳 Project Tree Structure
+##  Project Tree Structure
 
 ```text
 drones_controller/
@@ -120,7 +120,7 @@ drones_controller/
 
 ---
 
-## 🚀 Build
+##  Build
 
 ```bash
 cd ~/drones_ws
@@ -128,7 +128,7 @@ colcon build --packages-select drones_controller
 source install/setup.bash
 ```
 
-## ▶️ Run
+##  Run
 
 Check the available controller executables:
 
@@ -142,7 +142,7 @@ Then run the required controller node:
 ros2 run drones_controller <executable_name>
 ```
 
-## 📡 Check ArduPilot Topics
+##  Check ArduPilot Topics
 
 ```bash
 ros2 topic list
