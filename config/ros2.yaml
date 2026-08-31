@@ -1,0 +1,65 @@
+# ROS 2 & Gazebo Integration Profile for Ubuntu 22.04 (Humble)
+
+camera:
+  topic: "/camera/image_raw"
+  frame_id: "camera_optical_link"
+  width: 640
+  height: 480
+  fps: 30.0
+  intrinsics:
+    fx: 400.0
+    fy: 400.0
+    cx: 320.0
+    cy: 240.0
+  distortion:
+    model: "radtan"
+    k1: 0.0
+    k2: 0.0
+    p1: 0.0
+    p2: 0.0
+
+imu:
+  topic: "/imu/data"
+  frame_id: "imu_link"
+  rate_hz: 200.0
+  noise_accel: 0.005       # [m/s^2 / sqrt(Hz)]
+  noise_gyro: 0.001        # [rad/s / sqrt(Hz)]
+  random_walk_accel: 0.0001
+  random_walk_gyro: 0.00001
+
+extrinsics:
+  body_frame: "base_link"
+  camera_frame: "camera_optical_link"
+  # Standard OpenCV camera frame (Z-forward, X-right, Y-down) relative to drone ENU (X-forward, Y-left, Z-up)
+  R_BC:
+    - [0.0, 0.0, 1.0]
+    - [-1.0, 0.0, 0.0]
+    - [0.0, -1.0, 0.0]
+  p_BC: [0.10, 0.0, 0.0]
+
+world:
+  world_frame: "world"
+  gravity: [0.0, 0.0, -9.81]
+
+estimator:
+  max_clones: 12
+  min_track_length: 3
+  max_features: 150
+  min_features: 50
+  min_feature_dist: 15.0
+  feature_cov: 1.0
+  grid_rows: 4
+  grid_cols: 5
+  initial_covariance:
+    p: 1e-4
+    v: 1e-3
+    q: 1e-4
+    ba: 1e-2
+    bg: 1e-4
+
+publishers:
+  odometry_topic: "/drone/vio/odometry"
+  pose_topic: "/drone/vio/pose"
+  publish_tf: true
+  tf_parent_frame: "world"
+  tf_child_frame: "base_link"

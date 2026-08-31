@@ -1,0 +1,52 @@
+# Frozen Master VIO Configuration for Drone Autonomy Pipeline (Phase 1)
+
+version: "1.0.0"
+mode: "standalone" # standalone | ros2_bridge | simulation
+
+camera:
+  fps: 20.0
+  width: 640
+  height: 480
+  intrinsics:
+    fx: 400.0
+    fy: 400.0
+    cx: 320.0
+    cy: 240.0
+  distortion:
+    model: "radtan"
+    k1: 0.0
+    k2: 0.0
+    p1: 0.0
+    p2: 0.0
+
+extrinsics:
+  R_BC: [
+    [0.0, 0.0, 1.0],
+    [-1.0, 0.0, 0.0],
+    [0.0, -1.0, 0.0]
+  ]
+  p_BC: [0.10, 0.0, 0.0]
+
+imu:
+  rate_hz: 200.0
+  noise_accel: 0.005
+  noise_gyro: 0.001
+  random_walk_accel: 0.0001
+  random_walk_gyro: 0.00001
+
+estimator:
+  algorithm: "MSCKF"
+  max_clones: 12
+  min_track_length: 3
+  max_features: 150
+  fast_threshold: 15
+  grid_rows: 4
+  grid_cols: 5
+  init_time_seconds: 1.0
+  gravity: [0.0, 0.0, -9.81]
+  chi2_outlier_rejection: true
+  chi2_multiplier: 3.0
+
+evaluation:
+  alignment_mode: "se3"  # se3 or sim3
+  rpe_delta_sec: 1.0

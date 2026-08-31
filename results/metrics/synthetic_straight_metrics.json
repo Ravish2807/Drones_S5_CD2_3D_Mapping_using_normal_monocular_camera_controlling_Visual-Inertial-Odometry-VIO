@@ -1,0 +1,14 @@
+{
+    "sequence": "synthetic_straight",
+    "preset": "straight",
+    "ate_rmse_m": 3.245406410669476,
+    "ate_mean_m": 2.7051017748855184,
+    "ate_median_m": 2.614983554231812,
+    "ate_max_m": 7.26044859118288,
+    "rpe_trans_rmse_m": 0.5177783714672608,
+    "ori_rmse_deg": 6.972830933556259,
+    "ori_final_deg": 7.047908681638209,
+    "vel_rmse_mps": 0.9442222122966683,
+    "mean_latency_ms": 35.70853580000403,
+    "effective_fps": 28.00450865868007
+}

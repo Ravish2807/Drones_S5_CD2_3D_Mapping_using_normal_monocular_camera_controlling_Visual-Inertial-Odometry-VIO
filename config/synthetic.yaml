@@ -1,0 +1,52 @@
+# Configuration for Drone Synthetic Flight Simulator
+
+camera:
+  fps: 20.0
+  width: 640
+  height: 480
+  intrinsics:
+    fx: 400.0
+    fy: 400.0
+    cx: 320.0
+    cy: 240.0
+  distortion:
+    model: "radtan"
+    k1: 0.0
+    k2: 0.0
+    p1: 0.0
+    p2: 0.0
+
+extrinsics:
+  # T_BC (Camera relative to Body: forward-facing camera along +X body)
+  R_BC: [
+    [0.0, 0.0, 1.0],
+    [-1.0, 0.0, 0.0],
+    [0.0, -1.0, 0.0]
+  ]
+  p_BC: [0.10, 0.0, 0.0]
+
+imu:
+  rate_hz: 200.0
+  noise_accel: 0.005        # m/s^2 / sqrt(Hz)
+  noise_gyro: 0.001         # rad/s / sqrt(Hz)
+  random_walk_accel: 0.0001 # m/s^3 / sqrt(Hz)
+  random_walk_gyro: 0.00001 # rad/s^2 / sqrt(Hz)
+
+simulation:
+  duration_sec: 25.0
+  num_landmarks: 500
+  scene_bounds: [[-8.0, 8.0], [-8.0, 8.0], [-1.0, 6.0]]
+  trajectory_preset: "orbit"  # hover, straight, orbit, multi_axis, stress
+  orbit_radius: 4.0
+  orbit_altitude: 2.5
+  orbit_speed_rad_s: 0.25
+
+estimator:
+  max_clones: 12
+  min_track_length: 3
+  max_features: 150
+  fast_threshold: 15
+  grid_rows: 4
+  grid_cols: 5
+  init_time_seconds: 1.0
+  gravity: [0.0, 0.0, -9.81]

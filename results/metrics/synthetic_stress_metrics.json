@@ -1,0 +1,14 @@
+{
+    "sequence": "synthetic_stress",
+    "preset": "stress",
+    "ate_rmse_m": 4.890041637516974,
+    "ate_mean_m": 4.200512281784207,
+    "ate_median_m": 3.3159820926047336,
+    "ate_max_m": 14.60954266286334,
+    "rpe_trans_rmse_m": 1.768456229863889,
+    "ori_rmse_deg": 12.277317165195765,
+    "ori_final_deg": 12.087854588997649,
+    "vel_rmse_mps": 2.0851862773374146,
+    "mean_latency_ms": 29.31225619999168,
+    "effective_fps": 34.115422339965896
+}
