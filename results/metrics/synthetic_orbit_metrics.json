@@ -1,0 +1,14 @@
+{
+    "sequence": "synthetic_orbit",
+    "preset": "orbit",
+    "ate_rmse_m": 0.3510034561836264,
+    "ate_mean_m": 0.3170765293373321,
+    "ate_median_m": 0.3251904500301821,
+    "ate_max_m": 0.6246942188973093,
+    "rpe_trans_rmse_m": 0.09783604338725518,
+    "ori_rmse_deg": 2.0315614644244815,
+    "ori_final_deg": 2.601587796428445,
+    "vel_rmse_mps": 0.11872101370016058,
+    "mean_latency_ms": 0.0,
+    "effective_fps": 0.0
+}

@@ -1,0 +1,14 @@
+{
+    "sequence": "synthetic_hover",
+    "preset": "hover",
+    "ate_rmse_m": 0.08202215145055686,
+    "ate_mean_m": 0.07051537877156078,
+    "ate_median_m": 0.058933206304212726,
+    "ate_max_m": 0.20795976018028742,
+    "rpe_trans_rmse_m": 0.026742247220814426,
+    "ori_rmse_deg": 172.80203238592395,
+    "ori_final_deg": 172.71252737094198,
+    "vel_rmse_mps": 0.04589009058912296,
+    "mean_latency_ms": 7.847854399915376,
+    "effective_fps": 127.4233630036234
+}

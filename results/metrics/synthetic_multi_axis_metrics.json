@@ -1,0 +1,14 @@
+{
+    "sequence": "synthetic_multi_axis",
+    "preset": "multi_axis",
+    "ate_rmse_m": 1.5476988407642023,
+    "ate_mean_m": 1.2900203167013853,
+    "ate_median_m": 0.9439110525993326,
+    "ate_max_m": 4.089926445739556,
+    "rpe_trans_rmse_m": 0.5199889556861071,
+    "ori_rmse_deg": 14.857493788516855,
+    "ori_final_deg": 6.324751473096928,
+    "vel_rmse_mps": 1.3622329703178708,
+    "mean_latency_ms": 49.80620259999705,
+    "effective_fps": 20.077820588555756
+}
