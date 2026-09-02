@@ -78,6 +78,18 @@ class VIOInterface:
         """Returns the most recent 6-DoF VIO motion state."""
         return self.estimator.current_state
 
+    def get_landmark_cloud(self) -> np.ndarray:
+        """Returns array of triangulated 3D landmark points in world frame (N, 3)."""
+        return self.estimator.get_landmark_cloud()
+
+    def export_pointcloud_ply(self, filepath: str):
+        """Exports 3D point cloud map to standard ASCII .PLY format."""
+        self.estimator.export_pointcloud_ply(filepath)
+
+    def export_pointcloud_pcd(self, filepath: str):
+        """Exports 3D point cloud map to standard .PCD format."""
+        self.estimator.export_pointcloud_pcd(filepath)
+
     def export_state_csv(self, filepath: str):
         """
         Exports standardized trajectory output to CSV format.

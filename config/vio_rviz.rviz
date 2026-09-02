@@ -1,0 +1,57 @@
+Panels:
+  - Class: rviz_common/Displays
+    Help Height: 78
+    Name: Displays
+    Property Tree Widget:
+      Expanded:
+        - /Global Options1
+        - /TF1
+        - /Path1
+        - /PointCloud21
+        - /Image1
+      Splitter Ratio: 0.5
+    Tree Height: 557
+Visualization Manager:
+  Class: ""
+  Displays:
+    - Class: rviz_default_plugins/Grid
+      Name: Grid
+      Value: true
+    - Class: rviz_default_plugins/TF
+      Name: TF
+      Value: true
+      Show Axes: true
+    - Class: rviz_default_plugins/Path
+      Name: Path
+      Topic:
+        Value: /drone/vio/path
+      Color: 0; 255; 0
+      Line Width: 0.05
+      Value: true
+    - Class: rviz_default_plugins/PointCloud2
+      Name: PointCloud2
+      Topic:
+        Value: /drone/vio/pointcloud
+      Size (m): 0.05
+      Style: Flat Squares
+      Color Transformer: AxisColor
+      Value: true
+    - Class: rviz_default_plugins/Image
+      Name: Image
+      Topic:
+        Value: /camera/vio_overlay
+      Value: true
+  Global Options:
+    Fixed Frame: world
+    Frame Rate: 30
+  Tools:
+    - Class: rviz_default_plugins/Interact
+    - Class: rviz_default_plugins/MoveCamera
+    - Class: rviz_default_plugins/Select
+  Views:
+    Current:
+      Class: rviz_default_plugins/Orbit
+      Distance: 10
+      Focal Point: 0; 0; 0
+      Pitch: 0.5
+      Yaw: 0.78

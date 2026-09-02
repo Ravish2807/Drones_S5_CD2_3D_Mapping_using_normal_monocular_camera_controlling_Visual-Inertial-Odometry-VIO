@@ -1,0 +1,30 @@
+# ROS 2 Build directories
+build/
+install/
+log/
+*.colcon*
+
+# Python bytecode & cache
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+
+# Conda / Virtual environments
+.venv
+env/
+venv/
+ENV/
+
+# Data & local temporary results
+*.bag
+*.mcap
+data/
+*.log
+
+# IDE & Editor files
+.vscode/
+.idea/
+*.swp
+*~
+.DS_Store
