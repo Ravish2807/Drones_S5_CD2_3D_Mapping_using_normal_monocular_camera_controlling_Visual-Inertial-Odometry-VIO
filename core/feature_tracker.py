@@ -8,10 +8,14 @@ class FeatureTrack:
     def __init__(self, track_id: int):
         self.track_id = track_id
         self.observations: Dict[int, Tuple[float, float, float, float]] = {} # clone_id -> (u, v, xn, yn)
+        self.color: Tuple[int, int, int] = (200, 200, 200) # RGB
         self.is_lost: bool = False
 
     def add_observation(self, clone_id: int, uv: np.ndarray, norm_xy: np.ndarray):
         self.observations[clone_id] = (float(uv[0]), float(uv[1]), float(norm_xy[0]), float(norm_xy[1]))
+
+    def set_color(self, rgb: Tuple[int, int, int]):
+        self.color = rgb
 
     @property
     def length(self) -> int:
@@ -68,8 +72,10 @@ class FeatureTracker:
         """
         if len(img.shape) == 3:
             img_gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+            img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         else:
             img_gray = img
+            img_rgb = cv2.cvtColor(img, cv2.COLOR_GRAY2RGB)
 
         lost_tracks = []
 
@@ -82,6 +88,8 @@ class FeatureTracker:
                 norm_pts = self._pixel_to_normalized(new_pts)
                 for pt_id, pt, norm_pt in zip(new_ids, new_pts, norm_pts):
                     track = FeatureTrack(int(pt_id))
+                    u, v = int(np.clip(round(pt[0]), 0, self.width - 1)), int(np.clip(round(pt[1]), 0, self.height - 1))
+                    track.set_color(tuple(int(c) for c in img_rgb[v, u]))
                     track.add_observation(clone_id, pt, norm_pt)
                     self.active_tracks[int(pt_id)] = track
 
@@ -128,7 +136,10 @@ class FeatureTracker:
             norm_surviving = self._pixel_to_normalized(surviving_pts)
             for pt_id, pt, norm_pt in zip(surviving_ids, surviving_pts, norm_surviving):
                 if int(pt_id) in self.active_tracks:
-                    self.active_tracks[int(pt_id)].add_observation(clone_id, pt, norm_pt)
+                    t = self.active_tracks[int(pt_id)]
+                    u, v = int(np.clip(round(pt[0]), 0, self.width - 1)), int(np.clip(round(pt[1]), 0, self.height - 1))
+                    t.set_color(tuple(int(c) for c in img_rgb[v, u]))
+                    t.add_observation(clone_id, pt, norm_pt)
 
         # Grid bucketing replenishment
         num_needed = self.max_features - len(surviving_pts)
@@ -141,6 +152,8 @@ class FeatureTracker:
                 norm_new = self._pixel_to_normalized(new_pts)
                 for pt_id, pt, norm_pt in zip(new_ids, new_pts, norm_new):
                     track = FeatureTrack(int(pt_id))
+                    u, v = int(np.clip(round(pt[0]), 0, self.width - 1)), int(np.clip(round(pt[1]), 0, self.height - 1))
+                    track.set_color(tuple(int(c) for c in img_rgb[v, u]))
                     track.add_observation(clone_id, pt, norm_pt)
                     self.active_tracks[int(pt_id)] = track
 

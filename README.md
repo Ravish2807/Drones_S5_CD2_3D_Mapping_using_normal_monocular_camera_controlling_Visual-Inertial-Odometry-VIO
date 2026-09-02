@@ -1,115 +1,175 @@
-# Drone Visual-Inertial Odometry (VIO) Pipeline - Phase 1
+# 🚁 ROS 2 Visual-Inertial Odometry (VIO) for Autonomous Drone 3D Navigation
 
+[![ROS 2 Humble](https://img.shields.io/badge/ROS_2-Humble-blue.svg)](https://docs.ros.org/en/humble/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
+[![Python 3.10+](https://img.shields.io/badge/python-3.10+-brightgreen.svg)](https://www.python.org/downloads/)
 
-This repository implements **Phase 1** of the autonomous drone 3D scanning project: a standalone, reproducible Visual-Inertial Odometry (VIO) state estimator and evaluation suite that fuses camera imagery and 6-axis IMU measurements before integration with ROS 2, Gazebo, ArduPilot, and downstream dense reconstruction.
+A production-grade, standalone **Multi-State Constraint Kalman Filter (MSCKF) Visual-Inertial Odometry (VIO)** package for ROS 2 Humble. Fuses monocular camera frames and 6-axis IMU streams to estimate real-time 6-DoF drone pose, velocity, dynamic TF transforms, 3D object feature landmarks, and trajectory streams.
 
 ---
 
-## 1. System Architecture
+## 🌟 Key Features
+
+* **Real-time 6-DoF State Estimation**: 200 Hz position, velocity, orientation quaternion, and online IMU bias estimation.
+* **Dynamic TF Broadcasting**: Continuously publishes dynamic coordinate frame transformations (`world -> base_link`).
+* **3D Landmark Feature Map**: Triangulates and streams 3D spatial object feature landmarks via `sensor_msgs/msg/PointCloud2`.
+* **Annotated Camera Overlay**: Publishes camera video feed annotated with live optical flow feature tracks (`sensor_msgs/msg/Image`).
+* **1-Command ROS 2 Launch**: Pre-configured launch script bringing up the VIO node alongside RViz2 pre-loaded with point cloud, trajectory path, and video overlay panels.
+* **Interactive 3D Visualizer**: Included Open3D script (`3d_view.py`) for offline/interactive inspection of flight trajectory lines and 3D object feature landmarks.
+
+---
+
+## 📐 System Architecture
 
 ```
                     SYNCHRONIZED SENSOR STREAM
-                     |                      |
-                 CAMERA I(t)            IMU a(t), w(t)
-                     |                      |
-                     v                      v
-             +---------------+      +---------------+
-             | Feature       |      | IMU           |
-             | Tracking      |      | Propagation   |
-             +-------+-------+      +-------+-------+
-                     |                      |
-                     +----------+-----------+
-                                |
-                                v
-                     +---------------------+
-                     | MSCKF State Update  |
-                     | (Nullspace Proj.)   |
-                     +----------+----------+
-                                |
-                                v
-                     Estimated Drone State:
-                     x = [p, v, R, b_a, b_g]
-                                |
-                                v
-                     +---------------------+
-                     | SE(3) Umeyama Eval  |
-                     | & Quality Dashboard |
-                     +---------------------+
+                     │                      │
+             /camera/image_raw         /imu/data
+                     │                      │
+                     ▼                      ▼
+             ┌───────────────┐      ┌───────────────┐
+             │ KLT Feature   │      │ IMU           │
+             │ Tracking      │      │ Propagation   │
+             └───────┬───────┘      └───────┬───────┘
+                     │                      │
+                     └──────────┬───────────┘
+                                │
+                                ▼
+                     ┌─────────────────────┐
+                     │ MSCKF State Update  │
+                     │ (Nullspace Proj.)   │
+                     └──────────┬──────────┘
+                                │
+                                ▼
+                      ROS 2 PUBLISHER NODE
+                     /drone/vio/odometry
+                     /drone/vio/path
+                     /drone/vio/pointcloud
+                     /camera/vio_overlay
+                     /tf (world -> base_link)
 ```
 
 ---
 
-## 2. Directory Structure
+## 📁 Repository Structure
 
 ```
-VIO-CV/
-├── README.md                     # Project overview and reproduction guide
-├── LICENSE                       # MIT License
-├── THIRD_PARTY_NOTICES.md        # OpenVINS, EuRoC, DROID-SLAM attributions
-├── docs/
-│   ├── calibration.md            # Sensor intrinsics, extrinsics, and noise models
-│   ├── coordinate_frames.md      # World (W), Body (B), Camera (C) definitions
-│   ├── dataset_notes.md          # EuRoC and Synthetic dataset descriptions
-│   └── experiment_protocol.md    # Metrics (ATE, RPE) and pass/fail criteria
+ros2_vio_ws/
+├── package.xml                       # ROS 2 package manifest & dependencies
+├── setup.py                          # Setuptools build & launch installation script
+├── setup.cfg                         # ROS 2 script configuration
+├── README.md                         # Project documentation
+├── 3d_view.py                        # Standalone Open3D tracking & trajectory viewer
+├── launch/
+│   └── vio_launch.py                 # ROS 2 launch file (VIO Node + RViz2)
 ├── config/
-│   ├── euroc.yaml                # EuRoC MAV configuration
-│   ├── synthetic.yaml            # Synthetic drone flight simulator config
-│   └── project_vio.yaml          # Master frozen VIO configuration
+│   ├── project_vio.yaml              # VIO algorithm, camera intrinsics & IMU noise config
+│   └── vio_rviz.rviz                 # RViz2 pre-configured display layout
+├── ros2_nodes/
+│   └── vio_node.py                   # ROS 2 Humble node publisher/subscriber
+├── interfaces/
+│   └── vio_interface.py              # Adapter interface wrapping estimator core
+├── core/
+│   ├── msckf_estimator.py            # MSCKF estimation engine & landmark map
+│   └── feature_tracker.py            # KLT optical flow tracker & RGB sampling
 ├── scripts/
-│   ├── run_synthetic.py          # Synthetic benchmark runner
-│   ├── run_synthetic.sh          # Batch synthetic test script
-│   ├── run_euroc.py              # EuRoC dataset runner
-│   ├── run_euroc.sh              # Batch EuRoC test script
-│   └── evaluate.py               # Multi-run evaluation aggregator
-├── src/
-│   ├── dataset_io/               # Data loaders (EuRoC) & Synthetic generator
-│   ├── estimator_wrapper/        # MSCKF estimator, IMU propagator, feature tracker
-│   ├── evaluation/               # Umeyama SE(3) alignment & ATE/RPE metrics
-│   └── visualization/            # 3D trajectory, error, velocity, and dashboard plots
-├── results/
-│   ├── trajectories/             # Exported timestamped trajectory CSVs
-│   ├── metrics/                  # JSON metric summaries
-│   └── figures/                  # 3D plots, error profiles, dashboards
-└── data/                         # Local dataset directory (not committed)
+│   ├── run_synthetic.py              # Synthetic drone flight simulator & evaluator
+│   └── build_dense_room_mesh.py      # Open3D Voxel Grid & Surface Mesh generator
+└── results/                          # Output trajectories, point clouds & metric JSONs
 ```
 
 ---
 
-## 3. Quickstart & Reproducibility
+## 🛠️ Prerequisites & Dependencies
 
-### Prerequisites
-* Python 3.10+
-* `numpy`, `scipy`, `opencv-python`, `matplotlib`, `pyyaml`, `pandas`
+* **OS**: Linux (Ubuntu 22.04 LTS recommended)
+* **ROS 2**: Humble Hawksbill (`ros-humble-desktop`)
+* **Python**: 3.10+
+* **Dependencies**:
+  ```bash
+  sudo apt install ros-humble-sensor-msgs-py ros-humble-cv-bridge ros-humble-tf2-ros
+  pip install numpy scipy opencv-python pyyaml open3d matplotlib pandas
+  ```
 
-### Run Drone Synthetic Benchmark
+---
+
+## 🚀 Quickstart & Usage
+
+### 1. Build the ROS 2 Workspace
+
 ```bash
-# 1. Run 360-degree orbital scanning flight
+cd ~/ros2_vio_ws
+
+# Source ROS 2 Humble
+source /opt/ros/humble/setup.bash
+
+# Build package
+colcon build --packages-select vio_estimator
+
+# Source workspace setup
+source install/setup.bash
+```
+
+---
+
+### 2. Launch VIO Node + RViz2 Visualizer
+
+Run the unified launch file to start the VIO estimator node and open RViz2 pre-configured for 3D visualization:
+
+```bash
+ros2 launch vio_estimator vio_launch.py
+```
+
+---
+
+### 3. Run Standalone Node
+
+If you want to run the VIO node without RViz2:
+
+```bash
+ros2 run vio_estimator vio_node
+```
+
+---
+
+### 4. Interactive 3D Feature & Trajectory Visualizer
+
+To visualize the drone's 3D flight trajectory curve and tracked object feature landmarks in an interactive 3D window:
+
+```bash
+python 3d_view.py
+```
+
+---
+
+## 📡 ROS 2 Topic Specifications
+
+| Topic Name | Message Type | Description |
+| :--- | :--- | :--- |
+| `/imu/data` | `sensor_msgs/msg/Imu` | Input 6-axis IMU stream (Subscribed) |
+| `/camera/image_raw` | `sensor_msgs/msg/Image` | Input camera image feed (Subscribed) |
+| `/drone/vio/odometry` | `nav_msgs/msg/Odometry` | 6-DoF Position, Velocity & Orientation at 200 Hz |
+| `/drone/vio/path` | `nav_msgs/msg/Path` | Continuous 3D drone trajectory stream |
+| `/drone/vio/pointcloud` | `sensor_msgs/msg/PointCloud2` | 3D triangulated object feature landmarks |
+| `/camera/vio_overlay` | `sensor_msgs/msg/Image` | Live video feed with visual feature tracks |
+| `/tf` | `tf2_msgs/msg/TFMessage` | Dynamic `world -> base_link` transform |
+
+---
+
+## 📊 Benchmarking & Simulation
+
+Run synthetic drone trajectory benchmarks (Orbit, Multi-Axis, Stress test) to evaluate Absolute Trajectory Error (ATE) and Relative Pose Error (RPE):
+
+```bash
+# Run orbital scanning trajectory benchmark
 python scripts/run_synthetic.py --preset orbit
 
-# 2. Run multi-axis coupled dynamic maneuver
+# Run multi-axis maneuver benchmark
 python scripts/run_synthetic.py --preset multi_axis
-
-# 3. Run stress test with feature dropouts
-python scripts/run_synthetic.py --preset stress --dropout
-
-# 4. Generate multi-run benchmark summary table
-python scripts/evaluate.py
-```
-
-### Run on EuRoC MAV Benchmark Dataset
-1. Download a sequence (e.g. `MH_01_easy`) from the [ETH EuRoC MAV page](https://projects.asl.ethz.ch/datasets/euroc-mav/) into `data/MH_01_easy`.
-2. Execute the benchmark:
-```bash
-python scripts/run_euroc.py --sequence_path data/MH_01_easy
 ```
 
 ---
 
-## 4. Evaluation Metrics
+## 📄 License
 
-* **ATE (Absolute Trajectory Error)**: Global root-mean-square position error aligned via $SE(3)$ Umeyama SVD.
-* **RPE (Relative Pose Error)**: Local translation/rotation drift over step intervals.
-* **Velocity RMSE**: Estimation quality of the 3D dynamic velocity state.
-* **Bias Stability**: Online estimation and tracking of accelerometer ($b_a$) and gyroscope ($b_g$) drift.
+This repository is released under the [MIT License](LICENSE).

@@ -108,9 +108,16 @@ def main():
 
     seq_name = f"synthetic_{args.preset}"
 
-    # Save trajectories CSV
+    # Save trajectories CSV and PointCloud PLY/PCD files
+    pc_dir = os.path.join(args.out_dir, "pointclouds")
+    os.makedirs(pc_dir, exist_ok=True)
     traj_csv = os.path.join(traj_dir, f"{seq_name}_estimated_trajectory.csv")
+    ply_file = os.path.join(pc_dir, f"{seq_name}_scanned_map.ply")
+    pcd_file = os.path.join(pc_dir, f"{seq_name}_scanned_map.pcd")
+
     vio.export_state_csv(traj_csv)
+    vio.export_pointcloud_ply(ply_file)
+    vio.export_pointcloud_pcd(pcd_file)
 
     ori = eval_results["orientation"]
 

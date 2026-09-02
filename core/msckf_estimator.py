@@ -83,6 +83,61 @@ class MSCKFEstimator:
         self.init_time = float(config.get("initialization", {}).get("init_duration_sec", 0.5))
 
         self.current_state: Optional[VIOState] = None
+        self.landmarks_map: Dict[int, np.ndarray] = {}
+
+    def get_landmark_cloud(self) -> np.ndarray:
+        """Returns array of triangulated 3D landmark points in world frame (N, 3)."""
+        if len(self.landmarks_map) == 0:
+            return np.empty((0, 3), dtype=np.float64)
+        arr = np.array(list(self.landmarks_map.values()), dtype=np.float64)
+        return arr[:, :3]
+
+    def export_pointcloud_ply(self, filepath: str):
+        """Exports triangulated 3D landmark point cloud with RGB colors to standard PLY format."""
+        import os
+        if len(self.landmarks_map) == 0:
+            pts = np.empty((0, 6), dtype=np.float64)
+        else:
+            pts = np.array(list(self.landmarks_map.values()), dtype=np.float64)
+        os.makedirs(os.path.dirname(os.path.abspath(filepath)), exist_ok=True)
+        with open(filepath, "w") as f:
+            f.write("ply\n")
+            f.write("format ascii 1.0\n")
+            f.write(f"element vertex {len(pts)}\n")
+            f.write("property float x\n")
+            f.write("property float y\n")
+            f.write("property float z\n")
+            f.write("property uchar red\n")
+            f.write("property uchar green\n")
+            f.write("property uchar blue\n")
+            f.write("end_header\n")
+            for p in pts:
+                r = int(np.clip(p[3] if len(p) >= 6 else 200, 0, 255))
+                g = int(np.clip(p[4] if len(p) >= 6 else 200, 0, 255))
+                b = int(np.clip(p[5] if len(p) >= 6 else 200, 0, 255))
+                f.write(f"{p[0]:.6f} {p[1]:.6f} {p[2]:.6f} {r} {g} {b}\n")
+        print(f"Exported 3D Colored Point Cloud ({len(pts)} points) to {filepath}")
+
+    def export_pointcloud_pcd(self, filepath: str):
+        """Exports triangulated 3D landmark point cloud to standard PCD format."""
+        import os
+        pts = self.get_landmark_cloud()
+        os.makedirs(os.path.dirname(os.path.abspath(filepath)), exist_ok=True)
+        with open(filepath, "w") as f:
+            f.write("# .PCD v.7 - Point Cloud Data file format\n")
+            f.write("VERSION .7\n")
+            f.write("FIELDS x y z\n")
+            f.write("SIZE 4 4 4\n")
+            f.write("TYPE F F F\n")
+            f.write("COUNT 1 1 1\n")
+            f.write(f"WIDTH {len(pts)}\n")
+            f.write("HEIGHT 1\n")
+            f.write("VIEWPOINT 0 0 0 1 0 0 0\n")
+            f.write(f"POINTS {len(pts)}\n")
+            f.write("DATA ascii\n")
+            for p in pts:
+                f.write(f"{p[0]:.6f} {p[1]:.6f} {p[2]:.6f}\n")
+        print(f"Exported 3D Point Cloud PCD ({len(pts)} points) to {filepath}")
 
     def initialize_from_imu(self, init_pos: Optional[np.ndarray] = None, init_R: Optional[np.ndarray] = None):
         """Initializes estimator orientation and gravity alignment."""
@@ -272,6 +327,9 @@ class MSCKFEstimator:
             P_W = triangulate_linear_dlt(obs, camera_poses)
             if P_W is None:
                 continue
+
+            r, g, b = track.color
+            self.landmarks_map[track.track_id] = np.array([P_W[0], P_W[1], P_W[2], r, g, b], dtype=np.float64)
 
             valid_clone_ids = list(obs.keys())
             if len(valid_clone_ids) < 2:
