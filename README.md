@@ -199,22 +199,6 @@ python3 -m pytest tests/
 
 ---
 
-## 📤 How to Push to Branch `VIO-Controller`
-
-To push all updates, scripts, documentation, and benchmark results to the remote `VIO-Controller` branch:
-
-```bash
-cd ~/vio_ws
-
-# 1. Stage all modifications and newly created modules
-git add 3d_view.py README.md config/ core/ evaluation/ ros2_nodes/ scripts/ setup.py tests/ trajectory/ results/ phase1_verified/
-
-# 2. Commit changes
-git commit -m "Complete Phase 2: Camera Trajectory T_WC, ZUPT, interactive 3D visualizers, benchmark suite, and modular documentation"
-
-# 3. Push directly to remote branch
-git push origin VIO-Controller
-```
 
 ---
 
