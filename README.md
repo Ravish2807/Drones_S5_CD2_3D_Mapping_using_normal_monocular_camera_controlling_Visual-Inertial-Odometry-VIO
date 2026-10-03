@@ -72,7 +72,7 @@ flowchart LR
 
 ---
 
-## 🗂️ Project Divisions & Modular Documentation
+## 🗂️ Divisions & Modular Documentation
 
 To keep this documentation clean and easy to navigate, deep technical implementations are divided into dedicated modules:
 
@@ -138,7 +138,7 @@ Stress,52.1553,13.1805,160.89,15.1754
 
 ---
 
-## 📁 Clickable Project Architecture
+## 📁 Project Architecture
 
 Click on any file or directory below to inspect its code and implementation:
 
