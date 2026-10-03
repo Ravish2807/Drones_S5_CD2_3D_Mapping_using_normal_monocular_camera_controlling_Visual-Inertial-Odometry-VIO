@@ -248,9 +248,27 @@ class MSCKFEstimator:
         if len(update_tracks) > 0:
             num_updated = self._update_features(update_tracks)
 
+        # 4b. Zero-Velocity Update (ZUPT):
+        # When camera is static on a table (mean optical flow < 0.6 px),
+        # apply direct velocity constraint to prevent quadratic dead-reckoning drift
+        if hasattr(self.tracker, 'mean_optical_flow') and self.tracker.mean_optical_flow < 0.6 and len(active_tracks) > 20:
+            self._apply_zero_velocity_update()
+
         # 5. Prune sliding window
         while len(self.clone_order) > self.max_clones:
             self._marginalize_oldest_clone()
+
+        # 6. Opportunistically triangulate active tracks for real-time 3D landmark visualization
+        for track in active_tracks:
+            if track.track_id not in self.landmarks_map and track.length >= self.min_track_length:
+                obs = {cid: (track.observations[cid][2], track.observations[cid][3])
+                       for cid in track.observations if cid in self.clones}
+                if len(obs) >= 2:
+                    camera_poses = {cid: (self.clones[cid].p_WC, self.clones[cid].R_CW) for cid in obs}
+                    P_W = triangulate_linear_dlt(obs, camera_poses)
+                    if P_W is not None:
+                        r, g, b = track.color
+                        self.landmarks_map[track.track_id] = np.array([P_W[0], P_W[1], P_W[2], r, g, b], dtype=np.float64)
 
         proc_time = time.perf_counter() - t_start
 
@@ -416,3 +434,35 @@ class MSCKFEstimator:
             return len(H_rows)
         except Exception:
             return 0
+
+    def _apply_zero_velocity_update(self):
+        """
+        Applies a Kalman Zero-Velocity Update (ZUPT) when static:
+        1. Observes v_WB = [0, 0, 0] with small variance.
+        2. Estimates accelerometer and gyroscope biases online.
+        3. Prevents quadratic double-integration drift while static on a table.
+        """
+        total_dim = self.P.shape[0]
+        H_v = np.zeros((3, total_dim), dtype=np.float64)
+        H_v[0:3, 3:6] = np.eye(3)  # Velocity state is indices 3:6
+
+        r_v = -self.v_WB  # Residual: 0 - v_WB
+        R_v = np.eye(3, dtype=np.float64) * 1e-4
+
+        try:
+            S = H_v @ self.P @ H_v.T + R_v
+            K = self.P @ H_v.T @ np.linalg.inv(S)
+
+            delta_x = K @ r_v
+
+            self.p_WB += delta_x[0:3]
+            self.v_WB += delta_x[3:6]
+            self.R_WB = self.R_WB @ exp_so3(delta_x[6:9])
+            self.b_a += delta_x[9:12]
+            self.b_g += delta_x[12:15]
+
+            I_KH = np.eye(total_dim) - K @ H_v
+            self.P = I_KH @ self.P @ I_KH.T + K @ R_v @ K.T
+            self.P = 0.5 * (self.P + self.P.T)
+        except Exception:
+            self.v_WB *= 0.1  # Fallback soft damping

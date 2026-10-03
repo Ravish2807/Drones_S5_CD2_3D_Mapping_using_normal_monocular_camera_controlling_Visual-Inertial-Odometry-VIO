@@ -6,8 +6,9 @@ Panels:
       Expanded:
         - /Global Options1
         - /TF1
-        - /Path1
-        - /PointCloud21
+        - /Body Path1
+        - /Camera Trajectory (Phase 2)1
+        - /3D Landmarks Map1
         - /Image1
       Splitter Ratio: 0.5
     Tree Height: 557
@@ -22,18 +23,25 @@ Visualization Manager:
       Value: true
       Show Axes: true
     - Class: rviz_default_plugins/Path
-      Name: Path
+      Name: Body Path
       Topic:
         Value: /drone/vio/path
-      Color: 0; 255; 0
-      Line Width: 0.05
+      Color: 0; 220; 255
+      Line Width: 0.04
+      Value: true
+    - Class: rviz_default_plugins/Path
+      Name: Camera Trajectory (Phase 2)
+      Topic:
+        Value: /drone/vio/camera_path
+      Color: 255; 180; 0
+      Line Width: 0.06
       Value: true
     - Class: rviz_default_plugins/PointCloud2
-      Name: PointCloud2
+      Name: 3D Landmarks Map
       Topic:
         Value: /drone/vio/pointcloud
-      Size (m): 0.05
-      Style: Flat Squares
+      Size (m): 0.10
+      Style: Boxes
       Color Transformer: AxisColor
       Value: true
     - Class: rviz_default_plugins/Image

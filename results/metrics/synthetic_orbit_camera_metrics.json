@@ -1,0 +1,15 @@
+{
+    "sequence": "synthetic_orbit",
+    "preset": "orbit",
+    "camera_ate_rmse_m": 0.3538040684861938,
+    "camera_ate_mean_m": 0.3188128044489525,
+    "camera_ate_median_m": 0.3287515934236731,
+    "camera_ate_max_m": 0.6296407695259515,
+    "camera_rpe_trans_rmse_m": 0.16950443857427147,
+    "camera_rpe_rot_rmse_deg": 0.199304615931778,
+    "camera_ori_rmse_deg": 1.917800951142076,
+    "camera_ori_final_deg": 2.486090308875681,
+    "camera_vel_rmse_mps": 0.2422718100589837,
+    "max_delta_t_ms": 0.0,
+    "mean_delta_t_ms": 0.0
+}

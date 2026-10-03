@@ -7,7 +7,7 @@ package_name = 'vio_estimator'
 setup(
     name=package_name,
     version='1.0.0',
-    packages=find_packages(include=['core*', 'interfaces*', 'src*', 'ros2_nodes*']),
+    packages=find_packages(include=['core*', 'interfaces*', 'src*', 'ros2_nodes*', 'trajectory*', 'evaluation*']),
     data_files=[
         ('share/ament_index/resource_index/packages', ['resource/' + package_name] if os.path.exists('resource/' + package_name) else []),
         ('share/' + package_name, ['package.xml']),

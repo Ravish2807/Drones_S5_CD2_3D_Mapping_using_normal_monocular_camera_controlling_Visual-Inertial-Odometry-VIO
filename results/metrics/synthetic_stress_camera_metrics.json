@@ -1,0 +1,15 @@
+{
+    "sequence": "synthetic_stress",
+    "preset": "stress",
+    "camera_ate_rmse_m": 52.155327795901464,
+    "camera_ate_mean_m": 40.10266094770666,
+    "camera_ate_median_m": 31.431683888232246,
+    "camera_ate_max_m": 179.15611465567008,
+    "camera_rpe_trans_rmse_m": 13.180467267773142,
+    "camera_rpe_rot_rmse_deg": 1.432107177129089,
+    "camera_ori_rmse_deg": 160.88750997654276,
+    "camera_ori_final_deg": 159.3392748784238,
+    "camera_vel_rmse_mps": 15.175368643982507,
+    "max_delta_t_ms": 0.0,
+    "mean_delta_t_ms": 0.0
+}

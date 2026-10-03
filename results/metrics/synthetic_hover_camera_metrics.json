@@ -1,0 +1,15 @@
+{
+    "sequence": "synthetic_hover",
+    "preset": "hover",
+    "camera_ate_rmse_m": 0.13410971386487747,
+    "camera_ate_mean_m": 0.11927692882954444,
+    "camera_ate_median_m": 0.12853538522621394,
+    "camera_ate_max_m": 0.2481042217321647,
+    "camera_rpe_trans_rmse_m": 0.018585966031058797,
+    "camera_rpe_rot_rmse_deg": 0.008088753673379311,
+    "camera_ori_rmse_deg": 160.59556658246018,
+    "camera_ori_final_deg": 160.58841211481487,
+    "camera_vel_rmse_mps": 0.018460238810760903,
+    "max_delta_t_ms": 0.0,
+    "mean_delta_t_ms": 0.0
+}

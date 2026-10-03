@@ -126,6 +126,12 @@ class FeatureTracker:
         surviving_ids = self.prev_ids[valid_mask]
         lost_ids = self.prev_ids[~valid_mask]
 
+        if len(surviving_pts) > 0:
+            flow_disp = np.linalg.norm(surviving_pts - self.prev_pts[valid_mask], axis=1)
+            self.mean_optical_flow = float(np.mean(flow_disp))
+        else:
+            self.mean_optical_flow = 999.0
+
         for lid in lost_ids:
             if int(lid) in self.active_tracks:
                 t = self.active_tracks.pop(int(lid))

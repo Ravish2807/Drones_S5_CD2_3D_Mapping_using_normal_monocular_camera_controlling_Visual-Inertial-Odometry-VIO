@@ -1,0 +1,15 @@
+{
+    "sequence": "synthetic_straight",
+    "preset": "straight",
+    "camera_ate_rmse_m": 2.7091351219443243,
+    "camera_ate_mean_m": 2.3213055943426713,
+    "camera_ate_median_m": 2.3526389102102154,
+    "camera_ate_max_m": 7.29544853829954,
+    "camera_rpe_trans_rmse_m": 0.8255317466087438,
+    "camera_rpe_rot_rmse_deg": 0.17412023426792592,
+    "camera_ori_rmse_deg": 46.78495750184748,
+    "camera_ori_final_deg": 46.71888221040656,
+    "camera_vel_rmse_mps": 0.8658892868342883,
+    "max_delta_t_ms": 0.0,
+    "mean_delta_t_ms": 0.0
+}

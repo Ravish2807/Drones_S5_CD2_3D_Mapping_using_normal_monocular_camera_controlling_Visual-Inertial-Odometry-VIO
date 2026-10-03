@@ -1,0 +1,15 @@
+{
+    "sequence": "synthetic_multi_axis",
+    "preset": "multi_axis",
+    "camera_ate_rmse_m": 0.38342391005342985,
+    "camera_ate_mean_m": 0.3541971590075257,
+    "camera_ate_median_m": 0.30204553788527044,
+    "camera_ate_max_m": 0.793473662230852,
+    "camera_rpe_trans_rmse_m": 0.19543796609504288,
+    "camera_rpe_rot_rmse_deg": 0.7081005002674697,
+    "camera_ori_rmse_deg": 4.406541194450461,
+    "camera_ori_final_deg": 5.963094083710369,
+    "camera_vel_rmse_mps": 0.23653368134723413,
+    "max_delta_t_ms": 0.0,
+    "mean_delta_t_ms": 0.0
+}
