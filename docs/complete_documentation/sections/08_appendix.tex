@@ -1,0 +1,98 @@
+% =====================================================================
+\section{All Symbols in One Table}
+\label{app:symbols}
+% =====================================================================
+
+\begin{center}\small
+\begin{tabularx}{\linewidth}{@{}l X l l@{}}
+\toprule
+\textbf{Symbol} & \textbf{Meaning} & \textbf{Size} & \textbf{Unit}\\
+\midrule
+$\vp,\ \vv$ & position, velocity (world, ENU) & 3 & m, m/s\\
+$R$ & attitude: body $\rightarrow$ world rotation matrix & $3\times3$ & --\\
+$\vw$ & angular velocity in the body frame & 3 & rad/s\\
+$T,\ \vtau$ & total thrust, body torque & 1, 3 & N, N\,m\\
+$\vu=[T;\vtau]$ & input & 4 & N, N\,m\\
+$m,\ J,\ g_0$ & mass, inertia, gravity & 1, $3\times3$, 1 & kg, kg\,m$^2$, m/s$^2$\\
+$\ve_3$ & $[0,0,1]^\top$ & 3 & --\\
+$\skw{\bm a}$, $(\cdot)^\vee$ & hat (cross-product matrix), vee (its inverse) & $3\times3$, 3 & --\\
+$\Exp,\ \Log$ & rotation vector $\leftrightarrow$ rotation matrix & -- & rad\\
+$\hat{(\cdot)},\ (\cdot)_d,\ \tilde{(\cdot)}$ & estimated, desired, measured & -- & --\\
+$\delta\vx$ & error state $[\delta\vp;\delta\vv;\delta\vth;\delta\vw]$ & 12 & m, m/s, rad, rad/s\\
+$A,\ B$ & Jacobians (Model 1) or learned model (Model 2) & $12\times12$, $12\times4$ & --\\
+$F$ & one-step error transition & $12\times12$ & --\\
+$P$ (EKF) & error covariance & $12\times12$ & squared units\\
+$Q,\ R_n$ (EKF) & process noise, sensor noise covariance & $12\times12$, $m\times m$ & squared units\\
+$H,\ K$ (EKF) & measurement Jacobian, Kalman gain & $m\times12$, $12\times m$ & --\\
+$\ve_p,\ \ve_v$ & position, velocity error & 3 & m, m/s\\
+$K_p,\ K_v$ & position, velocity gains & $3\times3$ & 1/s$^2$, 1/s\\
+$\va_d,\ \vF_d$ & desired acceleration, desired force & 3 & m/s$^2$, N\\
+$\vb_{1d},\vb_{2d},\vb_{3d},\ R_d$ & desired body axes, desired attitude & 3, $3\times3$ & --\\
+$\psi_d$ & desired yaw & 1 & rad\\
+$\ve_R,\ \ve_\omega$ & attitude error, angular-velocity error & 3 & rad, rad/s\\
+$K_R,\ K_\omega$ & attitude, rate gains & $3\times3$ & N\,m, N\,m\,s\\
+$\Gamma,\ \vf,\ \vOmega$ & mixer matrix, rotor thrusts, motor speeds & $4\times4$, 4, 4 & --, N, rad/s\\
+$k_f,\ c_m$ & thrust constant, yaw torque per newton & 1 & N\,s$^2$, m\\
+$X,\ X^+,\ U$ & snapshot matrices (DMDc) & $12\times N$, $4\times N$ & --\\
+$Q,\ R$ (control) & state weight, input weight & $12\times12$, $4\times4$ & --\\
+$P$ (control) & value matrix: $V(\vx)=\vx^\top P\vx$ & $12\times12$ & --\\
+$K$ (control) & LQR gain, $\vu=-K\vx$ & $4\times12$ & --\\
+$N,\ P_f$ & MPC horizon, terminal weight & 1, $12\times12$ & steps, --\\
+$S_x,\ S_u,\ H,\ \bm f,\ G,\ \bm h$ & QP matrices & see block 8 & --\\
+$\vv_{\text{cmd}}$ & velocity command sent by our node & 3 & m/s\\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+% =====================================================================
+\section{Glossary}
+% =====================================================================
+
+\begin{center}\small
+\begin{tabularx}{\linewidth}{@{}l X@{}}
+\toprule
+\textbf{Word} & \textbf{Meaning in plain words}\\
+\midrule
+ArduPilot SITL & the real flight-controller software, running on a PC and flying a simulated drone\\
+Attitude & which way the drone is facing and tilted; stored as the matrix $R$\\
+Covariance & a table of ``how unsure'' for every error and every pair of errors\\
+DARE & the equation whose solution gives the best LQR gain for an endless flight\\
+DMDc & learning $\vx_{k+1}=A\vx_k+B\vu_k$ from recorded data by least squares\\
+EKF & Extended Kalman Filter: predict with the model, correct with sensors, weighted by trust\\
+ENU / FLU & world axes East-North-Up / body axes Forward-Left-Up\\
+Error state & the filter keeps track of the small error, not the full state, so the attitude stays a true rotation\\
+Gimbal lock & the failure of roll-pitch-yaw angles at 90$^\circ$ pitch; avoided by using $R$\\
+IMU & Inertial Measurement Unit: gyroscope and accelerometer\\
+Innovation & what the sensor says minus what we expected it to say\\
+Jacobian & the matrix of all ``slopes'' of a function of many variables\\
+Kalman gain & how far to move the estimate towards a measurement\\
+Linearization & replacing a curved model by its tangent (straight-line) version near a point\\
+LQR & the best linear controller for a quadratic score: $\vu=-K\vx$\\
+Lyapunov function & an ``energy'' that can only decrease; proves that a controller settles\\
+MPC & re-plan the next few seconds at every step, with limits, and use only the first move\\
+QP & quadratic program: find the bottom of a bowl inside a fence\\
+ROS~2 & software that lets programs exchange messages on named topics\\
+SO(3) & the set of all rotation matrices\\
+VIO & Visual-Inertial Odometry: working out motion from a camera and an IMU together\\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+% =====================================================================
+\section{References}
+% =====================================================================
+
+\begin{enumerate}[label={[\arabic*]}, leftmargin=*]
+\item T.~Lee, M.~Leok, N.\,H.~McClamroch, ``Geometric tracking control of a quadrotor UAV on SE(3)'', IEEE CDC, 2010.
+      (Blocks 5--7 of Model 1.)
+\item J.~Sol\`a, ``Quaternion kinematics for the error-state Kalman filter'', arXiv:1711.02508, 2017. (Block 4.)
+\item J.\,L.~Proctor, S.\,L.~Brunton, J.\,N.~Kutz, ``Dynamic mode decomposition with control'', SIAM J.\ Applied Dynamical
+      Systems 15(1), 2016. (Model 2, block 2.)
+\item D.\,P.~Bertsekas, \emph{Dynamic Programming and Optimal Control}, Vol.~I. (Model 2, blocks 3--6.)
+\item J.\,B.~Rawlings, D.\,Q.~Mayne, M.\,M.~Diehl, \emph{Model Predictive Control: Theory, Computation, and Design}, 2nd ed., 2017.
+      (Model 2, blocks 7--9.)
+\item T.~Qin, P.~Li, S.~Shen, ``VINS-Mono: a robust and versatile monocular visual-inertial state estimator'', IEEE T-RO, 2018.
+\item Sunil Kumar~S and K.\,P.~Soman, course notes \emph{Introduction to Drones -- 22AIE448}: ``Taylor series'' and
+      ``Nonlinear systems and EDMD'', Amrita Vishwa Vidyapeetham.
+\item ArduPilot documentation: SITL with Gazebo, ROS~2 (DDS) interface. Project parameters: \code{drones\_controller/config/controller.yaml}.
+\end{enumerate}

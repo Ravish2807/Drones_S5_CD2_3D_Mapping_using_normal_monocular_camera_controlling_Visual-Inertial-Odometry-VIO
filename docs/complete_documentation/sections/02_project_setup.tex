@@ -1,0 +1,96 @@
+% =====================================================================
+\section{Our Drone and Our Software}
+\label{sec:setup}
+% =====================================================================
+
+\subsection{The pieces of the system}
+
+\begin{center}\small
+\begin{tabularx}{\linewidth}{@{}l X@{}}
+\toprule
+\textbf{Piece} & \textbf{What it does for us}\\
+\midrule
+Gazebo + Iris model & The ``real'' drone: a 3D physics simulator that solves the equations of motion of a 1.5\,kg quadrotor\\
+ArduPilot SITL & The flight computer software, running on the PC. It reads the simulated IMU, runs its own
+  estimator (EKF3) and its own low-level controllers, and drives the four motors\\
+ROS~2 & The ``post office'' between programs. Programs publish and subscribe to named \emph{topics}\\
+Monocular camera + VIO & Images $\rightarrow$ visual odometry pose; fused with the IMU it gives the state; the same poses build the 3D map\\
+\code{drones\_controller} & Our ROS~2 package: reads the state, runs the SO(3) controller, sends commands\\
+\code{toy\_model3} & Our MATLAB toy model: every equation of this document, runnable, with small examples\\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+The ROS~2 topics that matter:
+
+\begin{center}\small
+\begin{tabularx}{\linewidth}{@{}l l X@{}}
+\toprule
+\textbf{Topic} & \textbf{Direction} & \textbf{Content}\\
+\midrule
+\code{/ap/v1/pose/filtered} & ArduPilot $\rightarrow$ us & position $\vp$ and orientation (quaternion $\rightarrow R$), from ArduPilot's EKF\\
+\code{/ap/v1/twist/filtered} & ArduPilot $\rightarrow$ us & velocity $\vv$ and angular velocity $\vw$\\
+\code{/ap/v1/cmd\_vel} & us $\rightarrow$ ArduPilot & the velocity command we want the drone to fly\\
+\code{/drones\_controller/*} & us $\rightarrow$ anyone & our diagnostics: $\ve_p,\ve_v,\vF_d,\vtau,\ve_R,\ve_\omega,R_d$\\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\subsection{Frames: which way is up?}
+
+\begin{itemize}
+  \item \textbf{World frame, ENU}: $x$ = East, $y$ = North, $z$ = Up. ArduPilot's ROS~2 topics use this. Gravity
+        is therefore $\vg=[0,\ 0,\ -9.81]^\top$\,m/s$^2$ (it pulls towards $-z$).
+  \item \textbf{Body frame, FLU}: fixed to the drone, $x$ = Forward (nose), $y$ = Left, $z$ = Up (through the
+        propellers). The thrust always points along body $+z$.
+  \item The rotation matrix $R$ turns body-frame vectors into world-frame vectors (\cref{sec:rotations}).
+\end{itemize}
+
+\subsection{The state of the drone}
+
+Everything we need to know about the drone at one moment is its \textbf{state}:
+\begin{center}\small
+\begin{tabular}{@{}l l l l@{}}
+\toprule
+\textbf{Symbol} & \textbf{Meaning} & \textbf{Size} & \textbf{Unit}\\
+\midrule
+$\vp$ & position (world) & 3 numbers & m\\
+$\vv$ & velocity (world) & 3 numbers & m/s\\
+$R$ & attitude: rotation body $\rightarrow$ world & $3\times3$ matrix & --\\
+$\vw$ & angular velocity, measured in the body (what a gyro reads) & 3 numbers & rad/s\\
+\bottomrule
+\end{tabular}
+\end{center}
+That is 18 stored numbers but only 12 ``degrees of freedom'', because $R$ has 9 entries but only 3 independent
+directions of rotation. The \textbf{input} is $\vu=[T;\ \vtau]$: total thrust $T$ (newtons) and the three body
+torques $\vtau$ (newton-metres).
+
+A hat on a symbol means \emph{estimated} ($\hp$ = the position the estimator believes). A subscript $d$ means
+\emph{desired} ($\vp_d$ = where we want to be). A tilde means \emph{measured by a sensor} ($\tilde{\vp}$).
+
+\subsection{The parameters: \texttt{controller.yaml}}
+
+All numbers used in this document and in the toy model come from the configuration file of our controller:
+
+\lstinputlisting[style=py, language={}, title={\small\sffamily drones\_controller/config/controller.yaml}]{\yaml}
+
+\begin{center}\small
+\begin{tabular}{@{}l l l@{}}
+\toprule
+\textbf{YAML key} & \textbf{Symbol in this document} & \textbf{Value}\\
+\midrule
+\code{mass}, \code{gravity} & $m$, $g_0$ & 1.5\,kg, 9.81\,m/s$^2$\\
+\code{inertia} & $J=\diag(J_x,J_y,J_z)$ & $\diag(0.02,\ 0.02,\ 0.04)$\,kg\,m$^2$\\
+\code{kp}, \code{kv} & $K_p$, $K_v$ (position loop) & $\diag(1.5,1.5,2.0)$, $\diag(1.2,1.2,1.5)$\\
+\code{kR}, \code{kOmega} & $K_R$, $K_\omega$ (attitude loop) & $\diag(4,4,2)$, $\diag(0.8,0.8,0.5)$\\
+\code{desired\_x/y/z}, \code{desired\_yaw} & $\vp_d$, $\psi_d$ & $[0,0,2]$\,m, 0\,rad\\
+\code{control\_rate} & $1/\Delta t$ & 25\,Hz ($\Delta t=0.04$\,s)\\
+\code{max\_velocity} & speed limit & 1.0\,m/s\\
+\code{state\_timeout} & how old the state may be & 0.5\,s\\
+\code{enable\_command} & actually send commands? & \code{false} by default (safety)\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+The rotor numbers (arm positions, thrust constant $k_f=8.549\times10^{-6}$\,N\,s$^2$, yaw constant $c_m=0.016$\,m)
+are those of the ArduPilot Gazebo Iris. They are only needed in the motor mixer (\cref{sec:m1b8}).

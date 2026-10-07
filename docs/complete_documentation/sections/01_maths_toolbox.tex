@@ -1,0 +1,232 @@
+% =====================================================================
+\section{The Maths Toolbox (everything we need, with tiny examples)}
+\label{sec:maths}
+% =====================================================================
+
+This section collects every mathematical tool used later. If a later page uses a word you do not know, it is
+explained here. Each tool comes with the smallest example that shows how it works.
+
+% ---------------------------------------------------------------------
+\subsection{Vectors and matrices}
+
+A \textbf{vector} is a list of numbers written as a column. The position of the drone is a vector with three numbers:
+\[
+\vp=\begin{bmatrix}p_x\\p_y\\p_z\end{bmatrix}=\begin{bmatrix}0.1\\-0.2\\1.5\end{bmatrix}\ \text{m}
+\quad\text{means: 10\,cm east, 20\,cm south, 1.5\,m up.}
+\]
+We write $\vp\in\R^3$ (``$\vp$ is a list of 3 real numbers''). A \textbf{matrix} is a table of numbers. $M\in\R^{m\times n}$ has
+$m$ rows and $n$ columns. Multiplying a matrix by a vector takes each row, multiplies it entry by entry with the vector
+and adds up:
+\begin{toy}[matrix times vector]
+\[
+\begin{bmatrix}1&2\\3&4\end{bmatrix}\begin{bmatrix}5\\6\end{bmatrix}=\begin{bmatrix}1\cdot5+2\cdot6\\3\cdot5+4\cdot6\end{bmatrix}=\begin{bmatrix}17\\39\end{bmatrix}.
+\]
+Sizes must fit: a $4\times12$ matrix times a 12-vector gives a 4-vector. This is exactly what the LQR controller does:
+12 errors in, 4 commands out.
+\end{toy}
+
+The \textbf{transpose} $M^\top$ swaps rows and columns. For vectors, $\bm a^\top\bm b=a_1b_1+a_2b_2+a_3b_3$ is the
+\textbf{dot product}; it measures how much two vectors point the same way. $\|\bm a\|=\sqrt{\bm a^\top\bm a}$ is the length.
+The \textbf{cross product} $\bm a\times\bm b$ is a vector at right angles to both:
+\begin{toy}[dot and cross product]
+$\bm a=[1,0,0]$ (east), $\bm b=[0,1,0]$ (north): $\bm a^\top\bm b=0$ (they are at right angles),
+$\bm a\times\bm b=[0,0,1]$ (up). Rule: $\bm a\times\bm b=[a_2b_3-a_3b_2,\ a_3b_1-a_1b_3,\ a_1b_2-a_2b_1]$.
+\end{toy}
+
+The \textbf{identity matrix} $I$ has ones on the diagonal and zeros elsewhere; $I\bm a=\bm a$. The \textbf{inverse}
+$M^{-1}$ undoes $M$: $M^{-1}M=I$. $\diag(a,b,c)$ is a matrix with $a,b,c$ on the diagonal and zeros elsewhere.
+
+% ---------------------------------------------------------------------
+\subsection{Rates of change and differential equations}
+
+A dot on top means ``rate of change with time'': $\dot{\vp}=d\vp/dt$ is velocity and $\ddot{\vp}$ is acceleration.
+An equation of the form
+\[
+\dot{\vx}=\vf(\vx,\vu)
+\]
+is a \textbf{differential equation}. It does not tell you where the system is; it tells you \emph{how fast it is
+changing}, given where it is ($\vx$, the \textbf{state}) and what you are doing to it ($\vu$, the \textbf{input}).
+A computer finds the motion by taking small time steps $\Delta t$.
+\begin{toy}[Euler's method for a falling ball]
+State $x=[\text{height};\ \text{velocity}]$, $\dot x=[\text{velocity};\ -9.81]$. Start at height 10\,m, at rest,
+$\Delta t=0.1$\,s. One step: $\text{height}=10+0.1\cdot0=10$, $\text{velocity}=0+0.1\cdot(-9.81)=-0.981$.
+Next step: $\text{height}=10+0.1\cdot(-0.981)=9.902$\,m, and so on. Each step is ``new = old + $\Delta t\,\times$ rate''.
+The course notes do exactly this for the Lotka--Volterra and Lorenz systems.
+\end{toy}
+
+Euler's method is simple but not very accurate. The toy model uses \textbf{RK4} (Runge--Kutta of order 4), which
+looks at the rate four times inside the step (start, two in the middle, end) and averages them. MATLAB's \code{ode45}
+uses the same idea with automatic step sizes.
+
+\textbf{Discrete time.} A computer works in ticks $t_k=k\,\Delta t$. A subscript $k$ means ``at tick $k$''. So
+$\vx_{k+1}=A\vx_k+B\vu_k$ reads: next state $=$ (matrix) $\times$ current state $+$ (matrix) $\times$ current input.
+Model 2 works entirely in this form.
+
+% ---------------------------------------------------------------------
+\subsection{Taylor series and linearization}
+\label{sec:taylor}
+
+From the course notes: if we know a smooth function $f$ and its derivatives at a point $a$, we can predict it nearby:
+\[
+f(x)=f(a)+f'(a)(x-a)+\frac{f''(a)}{2!}(x-a)^2+\dots
+\]
+Keeping only the first two terms gives the \textbf{first order (linear) approximation}: near $a$ the curve looks like
+its tangent line.
+\begin{toy}[$\sin$ near 0]
+$f(\theta)=\sin\theta$, $a=0$: $f(0)=0$, $f'(0)=\cos0=1$, so $\sin\theta\approx\theta$.
+For $\theta=0.1$\,rad: true $0.0998$, linear $0.1$ (0.17\% off). For $\theta=0.5$\,rad: true $0.479$, linear $0.5$
+(4.3\% off). The approximation is excellent close to $a$ and gets worse further away. This exact example decides how
+well the linear drone models work: $\theta$ is the tilt of the drone.
+\end{toy}
+
+For a function of \emph{many} variables that also gives \emph{many} outputs, the slopes form a matrix, the
+\textbf{Jacobian}. Entry $(i,j)$ is $\partial f_i/\partial x_j$: ``how much output $i$ changes when only input $j$ is
+nudged''. Then
+\[
+\vf(\vx)\approx\vf(\bm a)+J\,(\vx-\bm a),\qquad J=\left.\frac{\partial\vf}{\partial\vx}\right|_{\bm a}.
+\]
+\begin{toy}[a Jacobian by hand]
+$\vf(x,y)=\begin{bmatrix}x\,y\\ x+y^2\end{bmatrix}$ at $(x,y)=(2,1)$:\quad
+$J=\begin{bmatrix}\partial f_1/\partial x&\partial f_1/\partial y\\ \partial f_2/\partial x&\partial f_2/\partial y\end{bmatrix}=
+\begin{bmatrix}y&x\\1&2y\end{bmatrix}=\begin{bmatrix}1&2\\1&2\end{bmatrix}$.
+
+Move to $(2.1,\,1)$: the linear prediction is $\vf(2,1)+J[0.1,0]^\top=[2,3]+[0.1,0.1]=[2.1,3.1]$. The true value is
+$[2.1\cdot1,\ 2.1+1]=[2.1,3.1]$. Here they agree exactly because $\vf$ is linear in $x$.
+\end{toy}
+
+\textbf{Linear versus nonlinear.} A model is \emph{linear} if doubling the input doubles the effect, like
+$\vx_{k+1}=A\vx_k+B\vu_k$. A drone is \emph{nonlinear} because of $\sin$, $\cos$ and products like $\vw\times J\vw$.
+Linear models are much easier to work with, so we \textbf{linearize}: replace the nonlinear model by its Jacobian
+near an \textbf{operating point} such as hover.
+
+% ---------------------------------------------------------------------
+\subsection{Rotations: the rotation matrix $R$}
+\label{sec:rotations}
+
+The \textbf{attitude} (orientation) of the drone is stored as a $3\times3$ \textbf{rotation matrix} $R$. Its three
+columns are the drone's own three axes (forward, left, up), written in world coordinates:
+\[
+R=\big[\ \vb_1\ \ \vb_2\ \ \vb_3\ \big],\qquad \vb_1=\text{drone's nose},\ \vb_2=\text{drone's left},\ \vb_3=\text{drone's top}.
+\]
+Multiplying $R$ by a vector written in the drone's frame gives the same vector in the world frame.
+\begin{toy}[the drone turned 90 degrees to the left (yaw)]
+Its nose now points north, its left points west, its top still points up:
+$R=\begin{bmatrix}0&-1&0\\1&0&0\\0&0&1\end{bmatrix}$.
+A camera that looks along the nose, $[1,0,0]$ in the drone frame, looks along $R[1,0,0]^\top=[0,1,0]^\top$: north. Correct.
+\end{toy}
+
+Every rotation matrix has two properties: the columns are unit length and at right angles, which is written
+$R^\top R=I$ (so $R^{-1}=R^\top$), and $\det R=+1$ (it is not a mirror). The set of all such matrices is called
+$\SO$ (``special orthogonal group in 3D''). When you see $\SO$, read ``rotation matrices''.
+
+\textbf{Why not roll, pitch, yaw angles?} Three angles are easier to imagine, but they break down: at a pitch of
+$90^\circ$ the roll and yaw axes line up and one direction of motion is lost (\textbf{gimbal lock}). Rotation matrices
+never break down. That is why our controller is called \emph{geometric} or \emph{SO(3)} control: it works with $R$
+directly.
+
+% ---------------------------------------------------------------------
+\subsection{The hat and vee maps}
+
+A cross product can be written as a matrix times a vector. For $\bm a=[a_1,a_2,a_3]$:
+\[
+\skw{\bm a}=\begin{bmatrix}0&-a_3&a_2\\a_3&0&-a_1\\-a_2&a_1&0\end{bmatrix},\qquad \skw{\bm a}\,\bm b=\bm a\times\bm b .
+\]
+$\skw{\cdot}$ is called \textbf{hat}. The matrix is \emph{skew-symmetric}: $\skw{\bm a}^\top=-\skw{\bm a}$. The reverse
+operation, which reads the three numbers back out of such a matrix, is called \textbf{vee}: $\skw{\bm a}^\vee=\bm a$.
+\begin{toy}[hat and vee]
+$\bm a=[1,2,3]$: $\skw{\bm a}=\begin{bmatrix}0&-3&2\\3&0&-1\\-2&1&0\end{bmatrix}$. Then vee takes entries (3,2), (1,3), (2,1):
+$[1,\,2,\,3]$. In our Python code these are \code{hat()} and \code{vee()} in \code{state\_adapter.py}.
+\end{toy}
+
+% ---------------------------------------------------------------------
+\subsection{Exp and Log: rotation vector $\leftrightarrow$ rotation matrix}
+
+A rotation can also be described by a \textbf{rotation vector} $\bm\phi=\theta\,\bm n$: turn by the angle $\theta$
+about the unit axis $\bm n$. The two descriptions are linked by
+\[
+\Exp(\bm\phi)=I+\sin\theta\,\skw{\bm n}+(1-\cos\theta)\skw{\bm n}^2\quad\text{(Rodrigues' formula)},\qquad \Log(R)=\bm\phi .
+\]
+For a \emph{small} rotation, $\Exp(\bm\phi)\approx I+\skw{\bm\phi}$. This is used everywhere to describe a small
+attitude error with 3 numbers instead of 9.
+\begin{toy}[90 degrees about the vertical axis]
+$\bm n=[0,0,1]$, $\theta=\pi/2$: $\sin\theta=1$, $1-\cos\theta=1$, $\skw{\bm n}^2=\diag(-1,-1,0)$, so
+$\Exp=I+\skw{\bm n}+\diag(-1,-1,0)=\begin{bmatrix}0&-1&0\\1&0&0\\0&0&1\end{bmatrix}$, which is the yaw matrix of the earlier example.
+And $\Log$ of that matrix gives back $[0,0,1.5708]$.
+\end{toy}
+
+% ---------------------------------------------------------------------
+\subsection{Uncertainty: mean, variance, covariance}
+
+Sensors are noisy, so we need words for ``how unsure''. The \textbf{mean} is the average. The \textbf{variance}
+$\sigma^2$ is the average squared distance from the mean, and the \textbf{standard deviation} $\sigma$ is the typical
+size of the error. For a vector of errors, the \textbf{covariance matrix} $P=\mathbb E[\bm e\bm e^\top]$ holds the
+variance of each component on its diagonal and ``how two components move together'' off the diagonal.
+A \textbf{Gaussian} (bell curve) $\mathcal N(\mu,\sigma^2)$ puts about 68\% of samples within $\pm\sigma$ and 99.7\%
+within $\pm3\sigma$.
+\begin{toy}[three altitude readings]
+Readings $9.8,\ 10.1,\ 10.1$\,m: mean $10.0$, deviations $-0.2,\ 0.1,\ 0.1$,
+variance $(0.04+0.01+0.01)/3=0.02$\,m$^2$, $\sigma=0.14$\,m.
+\end{toy}
+
+\textbf{The one rule we use again and again.} If an error vector is multiplied by a matrix, $\bm e'=F\bm e$, its
+covariance becomes
+\[
+P'=\mathbb E[F\bm e\bm e^\top F^\top]=F\,P\,F^\top .
+\]
+\begin{toy}[uncertainty grows when you integrate]
+Position and velocity errors $[\delta p,\delta v]$ with $P=\diag(0.01,\ 0.04)$ (10\,cm and 20\,cm/s). After 1\,s,
+$\delta p'=\delta p+1\cdot\delta v$, $\delta v'=\delta v$, so $F=\begin{bmatrix}1&1\\0&1\end{bmatrix}$ and
+$P'=FPF^\top=\begin{bmatrix}0.05&0.04\\0.04&0.04\end{bmatrix}$. The position variance grew from 0.01 to 0.05
+($\sigma$ from 10 to 22\,cm), because an unknown velocity turns into an unknown position.
+\end{toy}
+
+% ---------------------------------------------------------------------
+\subsection{Finding the lowest point of a bowl}
+\label{sec:minquad}
+
+At the bottom of a smooth curve the slope is zero. For $g(u)=au^2+bu+c$ with $a>0$ (a bowl):
+\[
+g'(u)=2au+b=0\quad\Longrightarrow\quad u^*=-\frac{b}{2a}.
+\]
+The many-variable version: for $g(\vu)=\vu^\top M\vu+\bm b^\top\vu$ with $M$ ``positive definite'' (a bowl in every
+direction, meaning $\vu^\top M\vu>0$ for every $\vu\neq0$), the gradient is $2M\vu+\bm b=\bm0$, so
+$\vu^*=-\tfrac12M^{-1}\bm b$. Both the Kalman gain and the LQR gain are found exactly like this.
+\begin{toy}[a one-dimensional bowl]
+$g(u)=u^2-4u+1$: $g'(u)=2u-4=0\Rightarrow u^*=2$, and $g(2)=-3$ is the lowest value.
+\end{toy}
+
+% ---------------------------------------------------------------------
+\subsection{Eigenvalues: will it blow up or die out?}
+\label{sec:eig}
+
+If $M\bm v=\lambda\bm v$, the direction $\bm v$ is only stretched by $M$, by the factor $\lambda$ (an
+\textbf{eigenvalue}). For $\vx_{k+1}=M\vx_k$, every such direction is multiplied by $\lambda$ at every tick, so
+\[
+\text{all }|\lambda|<1\ \Rightarrow\ \text{the state dies out (stable)};\qquad
+\text{some }|\lambda|>1\ \Rightarrow\ \text{it blows up (unstable)}.
+\]
+The largest $|\lambda|$ is called the \textbf{spectral radius} $\rho(M)$.
+\begin{toy}[two scalar systems]
+$x_{k+1}=1.1\,x_k$: $1,\ 1.1,\ 1.21,\ 1.33,\dots$ grows for ever.\quad
+$x_{k+1}=0.62\,x_k$: $1,\ 0.62,\ 0.38,\ 0.24,\dots$ dies out. \Cref{sec:m2b4} shows that LQR turns the first system into the second.
+\end{toy}
+For continuous-time systems $\dot\vx=M\vx$ the rule is about the real part instead: all eigenvalues with negative
+real part means stable.
+
+% ---------------------------------------------------------------------
+\subsection{Least squares and the pseudo-inverse}
+\label{sec:lsq}
+
+Given many noisy examples, find the one rule that fits them best. If the rule is $y\approx g\,x$ and we have samples
+$(x_i,y_i)$, the \textbf{least-squares} choice minimises $\sum_i(y_i-g\,x_i)^2$. Setting the derivative to zero gives
+$g=\sum x_iy_i/\sum x_i^2$. For many rows at once, with all inputs as columns of $\Omega$ and all outputs as
+columns of $Y$:
+\[
+G=Y\,\Omega^\top(\Omega\Omega^\top)^{-1}=Y\,\Omega^\dagger .
+\]
+$\Omega^\dagger$ is the \textbf{pseudo-inverse} (MATLAB: \code{pinv}). It is the EDMD formula
+\code{K = Psi2*pinv(Psi1)} from the course notes, and DMDc in \cref{sec:m2b2}.
+\begin{toy}[fitting a slope]
+Samples $(1,2.1),\ (2,3.9),\ (3,6.0)$: $\sum xy=2.1+7.8+18=27.9$, $\sum x^2=14$, so $g=1.993$, close to the
+true slope 2.
+\end{toy}

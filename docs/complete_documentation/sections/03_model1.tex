@@ -1,0 +1,865 @@
+% =====================================================================
+\section{Model 1: Physics, Estimation and Geometric Control}
+\label{sec:model1}
+% =====================================================================
+
+Model~1 is the loop that flies the drone (\cref{fig:flow1}). Blocks 1--3 describe how the drone moves and how a small
+error grows. Block 4 estimates the state from the sensors. Blocks 5--7 decide thrust and torque. Block 8 turns them
+into motor speeds. Toy model files: \code{M1\_1\_Dynamics\_Linearization.mlx} (blocks 1--3),
+\code{M1\_2\_Error\_State\_EKF.mlx} (block 4) and\\ \code{M1\_3\_SO3\_Control\_Closed\_Loop.mlx} (blocks 5--8).
+
+% ---------------------------------------------------------------------
+\subsection{Block 1 --- How the drone moves (nonlinear dynamics)}
+\label{sec:m1b1}
+% ---------------------------------------------------------------------
+
+\begin{idea}
+A quadrotor is one solid body. Its four propellers can only push in one direction: straight out of the top of
+the drone. Gravity pulls it down. To move sideways it must first \emph{tilt}, so that part of its push points
+sideways. To tilt, the rotors push unevenly, which creates a twisting force (torque). So there are two
+connected stories: how the body \emph{moves} (Newton) and how it \emph{turns} (Euler).
+\end{idea}
+
+\begin{eqbox}{Equations (1)--(4): rigid-body dynamics of the quadrotor}
+\begin{align}
+  \dot{\vp} &= \vv \tag{1}\label{eq:1}\\
+  \dot{\vv} &= \vg + \frac{T}{m}\,R\,\ve_3 \tag{2}\label{eq:2}\\
+  \dot{R}   &= R\,\skw{\vw} \tag{3}\label{eq:3}\\
+  \dot{\vw} &= J^{-1}\big(\vtau - \vw\times J\vw\big) \tag{4}\label{eq:4}
+\end{align}
+State $\vx=(\vp,\vv,R,\vw)$, input $\vu=[T;\ \vtau]$, $\ve_3=[0,0,1]^\top$. In short: $\dot\vx=\vf(\vx,\vu)$.
+\end{eqbox}
+
+\subsubsection*{Where each equation comes from}
+
+\textbf{(1) Position.} Velocity is, by definition, how fast position changes: $\vv=d\vp/dt$. Nothing more.
+
+\textbf{(2) Newton's second law, $m\,\dot{\vv}=$ sum of forces.} Two forces act on the drone.
+\begin{enumerate}
+  \item Gravity: $m\vg=m[0,0,-9.81]^\top$, always straight down.
+  \item Thrust: the four rotors together push with $T$ newtons along the drone's own up-axis. In the body frame this
+        is $T\ve_3=[0,0,T]^\top$. To write it in the world frame we multiply by $R$ (\cref{sec:rotations}):
+        $R\,T\ve_3=T\,\vb_3$, where $\vb_3$ is the third column of $R$, the direction the top of the drone points.
+\end{enumerate}
+So $m\dot\vv=m\vg+T R\ve_3$. Dividing by $m$ gives (2). Air drag and wind are left out of the model. In the toy
+simulation they are added as unknown ``gusts'', which is exactly what the controller has to cope with.
+
+\textbf{(3) How the attitude changes.} Take a point fixed on the drone, at $\bm r$ in body coordinates. In the world
+it is at $R\bm r$, so its velocity is $\dot R\,\bm r$. A body spinning with angular velocity $\vw$ (measured in the body)
+moves that point with velocity $\vw\times\bm r$ in body coordinates, which is $R(\vw\times\bm r)=R\skw{\vw}\bm r$ in
+the world. Since this holds for every $\bm r$: $\dot R=R\skw{\vw}$. This is how the gyroscope reading $\vw$ turns the
+attitude.
+
+\textbf{(4) Euler's law for rotation.} The ``spin momentum'' (angular momentum) is $J\vw$, where $J$ is the
+inertia matrix (how hard the body is to spin about each axis). Torque changes angular momentum. Because the body
+frame itself is turning, an extra term appears:
+\[
+J\dot{\vw}+\vw\times J\vw=\vtau\quad\Longrightarrow\quad \dot\vw=J^{-1}(\vtau-\vw\times J\vw).
+\]
+The term $\vw\times J\vw$ is the \textbf{gyroscopic coupling}: spinning about two axes at once starts a spin about the
+third axis, even with no torque. (Derivation: the world-frame momentum is $\bm h=RJ\vw$; Newton for rotation says
+$\dot{\bm h}=R\vtau$; differentiating with (3) gives $R(\skw{\vw}J\vw+J\dot\vw)=R\vtau$, which is the equation above.)
+
+\begin{toy}[hover, a 10 degree tilt, and gyroscopic coupling ($m=1.5$\,kg, $J=\diag(0.02,0.02,0.04)$)]
+\textbf{1. Hover.} Level ($R=I$), not spinning, thrust equal to the weight $T=mg_0=1.5\times9.81=14.715$\,N:
+\[
+\dot\vv=\begin{bmatrix}0\\0\\-9.81\end{bmatrix}+\frac{14.715}{1.5}\begin{bmatrix}0\\0\\1\end{bmatrix}=\begin{bmatrix}0\\0\\0\end{bmatrix}.
+\]
+No acceleration: the drone hangs still. This balance point is called the \textbf{hover equilibrium}.
+
+\textbf{2. Rolled by 10$^\circ$, same thrust.} The top of the drone now points along
+$R\ve_3=[0,\ -\sin10^\circ,\ \cos10^\circ]=[0,\ -0.1736,\ 0.9848]$:
+\[
+\dot\vv=\begin{bmatrix}0\\0\\-9.81\end{bmatrix}+9.81\begin{bmatrix}0\\-0.1736\\0.9848\end{bmatrix}=\begin{bmatrix}0\\-1.7035\\-0.1490\end{bmatrix}\text{ m/s}^2 .
+\]
+It accelerates sideways (this is how a drone moves sideways!) and also sinks a little, because only 98.5\% of the
+thrust still holds it up.
+
+\textbf{3. Gyroscopic coupling.} Spinning at $\vw=[1,0,1]$\,rad/s with no torque:
+$J\vw=[0.02,\,0,\,0.04]$, $\vw\times J\vw=[0\cdot0.04-1\cdot0,\ 1\cdot0.02-1\cdot0.04,\ 0]=[0,\,-0.02,\,0]$, so
+$\dot\vw=-J^{-1}[0,-0.02,0]=[0,\ 1,\ 0]$\,rad/s$^2$. A spin about $y$ appears on its own.
+\end{toy}
+
+\begin{toycode}{M1\_1\_Dynamics\_Linearization}{Block 1}
+x_hover = DroneLib.pack([0;0;2], [0;0;0], eye(3), [0;0;0]);
+u_hover = [m*P.g0; 0; 0; 0]          % [T; tau_x; tau_y; tau_z]
+xdot  = DroneLib.f(x_hover, u_hover, P);
+v_dot = xdot(4:6)'                   % zero : the drone hangs still
+\end{toycode}
+The function \code{DroneLib.f} is equations (1)--(4) written in MATLAB, line by line:
+\begin{lstlisting}[style=mat, title={\small\sffamily toy\_model3/DroneLib.m, function f}]
+v_dot = P.g + u(1)/P.m*R*P.e3 + d(1:3)/P.m;          % (2) + wind force d
+R_dot = R*DroneLib.hat(w);                            % (3)
+w_dot = P.J \ (u(2:4) - cross(w, P.J*w) + d(4:6));    % (4) + disturbance torque
+xdot  = [v; v_dot; R_dot(:); w_dot];                  % (1): p_dot = v
+\end{lstlisting}
+
+\textbf{A drone cannot fly by itself.} The toy model gives the hovering drone a tiny roll torque of 0.01\,N\,m for
+just 0.1\,s and then lets it go with hover thrust (solved with \code{ode45}, as in the course notes). Nobody corrects
+it, and after 4\,s it is \textbf{4.93\,m} away from where it started (\cref{fig:openloop}). A quadrotor is
+\emph{unstable}: it needs to know its state (block 4) and it needs feedback (blocks 5--8).
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.62\linewidth]{M1_1_Dynamics_Linearization_1.png}
+  \caption{Open loop: a 0.1\,s torque pulse and no correction. The drone slides further and further away.}
+  \label{fig:openloop}
+\end{figure}
+
+\begin{real}
+Equations (1)--(4) are ``the real drone''. In our setup Gazebo solves them for the Iris quadrotor; we never solve them
+in the controller. Our node only \emph{reads} their result. The position and the attitude arrive on
+\code{/ap/v1/pose/filtered}; the attitude comes as a quaternion and is turned into the rotation matrix $R$:
+\pyfile{371}{386}{\node}{drones\_controller/controller\_node.py --- pose\_callback()}
+\pyfile{24}{40}{\sad}{drones\_controller/state\_adapter.py --- quaternion\_to\_rotation\_matrix(): the matrix $R$}
+The node also checks that this really is a rotation matrix ($R^\top R=I$, $\det R=1$), the two properties of
+\cref{sec:rotations}:
+\pyfile{127}{138}{\sad}{drones\_controller/state\_adapter.py --- validate\_rotation\_matrix()}
+\end{real}
+
+% ---------------------------------------------------------------------
+\subsection{Block 2 --- Linearization: zooming in on the dynamics}
+\label{sec:m1b2}
+% ---------------------------------------------------------------------
+
+\begin{idea}
+Equations (1)--(4) are curved (nonlinear): they contain $R$, products and sines. But if we zoom in close to one
+flight condition, any smooth curve looks like a straight line (\cref{sec:taylor}). Near that condition the drone
+behaves like a simple \emph{linear} system, and linear systems are easy to predict and to control. The ``slopes'' of
+this straight-line model are two matrices, $A$ and $B$.
+\end{idea}
+
+\begin{eqbox}{Equations (5)--(6): first order Taylor expansion and the Jacobians}
+\begin{align}
+  \vf(\vx,\vu) &\approx \vf(\hx,\hat\vu) + A\,\delta\vx + B\,\delta\vu \tag{5}\label{eq:5}\\
+  A &= \left.\frac{\partial\vf}{\partial\vx}\right|_{\hx,\hat\vu}\in\R^{12\times12},\qquad
+  B = \left.\frac{\partial\vf}{\partial\vu}\right|_{\hx,\hat\vu}\in\R^{12\times4} \tag{6}\label{eq:6}
+\end{align}
+with the 12-number error $\delta\vx=[\delta\vp;\ \delta\vv;\ \delta\vth;\ \delta\vw]$, where $R=\hR\,\Exp(\delta\vth)$, and $\delta\vu=\vu-\hat\vu$.
+\end{eqbox}
+
+\subsubsection*{What is $\delta\vx$?}
+$\delta\vx$ is ``the difference between the true state and a reference state'' (later: the estimate).
+For position, velocity and angular velocity this is a simple subtraction: $\delta\vp=\vp-\hp$ and so on. For the
+attitude we cannot subtract matrices (the result would not be a rotation). Instead we ask: ``which small rotation
+$\delta\vth$ takes $\hR$ to $R$?'', i.e.\ $R=\hR\,\Exp(\delta\vth)$, so $\delta\vth=\Log(\hR^\top R)$. That is 3
+numbers. So $\delta\vx$ has $3+3+3+3=12$ numbers.
+
+\subsubsection*{Deriving $A$ and $B$, one row at a time}
+Put $\vp=\hp+\delta\vp$, $\vv=\hv+\delta\vv$, $R\approx\hR(I+\skw{\delta\vth})$, $\vw=\hw+\delta\vw$,
+$T=\hat T+\delta T$, $\vtau=\hat\vtau+\delta\vtau$ into (1)--(4). Keep every term that contains \emph{one} small
+quantity and throw away products of two small quantities (they are tiny squared).
+
+\textbf{Position row.} $\dot\vp=\vv$ gives $\delta\dot{\vp}=\delta\vv$ directly.
+
+\textbf{Velocity row.}
+$\dot{\vv}\approx\vg+\frac{\hat T+\delta T}{m}\hR(I+\skw{\delta\vth})\ve_3$. Multiply out and subtract the reference
+part $\vg+\frac{\hat T}{m}\hR\ve_3$:
+\[
+\delta\dot\vv=\frac{\hat T}{m}\hR\skw{\delta\vth}\ve_3+\frac{\delta T}{m}\hR\ve_3+\underbrace{\tfrac{\delta T}{m}\hR\skw{\delta\vth}\ve_3}_{\text{two small terms: drop}} .
+\]
+Using $\skw{\delta\vth}\ve_3=\delta\vth\times\ve_3=-\ve_3\times\delta\vth=-\skw{\ve_3}\delta\vth$:
+\[
+\delta\dot{\vv}=-\frac{\hat T}{m}\hR\skw{\ve_3}\,\delta\vth+\frac{1}{m}\hR\ve_3\,\delta T .
+\]
+
+\textbf{Attitude row.} Both $R$ and $\hR$ follow (3). Differentiating $R=\hR\Exp(\delta\vth)$ and keeping first order
+terms gives
+\[
+\delta\dot{\vth}=-\skw{\hw}\,\delta\vth+\delta\vw .
+\]
+In words: an angular-velocity error makes the attitude error grow; the first term just accounts for the reference
+frame itself spinning.
+
+\textbf{Angular-velocity row.} The only nonlinear part of (4) is $\vw\times J\vw$. Its derivative with respect to $\vw$
+is $\skw{\vw}J-\skw{J\vw}$ (product rule for the cross product), so
+\[
+\delta\dot{\vw}=J^{-1}\big(\skw{J\hw}-\skw{\hw}J\big)\delta\vw+J^{-1}\delta\vtau .
+\]
+
+Stacking the four rows (each block is $3\times3$; the columns follow $\delta\vp,\delta\vv,\delta\vth,\delta\vw$ for $A$
+and $\delta T,\delta\vtau$ for $B$):
+\begin{equation}
+\label{eq:AB}\tag{6a}
+A=\begin{bmatrix}
+0&I&0&0\\
+0&0&-\frac{\hat T}{m}\hR\skw{\ve_3}&0\\
+0&0&-\skw{\hw}&I\\
+0&0&0&J^{-1}\big(\skw{J\hw}-\skw{\hw}J\big)
+\end{bmatrix},\qquad
+B=\begin{bmatrix}0&0\\ \frac1m\hR\ve_3&0\\ 0&0\\ 0&J^{-1}\end{bmatrix}.
+\end{equation}
+
+\begin{toy}[the Jacobians at hover, and how good ``first order'' is]
+At hover ($\hR=I$, $\hw=0$, $\hat T=mg_0$) the important blocks are
+\[
+-g_0\skw{\ve_3}=\begin{bmatrix}0&9.81&0\\-9.81&0&0\\0&0&0\end{bmatrix},\qquad
+\tfrac1m\ve_3=\begin{bmatrix}0\\0\\0.667\end{bmatrix},\qquad
+J^{-1}=\diag(50,\,50,\,25).
+\]
+Read them as sentences:
+\begin{itemize}
+  \item a pitch error of $\delta\theta_y$ radians accelerates the drone along $+x$ at $9.81\,\delta\theta_y$\,m/s$^2$
+        (row 1 of the first matrix); a roll error accelerates it along $-y$ (row 2);
+  \item 1\,N of extra thrust gives 0.667\,m/s$^2$ of extra \emph{vertical} acceleration and nothing else;
+  \item 1\,N\,m of roll torque gives 50\,rad/s$^2$ of roll acceleration.
+\end{itemize}
+\textbf{Check by numbers.} The toy model also computes the derivatives numerically, $(\vf(\vx+h)-\vf(\vx-h))/2h$,
+at a tilted, spinning, climbing state. The largest difference from the formulas is $4.9\times10^{-10}$ for $A$ and
+$6.8\times10^{-10}$ for $B$: the derivation is right.
+
+\textbf{How far can we trust the straight line?} Pitch the hovering drone by $\theta$. The linear model says
+$\dot v_x=g_0\theta$, the truth is $g_0\sin\theta$ (the $\sin$ example of \cref{sec:taylor}):
+\begin{center}\small
+\begin{tabular}{rrrr}
+\toprule
+$\theta$ [deg] & linear $g_0\theta$ [m/s$^2$] & true $g_0\sin\theta$ [m/s$^2$] & error\\
+\midrule
+1 & 0.1712 & 0.1712 & 0.005\%\\
+2.87 & 0.4914 & 0.4912 & 0.04\%\\
+10 & 1.7122 & 1.7035 & 0.51\%\\
+20 & 3.4243 & 3.3552 & 2.06\%\\
+28.65 & 4.9054 & 4.7035 & 4.29\%\\
+\bottomrule
+\end{tabular}
+\end{center}
+In normal flight the tilt stays below 10$^\circ$, where the linear model is better than 0.5\%.
+\end{toy}
+
+\begin{toycode}{M1\_1\_Dynamics\_Linearization}{Block 2}
+[A, B] = DroneLib.jacobians(x_hover, u_hover, P);
+A_v_theta = A(4:6, 7:9)      % a pitch error pushes along +x, a roll error along -y
+B_v_T     = B(4:6, 1)'       % extra thrust only changes vertical acceleration (1/m)
+B_w_tau   = B(10:12, 2:4)    % torque -> angular acceleration (J^-1)
+\end{toycode}
+
+\begin{real}
+Our Python node does not compute $A$ and $B$; they are used \emph{inside the estimator} (block 4), which in our
+SITL setup is ArduPilot's EKF3. They are also the reason Model~2 can use a linear model at all: the table above shows
+that near hover the drone really is almost linear. And they are what Model~2 learns from data
+(\cref{sec:m2b2}): DMDc recovers these same numbers without knowing $m$ or $J$.
+\end{real}
+
+% ---------------------------------------------------------------------
+\subsection{Block 3 --- How a small error grows (local error dynamics)}
+\label{sec:m1b3}
+% ---------------------------------------------------------------------
+
+\begin{idea}
+Suppose our belief about the drone is slightly wrong. How does that mistake change over time if we only trust the
+physics? Block 3 answers this with the linear model of block 2. This is exactly what the estimator needs to know to
+decide how much it can still trust its own prediction.
+\end{idea}
+
+\begin{eqbox}{Equations (7)--(9): linear dynamics of the error}
+\begin{align}
+  \delta\vx &= \big[\vp-\hp;\ \vv-\hv;\ \Log(\hR^\top R);\ \vw-\hw\big] \tag{7}\label{eq:7}\\
+  \delta\dot{\vx} &= A\,\delta\vx + B\,\delta\vu \tag{8}\label{eq:8}\\
+  \delta\vx_{k+1} &= F\,\delta\vx_k + G\,\delta\vu_k,\qquad F=e^{A\Delta t}\approx I+A\Delta t,\quad G\approx B\Delta t \tag{9}\label{eq:9}
+\end{align}
+\end{eqbox}
+
+\subsubsection*{Derivation}
+The truth follows $\dot\vx=\vf(\vx,\vu)$ and the estimate follows the same model, $\dot\hx=\vf(\hx,\hat\vu)$.
+Subtract the two and use (5):
+\[
+\delta\dot\vx=\vf(\vx,\vu)-\vf(\hx,\hat\vu)\approx\big[\vf(\hx,\hat\vu)+A\delta\vx+B\delta\vu\big]-\vf(\hx,\hat\vu)=A\delta\vx+B\delta\vu .
+\]
+The big nonlinear parts cancel; only the small linear error is left. That is (8).
+
+For a computer we need one time step $\Delta t$. The exact solution of $\delta\dot\vx=A\delta\vx$ over one step is
+$\delta\vx_{k+1}=e^{A\Delta t}\delta\vx_k$, where the matrix exponential is the series
+$e^{A\Delta t}=I+A\Delta t+\frac12(A\Delta t)^2+\dots$ (Taylor again). Keeping the first two terms gives
+$F\approx I+A\Delta t$, which is the same as one Euler step.
+
+\textbf{Why a drone drifts away.} At hover every eigenvalue of $A$ is 0. Look at the chain inside $A$:
+angular-velocity error $\to$ attitude error $\to$ velocity error $\to$ position error. Each arrow is an
+integration. A constant roll-rate error $\delta\omega_x$ therefore becomes
+$\delta\theta_x=\delta\omega_x t$, then $\delta v_y=-g_0\delta\omega_x t^2/2$, then
+\[
+\delta y(t)=-\frac{g_0\,\delta\omega_x\,t^3}{6}.
+\]
+\begin{toy}[a tiny gyro error becomes a big position error]
+$\delta\omega_x=0.01$\,rad/s (about half a degree per second, a typical gyro bias). After 2\,s:
+$\delta y=-9.81\times0.01\times8/6=-0.131$\,m. After 5\,s: $-2.04$\,m. After 10\,s: $-16.4$\,m. This $t^3$ growth is why an
+IMU on its own is useless for position after a few seconds, and why the camera is needed.
+
+\textbf{Linear prediction versus truth.} The toy model starts the drone with an initial error (10\,cm, 0.2\,rad/s of
+yaw rate, and a roll error) and compares the linear prediction $e^{At}\delta\vx_0$ with the true nonlinear motion over
+2\,s. With a 2$^\circ$ roll error they differ by only 0.02\%; with a 30$^\circ$ roll error the linear model is off
+by 4.7\% (\cref{fig:errgrow}). The linear model is \emph{local}: perfect for small errors, worse for large ones.
+
+\textbf{One-step check.} With $\Delta t=0.01$\,s, the biggest entry of $F-e^{A\Delta t}$ is $4.9\times10^{-4}$,
+the size of the dropped $\tfrac12(A\Delta t)^2$ term. So $F=I+A\Delta t$ is good enough.
+\end{toy}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.85\linewidth]{M1_1_Dynamics_Linearization_2.png}
+  \caption{Sideways error $\delta y$ after an initial roll error: nonlinear truth (solid) and linear model (dashed).}
+  \label{fig:errgrow}
+\end{figure}
+
+\begin{toycode}{M1\_1\_Dynamics\_Linearization}{Block 3}
+dt = 0.01;                          % EKF / IMU sample time [s]
+F  = eye(12) + A*dt;
+max_F_error = max(abs(F - expm(A*dt)), [], 'all')   % size of the dropped (A dt)^2/2
+eig_A = eig(A)'                                       % all zero at hover
+\end{toycode}
+
+\begin{real}
+The estimator never tries to describe the whole flight with a linear model. It only describes the \emph{small
+difference} between what it believes and what is true, and that difference stays small because the camera and the
+IMU keep correcting it. That is why the filter of block~4 is called an \emph{error-state} filter, and why $F$ is all
+it needs.
+\end{real}
+
+% ---------------------------------------------------------------------
+\subsection{Block 4 --- Where am I? The error-state Kalman filter (our VIO)}
+\label{sec:m1b4}
+% ---------------------------------------------------------------------
+
+\begin{idea}
+We have two imperfect sources of information. The \emph{physics} (blocks 1--3) predicts where the drone should be,
+but small mistakes grow quickly. The \emph{sensors} tell us where it is, but every reading is noisy, and the camera
+only gives a new reading 25 times a second. The Kalman filter combines them in the best possible way. It repeats
+two steps for ever:
+\begin{enumerate}
+  \item \textbf{Predict.} ``I know how I pushed the drone, so physics tells me where it should be now.'' The guess
+        moves forward, and because physics is never perfect, the uncertainty \emph{grows}.
+  \item \textbf{Correct.} ``A sensor reading arrived. How surprised am I?'' The guess moves towards the reading. How
+        far depends on whom we trust more. The uncertainty \emph{shrinks}.
+\end{enumerate}
+The filter remembers two things: the \textbf{estimate} $\hx_k$ (its best guess) and the \textbf{covariance} $P_k$
+(a $12\times12$ matrix that says how unsure it is in each of the 12 error directions).
+\end{idea}
+
+\begin{eqbox}{Equations (10)--(14): error-state extended Kalman filter}
+\textbf{Prediction (every IMU sample, 100\,Hz)}
+\begin{align}
+  \hx_{k+1} &= \vf_d(\hx_k,\vu_k) \tag{10}\label{eq:10}\\
+  P_{k+1}   &= F P_k F^\top + Q \tag{11}\label{eq:11}
+\end{align}
+\textbf{Correction (whenever a measurement $\vz$ arrives)}
+\begin{align}
+  K   &= P H^\top\big(HPH^\top+R_n\big)^{-1} \tag{12}\label{eq:12}\\
+  \delta\hat{\vx} &= K\big(\vz-h(\hx)\big),\quad
+  \hp\leftarrow\hp+\delta\hat{\vp},\ \hv\leftarrow\hv+\delta\hat{\vv},\ \hR\leftarrow\hR\,\Exp(\delta\hat{\vth}),\ \hw\leftarrow\hw+\delta\hat{\vw} \tag{13}\label{eq:13}\\
+  P   &\leftarrow (I-KH)\,P \tag{14}\label{eq:14}
+\end{align}
+$\vf_d$ = one simulation step of (1)--(4); $Q$ = how much the physics may be wrong per step (wind, model errors);
+$\vz$ = measurement; $h(\hx)$ = what we expect to measure if our estimate were right; $H$ = Jacobian of $h$;
+$R_n$ = covariance of the sensor noise; $K$ = Kalman gain.
+\end{eqbox}
+
+\subsubsection*{First understand it with one number}
+Before matrices, take a single quantity, the altitude $z$, with a guess $\hat z$ and variance $P$.
+
+\textbf{Predict.} If we command a climb of $c$\,m/s for $\Delta t$ seconds, the guess becomes $\hat z+c\Delta t$. The old
+uncertainty is still there, and the physics adds a bit more ($Q$): $P^-=P+Q$.
+
+\textbf{Correct.} A sensor reads $z_m$ with noise variance $R_n$. The surprise (the \textbf{innovation}) is
+$r=z_m-\hat z^-$. We move a fraction $K$ of the surprise: $\hat z^+=\hat z^-+K\,r$. Which fraction is best? The new
+error is $(1-K)\times$(old error) $-K\times$(sensor noise), whose variance is
+\[
+P^+=(1-K)^2P^-+K^2R_n .
+\]
+This is a bowl in $K$ (\cref{sec:minquad}). Set the slope to zero:
+$-2(1-K)P^-+2KR_n=0\Rightarrow K=\dfrac{P^-}{P^-+R_n}$. Putting it back gives $P^+=(1-K)P^-$.
+
+So $K$ is simply ``my uncertainty divided by (my uncertainty + the sensor's uncertainty)''. If I am very unsure
+($P^-$ large), $K\to1$ and I believe the sensor. If the sensor is very noisy ($R_n$ large), $K\to0$ and I ignore it.
+
+\begin{toy}[one predict and one correct, altitude only]
+Prior: $\hat z_k=10$\,m with $P_k=3.5$\,m$^2$. We command a climb of 0.5\,m/s for 1\,s, $F=1$, $Q=0.5$:
+\[
+\hat z^-=10+0.5=10.5\ \text{m},\qquad P^-=1\cdot3.5\cdot1+0.5=4.0\ \text{m}^2 .
+\]
+A sensor reads $z=12.5$\,m with $R_n=1$\,m$^2$ and $H=1$:
+\[
+K=\frac{4.0}{4.0+1}=0.8,\qquad \hat z^+=10.5+0.8\,(12.5-10.5)=12.1\ \text{m},\qquad P^+=(1-0.8)\cdot4.0=0.8\ \text{m}^2 .
+\]
+The sensor is four times more trustworthy than the prediction ($4.0$ versus $1$), so the estimate moves 80\% of the
+way towards it, and the variance drops from 4.0 to 0.8. Both sources together are better than either alone.
+\end{toy}
+
+\begin{toycode}{M1\_2\_Error\_State\_EKF}{Toy example - altitude only}
+z_hat = 10;  Pk = 3.5;  F = 1;  Q = 0.5;  climb = 0.5;  dt = 1;
+z_hat = z_hat + climb*dt          % predict the guess
+Pk    = F*Pk*F' + Q               % uncertainty grows
+z = 12.5;  H = 1;  Rn = 1;
+K     = Pk*H'/(H*Pk*H' + Rn)      % how much to trust the sensor
+z_hat = z_hat + K*(z - H*z_hat)   % corrected guess
+Pk    = (1 - K*H)*Pk              % uncertainty shrinks
+\end{toycode}
+
+\subsubsection*{The same thing with matrices}
+Now the error is the 12-vector $\delta\vx$ and the uncertainty is the matrix $P$.
+
+\textbf{(10) Predict the guess.} The best guess of the next state is to run the full nonlinear physics one step
+forward from the current guess with the input we applied. The error we do not know averages to zero, so it does not
+move the guess.
+
+\textbf{(11) Predict the uncertainty.} From block 3, the error moves as $\delta\vx_{k+1}=F\delta\vx_k+\bm w_k$, where
+$\bm w_k$ is the new random error added by the wind and by model mistakes, with covariance $Q$. Using the rule
+$P'=FPF^\top$ of \cref{sec:maths} and the fact that $\bm w_k$ is independent of the old error:
+\[
+P_{k+1}=\mathbb E[\delta\vx_{k+1}\delta\vx_{k+1}^\top]=F\,P_k\,F^\top+Q .
+\]
+Uncertainty is stretched by the physics ($FPF^\top$) and inflated by the noise ($+Q$).
+
+\textbf{(12) The Kalman gain.} A sensor does not see the whole state. A camera sees position and attitude; a gyro
+sees angular velocity. $H$ picks out what the sensor sees: the innovation is $\vr=\vz-h(\hx)\approx H\delta\vx+\bm v$
+(``what I see minus what I expected = my error seen through the sensor + sensor noise''). Correcting by
+$\delta\hat\vx=K\vr$ leaves the error $(I-KH)\delta\vx-K\bm v$ with covariance
+\[
+P^+=(I-KH)P(I-KH)^\top+KR_nK^\top .
+\]
+Exactly as in the one-number case, we choose $K$ to make the total uncertainty (the sum of the diagonal, the trace)
+as small as possible. Setting the derivative with respect to $K$ to zero:
+\[
+-2PH^\top+2K\big(HPH^\top+R_n\big)=0\quad\Longrightarrow\quad K=PH^\top\big(HPH^\top+R_n\big)^{-1}.
+\]
+Compare with $K=P^-/(P^-+R_n)$: it is the same formula, with matrices.
+
+\textbf{(13) Correct the guess.} $\delta\hat\vx=K\vr$ is our best estimate of the error, so we add it to the guess.
+Position, velocity and angular velocity are added normally. The attitude is \emph{rotated}: $\hR\leftarrow\hR\Exp(\delta\hat\vth)$,
+so $\hR$ stays a true rotation matrix. This is the ``error-state'' trick: the filter works with a small 3-number
+attitude error and never adds matrices that should be rotations.
+
+\textbf{(14) Shrink the uncertainty.} Putting the best $K$ into the expression for $P^+$ simplifies it to
+$P^+=(I-KH)P$.
+
+\subsubsection*{Our sensors}
+\begin{center}\small
+\begin{tabular}{@{}llll@{}}
+\toprule
+Sensor (rate) & innovation $\vr$ & $H$ & noise $\sigma$\\
+\midrule
+Gyroscope (100\,Hz) & $\tilde{\vw}-\hw$ & $[\,0\ \ 0\ \ 0\ \ I\,]$ & 0.01\,rad/s\\
+Camera / VIO (25\,Hz) & $\begin{bmatrix}\tilde{\vp}-\hp\\ \Log(\hR^\top\tilde R)\end{bmatrix}$ &
+  $\begin{bmatrix}I&0&0&0\\0&0&I&0\end{bmatrix}$ & 5\,cm, 0.02\,rad\\
+\bottomrule
+\end{tabular}
+\end{center}
+Each block of $H$ is $3\times3$, in the order $[\delta\vp,\delta\vv,\delta\vth,\delta\vw]$. The \textbf{velocity is never
+measured}. The filter works it out from how the measured position changes, through the physics in $F$.
+
+\begin{toy}[the full 12-state filter on the drone (\code{M1\_2})]
+The drone flies a climbing helix in gusty wind for 20\,s. The filter starts with a wrong guess (30\,cm, 0.2\,m/s and
+about 7$^\circ$ off) and sees only the commands and the noisy sensors. After the first 2\,s:
+\begin{center}\small
+\begin{tabular}{lrl}
+\toprule
+quantity & estimation error (RMS) & for comparison\\
+\midrule
+position & 2.55\,cm & the camera alone: 8.55\,cm\\
+velocity (never measured!) & 3.85\,cm/s & --\\
+attitude & 0.20$^\circ$ & camera noise: 1.15$^\circ$\\
+\bottomrule
+\end{tabular}
+\end{center}
+The fused estimate is more than three times better than the camera alone. In 99\% of the samples all 12 errors lie
+inside the $\pm3\sigma$ band that the filter itself predicts from $P_k$: the filter knows how unsure it is.
+\end{toy}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.8\linewidth]{M1_2_Error_State_EKF_1.png}\\[4pt]
+  \includegraphics[width=0.9\linewidth]{M1_2_Error_State_EKF_2.png}
+  \caption{Top: noisy camera positions (grey dots), truth (black) and EKF estimate (red, dashed). Bottom: estimation
+  errors (blue) stay inside the $\pm3\sigma$ band computed from $P_k$.}
+\end{figure}
+
+\begin{toycode}{M1\_2\_Error\_State\_EKF}{Run the filter}
+for k = 1:N
+    [~, ~, ~, wh] = DroneLib.unpack(xh);                       % gyro correction
+    [xh, Pk] = DroneLib.ekf_update(xh, Pk, Zg(:,k) - wh, Hg, Rg);
+    if mod(k-1, 4) == 0                                % camera (25 Hz)
+        [ph, ~, Rh] = DroneLib.unpack(xh);
+        r = [Zp(:,k) - ph; DroneLib.logSO3(Rh'*DroneLib.expSO3(Zth(:,k)))];
+        [xh, Pk] = DroneLib.ekf_update(xh, Pk, r, Hc, Rc);
+    end
+    ...
+    [xh, Pk] = DroneLib.ekf_predict(xh, Pk, U(:,k), dt, P, Q);  % prediction
+end
+\end{toycode}
+\begin{lstlisting}[style=mat, title={\small\sffamily toy\_model3/DroneLib.m --- ekf\_predict and ekf\_update, equations (9)--(14)}]
+A  = DroneLib.jacobians(xh, u, P);
+F  = eye(12) + A*dt;                                 % (9)
+xh = DroneLib.rk4(xh, u, dt, P);                     % (10)
+Pk = F*Pk*F' + Q;                                    % (11)
+
+K  = Pk*H' / (H*Pk*H' + Rn);                         % (12)
+xh = DroneLib.boxplus(xh, K*r);                      % (13)  R <- R*Exp(dtheta)
+Pk = (eye(12) - K*H)*Pk;                             % (14)
+\end{lstlisting}
+
+\begin{real}[this is the ``VIO'' of our title]
+A monocular camera alone cannot tell scale (a small room close up looks like a big room far away) and an IMU alone
+drifts within seconds ($t^3$, block 3). The Kalman filter is the referee that fuses them. Between camera frames it
+predicts with the physics and the gyro; when a frame arrives, the visual-odometry pose corrects the prediction, and
+$K$ decides how much to trust each source.
+
+In our SITL setup this filter runs \emph{inside ArduPilot} (its EKF3 has exactly this predict / correct structure,
+with more states such as sensor biases). Its output arrives on \code{/ap/v1/pose/filtered} and
+\code{/ap/v1/twist/filtered}. Our node stores it, and before every control step checks that the estimate is complete,
+recent and finite:
+\pyfile{447}{480}{\node}{drones\_controller/controller\_node.py --- state\_is\_valid() (first part)}
+If the estimate is older than \code{state\_timeout} = 0.5\,s, the controller does nothing at all. This is a safety rule:
+never fly on stale information.
+\end{real}
+
+% ---------------------------------------------------------------------
+\subsection{Block 5 --- Position control (outer loop)}
+\label{sec:m1b5}
+% ---------------------------------------------------------------------
+
+\begin{idea}
+Compare where we are with where we should be, and ask for an acceleration that pulls us there: the further away,
+the harder we pull (a spring), and the faster we are already moving towards the target, the less we pull (a damper).
+\end{idea}
+
+\begin{eqbox}{Equations (15)--(16): tracking errors and desired acceleration}
+\begin{align}
+  \ve_p=\vp_d-\hp,\qquad \ve_v&=\vv_d-\hv \tag{15}\label{eq:15}\\
+  \va_d&=\ddot{\vp}_d+K_p\,\ve_p+K_v\,\ve_v \tag{16}\label{eq:16}
+\end{align}
+$\vp_d,\vv_d,\ddot\vp_d$: desired position, velocity, acceleration. $K_p,K_v$: diagonal gain matrices.
+\end{eqbox}
+
+\subsubsection*{Why this works: a spring and a damper}
+Suppose the inner loops deliver exactly the acceleration we ask for, $\ddot{\vp}=\va_d$. Then the position error
+$\ve_p=\vp_d-\vp$ changes as
+\[
+\ddot{\ve}_p=\ddot{\vp}_d-\ddot{\vp}=\ddot{\vp}_d-\va_d=-K_p\ve_p-K_v\dot{\ve}_p
+\quad\Longrightarrow\quad \ddot{\ve}_p+K_v\dot{\ve}_p+K_p\ve_p=\bm0 .
+\]
+This is the equation of a mass on a spring (stiffness $k_p$) with a damper (friction $k_v$), one per axis. Its
+solutions behave like $e^{st}$ with $s^2+k_vs+k_p=0$. If $k_p>0$ and $k_v>0$, both roots have negative real part, so the
+error always dies out. Comparing with the standard form $s^2+2\zeta\omega_ns+\omega_n^2$:
+\[
+\omega_n=\sqrt{k_p}\ \text{(how fast)},\qquad \zeta=\frac{k_v}{2\sqrt{k_p}}\ \text{(how damped)},\qquad t_{\text{settle}}\approx\frac{4}{\zeta\omega_n}.
+\]
+\begin{center}\small
+\begin{tabular}{@{}lrrrrr@{}}
+\toprule
+axis & $k_p$ & $k_v$ & $\omega_n$ [rad/s] & $\zeta$ & $t_{\text{settle}}$ [s]\\
+\midrule
+$x,\ y$ & 1.5 & 1.2 & 1.225 & 0.490 & 6.7\\
+$z$ & 2.0 & 1.5 & 1.414 & 0.530 & 5.3\\
+\bottomrule
+\end{tabular}
+\end{center}
+Our \code{controller.yaml} gains are gentle: $\zeta\approx0.5$ means a small overshoot, and the error settles in
+about 6\,s. That suits a camera drone that should move smoothly. The term $\ddot{\vp}_d$ (``feed-forward'') supplies the
+acceleration a perfect pilot would need to follow a moving target; the feedback terms only fix what is left over.
+
+\begin{toy}[50 cm too low and already climbing]
+Setpoint $\vp_d=[0,0,2]$\,m (the \code{controller.yaml} hover point), $\vv_d=\ddot{\vp}_d=\bm0$. The estimator says
+$\hp=[0.1,\,-0.2,\,1.5]$\,m and $\hv=[0,0,0.3]$\,m/s.
+\[
+\ve_p=\begin{bmatrix}0-0.1\\0-(-0.2)\\2-1.5\end{bmatrix}=\begin{bmatrix}-0.1\\0.2\\0.5\end{bmatrix},\quad
+\ve_v=\begin{bmatrix}0\\0\\-0.3\end{bmatrix},\quad
+\va_d=\begin{bmatrix}1.5(-0.1)\\1.5(0.2)\\2(0.5)+1.5(-0.3)\end{bmatrix}=\begin{bmatrix}-0.15\\0.30\\0.55\end{bmatrix}\text{ m/s}^2 .
+\]
+It is 50\,cm low, so it wants to accelerate up. Because it is already climbing at 0.3\,m/s, it asks for less: 0.55
+instead of 1.0. That is the damper at work, preventing overshoot.
+\end{toy}
+
+\begin{toycode}{M1\_3\_SO3\_Control\_Closed\_Loop}{Block 5}
+p_hat = [0.1; -0.2; 1.5];   v_hat = [0; 0; 0.3];
+p_d   = [0; 0; 2];          v_d = [0; 0; 0];     a_ff = [0; 0; 0];
+e_p = p_d - p_hat
+e_v = v_d - v_hat
+a_d = a_ff + P.Kp*e_p + P.Kv*e_v
+\end{toycode}
+
+\begin{real}
+Equation (15) is \code{compute\_position\_errors()} and equation (16) is the first part of
+\code{compute\_desired\_force()} in our controller (\code{a\_cmd} is $\va_d$):
+\pyfile{32}{40}{\so}{drones\_controller/so3\_controller.py --- equation (15)}
+\pyfile{64}{68}{\so}{drones\_controller/so3\_controller.py --- equation (16)}
+The desired state comes from \code{WaypointGenerator}: a fixed point $[0,0,2]$ with $\vv_d=\va_d=\bm0$, read from the YAML.
+\end{real}
+
+% ---------------------------------------------------------------------
+\subsection{Block 6 --- Force and attitude: which way to lean}
+\label{sec:m1b6}
+% ---------------------------------------------------------------------
+
+\begin{idea}
+A quadrotor can only push along its own up-axis. To get the acceleration $\va_d$ it must (1) work out the total force
+needed, including holding up its own weight, and (2) tilt so that its up-axis points along that force. Like a person
+pushing a heavy cart: to push forward, you lean forward.
+\end{idea}
+
+\begin{eqbox}{Equations (17)--(19): desired force, thrust direction and attitude}
+\begin{align}
+  \vF_d &= m\,(\va_d-\vg) \tag{17}\label{eq:17}\\
+  \vb_{3d} &= \frac{\vF_d}{\|\vF_d\|} \tag{18}\label{eq:18}\\
+  \vb_{1c}=[\cos\psi_d,\ \sin\psi_d,\ 0]^\top,\quad
+  \vb_{2d}&=\frac{\vb_{3d}\times\vb_{1c}}{\|\vb_{3d}\times\vb_{1c}\|},\quad
+  \vb_{1d}=\vb_{2d}\times\vb_{3d},\quad
+  R_d=\big[\vb_{1d}\ \ \vb_{2d}\ \ \vb_{3d}\big] \tag{19}\label{eq:19}
+\end{align}
+\end{eqbox}
+
+\subsubsection*{Derivation}
+\textbf{(17)} We want $\dot\vv=\va_d$. Equation (2) says $\dot\vv=\vg+\frac{T}{m}R\ve_3$, so the thrust vector must be
+$T\,R\ve_3=m(\va_d-\vg)$. Call this $\vF_d$. Because $\vg$ points down, $-\vg$ points up: even for $\va_d=0$ the drone
+must push up with $mg_0=14.7$\,N.
+
+\textbf{(18)} $T R\ve_3=T\vb_3$ is a vector of length $T$ along the drone's up-axis. For it to equal $\vF_d$, the up-axis
+must point along $\vF_d$, so $\vb_{3d}=\vF_d/\|\vF_d\|$, and the thrust must be $T=\|\vF_d\|$.
+This is the key fact of quadrotor flight: \emph{position is controlled through the attitude}.
+
+\textbf{(19)} $\vb_{3d}$ fixes the tilt (two of the three rotation directions). The third, yaw (where the nose points),
+is our free choice $\psi_d$. We build the remaining two axes so that they are unit length and at right angles:
+\begin{itemize}
+  \item $\vb_{1c}$ is the heading we would like, flat on the ground.
+  \item $\vb_{2d}=\vb_{3d}\times\vb_{1c}$ (normalised) is at right angles to both the up-axis and the heading: the drone's ``left''.
+  \item $\vb_{1d}=\vb_{2d}\times\vb_{3d}$ is at right angles to both: the nose, as close to the wanted heading as the tilt allows.
+\end{itemize}
+The three columns are orthonormal and right-handed, so $R_d^\top R_d=I$ and $\det R_d=1$: $R_d$ is a true rotation.
+The construction only fails if $\vb_{3d}$ is parallel to $\vb_{1c}$ (a 90$^\circ$ tilt); the code then nudges the yaw.
+
+\begin{toy}[continuing the example of block 5]
+$\va_d=[-0.15,\,0.30,\,0.55]$, $m=1.5$, $\vg=[0,0,-9.81]$, $\psi_d=0$:
+\[
+\vF_d=1.5\,[-0.15,\ 0.30,\ 0.55+9.81]=[-0.225,\ 0.450,\ 15.540]\ \text{N},\qquad \|\vF_d\|=15.548\ \text{N},
+\]
+\[
+\vb_{3d}=[-0.0145,\ 0.0289,\ 0.9995],\qquad
+R_d=\begin{bmatrix}0.9999&0.0000&-0.0145\\0.0004&0.9996&0.0289\\0.0145&-0.0289&0.9995\end{bmatrix}.
+\]
+Tilt $=\arccos(0.9995)=1.85^\circ$: lean very slightly towards $-x$ and $+y$ (where the target is) and push 15.5\,N,
+more than the 14.7\,N weight because the drone must also climb. Check: $\|R_d^\top R_d-I\|=1.1\times10^{-16}$.
+\end{toy}
+
+\begin{toycode}{M1\_3\_SO3\_Control\_Closed\_Loop}{Block 6}
+F_d = P.m*(a_d - P.g)                 % N
+b3d = F_d/norm(F_d);
+b1c = [cos(psi_d); sin(psi_d); 0];
+b2d = cross(b3d, b1c)/norm(cross(b3d, b1c));
+b1d = cross(b2d, b3d);
+R_d = [b1d b2d b3d]
+\end{toycode}
+
+\begin{real}
+Equation (17) is the end of \code{compute\_desired\_force()}. The code writes $\vF_d=m(\va_{\text{cmd}}+g\ve_3)$, which is
+the same thing because $-\vg=g\ve_3$ in ENU:
+\pyfile{70}{74}{\so}{drones\_controller/so3\_controller.py --- equation (17)}
+Equations (18)--(19) are \code{compute\_desired\_attitude()}, including the safety nudge of the yaw:
+\pyfile{82}{126}{\so}{drones\_controller/so3\_controller.py --- equations (18)--(19)}
+The node converts $R_d$ to a quaternion and publishes it on the topic\\
+\code{/drones\_controller/desired\_attitude}, so we can watch in RViz which way the controller wants to lean.
+\end{real}
+
+% ---------------------------------------------------------------------
+\subsection{Block 7 --- Attitude control on SO(3) (inner loop)}
+\label{sec:m1b7}
+% ---------------------------------------------------------------------
+
+\begin{idea}
+``I should be leaning like $R_d$, but I am leaning like $\hR$. Which way do I twist, and how hard?'' The inner loop
+computes an attitude error directly from the two rotation matrices (no angles, so no gimbal lock), a spin error, and
+a torque that removes both, like a spring and a damper for rotation. It runs faster than the position loop, because
+the drone must tilt before it can move.
+\end{idea}
+
+\begin{eqbox}{Equations (20)--(23): geometric attitude controller}
+\begin{align}
+  \ve_R &= \tfrac12\big(R_d^\top\hR-\hR^\top R_d\big)^\vee \tag{20}\label{eq:20}\\
+  \ve_\omega &= \hw-\hR^\top R_d\,\vw_d \tag{21}\label{eq:21}\\
+  \vtau &= -K_R\ve_R-K_\omega\ve_\omega+\hw\times J\hw
+          -J\big(\skw{\hw}\hR^\top R_d\vw_d-\hR^\top R_d\dot{\vw}_d\big) \tag{22}\label{eq:22}\\
+  T &= \vF_d\cdot\hR\,\ve_3 \tag{23}\label{eq:23}
+\end{align}
+\end{eqbox}
+
+\subsubsection*{(20) The attitude error}
+We need a number that says how far apart two attitudes are. Use
+\[
+\Psi=\tfrac12\tr\big(I-R_d^\top\hR\big)=1-\cos\varphi ,
+\]
+where $\varphi$ is the angle of the rotation that takes $R_d$ to $\hR$ (because the trace of a rotation by $\varphi$ is
+$1+2\cos\varphi$). $\Psi=0$ when the attitudes agree and $\Psi=2$ when they are upside down to each other.
+Now turn the drone a tiny bit in the direction $\bm\eta$ and see how $\Psi$ changes. A short calculation gives
+\[
+\text{change of }\Psi=\ve_R\cdot\bm\eta,\qquad \ve_R=\tfrac12\big(R_d^\top\hR-\hR^\top R_d\big)^\vee .
+\]
+So $\ve_R$ is the \emph{slope} (gradient) of the error: it points in the direction of turning that increases the
+error fastest. The controller twists the opposite way, $-K_R\ve_R$, ``downhill''. For a single-axis error of angle
+$\varphi$ about the axis $\bm n$, $\ve_R=\sin\varphi\,\bm n\approx\varphi\,\bm n$ for small angles.
+
+\subsubsection*{(21) The angular-velocity error}
+The relative rotation $R_e=R_d^\top\hR$ changes as $\dot R_e=R_e\skw{\ve_\omega}$ with $\ve_\omega=\hw-\hR^\top R_d\vw_d$
+(differentiate and use (3) for both). So $\ve_\omega$ is how fast the drone turns \emph{relative to how it should be
+turning}, in body axes. $\hR^\top R_d\vw_d$ is simply the desired spin written in the drone's own axes.
+Note the order: \emph{actual minus desired}.
+
+\subsubsection*{(22) The torque, and why it is guaranteed to work}
+Differentiate $\ve_\omega$ and replace $J\dot{\hw}$ using (4):
+\[
+J\dot{\ve}_\omega=\vtau-\hw\times J\hw+J\big(\skw{\hw}\hR^\top R_d\vw_d-\hR^\top R_d\dot{\vw}_d\big).
+\]
+Now insert the torque (22). The gyroscopic term and the bracket cancel exactly, and what remains is
+\[
+J\dot{\ve}_\omega=-K_R\ve_R-K_\omega\ve_\omega ,
+\]
+a rotational spring ($K_R$) and damper ($K_\omega$). To prove it always settles, take (with $K_R=k_RI$, $K_\omega=k_\omega I$)
+the ``energy''
+\[
+V=\underbrace{\tfrac12\ve_\omega^\top J\ve_\omega}_{\text{spin energy}}+\underbrace{k_R\Psi}_{\text{spring energy}} .
+\]
+Its rate of change is $\dot V=\ve_\omega^\top(-k_R\ve_R-k_\omega\ve_\omega)+k_R\,\ve_R\cdot\ve_\omega=-k_\omega\|\ve_\omega\|^2\le0$.
+The energy can only go down, like a pendulum with friction, so the drone settles at $R_d$ from \emph{any} starting
+attitude except exactly upside down. This kind of proof is called a \textbf{Lyapunov} argument.
+
+\subsubsection*{(23) The thrust}
+Thrust can only act along the \emph{current} up-axis $\hR\ve_3$. The useful part of $\vF_d$ along that axis is the dot
+product $T=\vF_d\cdot\hR\ve_3$. When the attitude is right, $T=\|\vF_d\|$. While the drone is still tilted the wrong way,
+$T$ is automatically smaller, so it does not push hard in a wrong direction.
+
+\begin{toy}[recovering from a 10 degree roll]
+The drone is rolled $10^\circ$ and still rolling further at 0.2\,rad/s; it should be level ($R_d=I$, $\vw_d=\dot\vw_d=0$),
+$\vF_d=[0,0,14.715]$:
+\[
+\ve_R=\tfrac12(\hR-\hR^\top)^\vee=[\sin10^\circ,\,0,\,0]=[0.1736,\,0,\,0],\qquad \ve_\omega=[0.2,\,0,\,0],
+\]
+\[
+\tau_x=-4(0.1736)-0.8(0.2)+0=-0.8546\ \text{N\,m},\qquad T=14.715\cos10^\circ=14.491\ \text{N}.
+\]
+A torque about $-x$ rolls it back, and the thrust is reduced to the part that is still vertical.
+
+\textbf{Recovery from 60$^\circ$.} The toy model starts the drone tilted 60$^\circ$ and lets block 7 bring it back. After 3\,s
+the error is $2\times10^{-6}$ degrees, and the energy $V$ goes down all the time (\cref{fig:att}).
+\end{toy}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.85\linewidth]{M1_3_SO3_Control_Closed_Loop_1.png}
+  \caption{Block 7 alone: from 60$^\circ$ to level. Right: the energy $V$ only goes down, as the proof promised.}
+  \label{fig:att}
+\end{figure}
+
+\begin{toycode}{M1\_3\_SO3\_Control\_Closed\_Loop}{Block 7}
+e_R = 0.5*DroneLib.vee(Rd'*R_hat - R_hat'*Rd)
+e_w = w_hat - R_hat'*Rd*w_d
+tau = -P.KR*e_R - P.Kw*e_w + cross(w_hat, P.J*w_hat) ...
+      - P.J*(DroneLib.hat(w_hat)*R_hat'*Rd*w_d - R_hat'*Rd*wdot_d)
+T = dot(Fd, R_hat*P.e3)
+\end{toycode}
+
+\begin{real}
+Equations (20), (21) and (22) are three functions of our controller, written exactly as above:
+\pyfile{134}{142}{\so}{drones\_controller/so3\_controller.py --- equation (20)}
+\pyfile{152}{158}{\so}{drones\_controller/so3\_controller.py --- equation (21)}
+\pyfile{181}{210}{\so}{drones\_controller/so3\_controller.py --- equation (22)}
+Equation (23) is not in the Python code, because our node does not send thrust to ArduPilot (see
+\cref{sec:realctrl}). The toy model computes it.
+\end{real}
+
+% ---------------------------------------------------------------------
+\subsection{Block 8 --- Four motor speeds (control allocation)}
+\label{sec:m1b8}
+% ---------------------------------------------------------------------
+
+\begin{idea}
+The drone does not have a ``torque knob''. It has four motors. Spinning the right-side motors faster rolls it left;
+spinning the front ones faster pitches it back; spinning the clockwise pair faster yaws it. Block 8 solves the
+reverse problem: which four rotor thrusts give exactly the wanted $T$ and $\vtau$?
+\end{idea}
+
+\begin{eqbox}{Equations (24)--(25): control allocation and motor speeds}
+\begin{align}
+  \begin{bmatrix}T\\ \vtau\end{bmatrix}&=\Gamma\,\vf,\qquad
+  \Gamma=\begin{bmatrix}1&1&1&1\\ y_1&y_2&y_3&y_4\\ -x_1&-x_2&-x_3&-x_4\\ \kappa_1c_m&\kappa_2c_m&\kappa_3c_m&\kappa_4c_m\end{bmatrix} \tag{24}\label{eq:24}\\
+  \Omega_i&=\sqrt{\frac{\big(\Gamma^{-1}\vu\big)_i}{k_f}}\quad\text{clipped to }[\Omega_{\min},\Omega_{\max}] \tag{25}\label{eq:25}
+\end{align}
+$f_i$: thrust of rotor $i$; $(x_i,y_i)$: its position on the frame; $\kappa_i=\pm1$: its spin direction; $c_m$: yaw torque per newton;
+$k_f$: thrust constant ($f_i=k_f\Omega_i^2$).
+\end{eqbox}
+
+\subsubsection*{Derivation}
+Each rotor $i$ pushes up with $f_i$ at the point $\bm r_i=[x_i,y_i,0]$ of the frame.
+\begin{itemize}
+  \item Total thrust: the pushes add up, $T=f_1+f_2+f_3+f_4$ (row 1 of $\Gamma$).
+  \item Roll and pitch torque: a force at a distance creates a torque $\bm r_i\times f_i\ve_3=f_i[y_i,\,-x_i,\,0]$
+        (rows 2 and 3). A rotor on the right ($y_i<0$) creates negative roll torque.
+  \item Yaw torque: air resists each spinning propeller, so each motor twists the body the opposite way with a torque
+        proportional to its thrust, $\kappa_ic_mf_i$ (row 4).
+\end{itemize}
+A propeller's thrust grows with the square of its speed: $f_i=k_f\Omega_i^2$. Inverting both relations gives (25).
+Motors cannot spin backwards or faster than their maximum, so the speeds are clipped.
+
+For the Iris (ArduPilot ``Quad-X'': 1 front-right CCW, 2 back-left CCW, 3 front-left CW, 4 back-right CW):
+\[
+\Gamma=\begin{bmatrix}1&1&1&1\\-0.22&0.22&0.22&-0.22\\-0.13&0.13&-0.13&0.13\\-0.016&-0.016&0.016&0.016\end{bmatrix}.
+\]
+
+\begin{toy}[hover, and the roll correction of block 7]
+\textbf{Hover} $\vu=[14.715,0,0,0]$: by symmetry every rotor gives $f_i=14.715/4=3.679$\,N, so
+$\Omega_i=\sqrt{3.679/8.549\times10^{-6}}=656$\,rad/s (about 6260\,rpm).
+
+\textbf{Roll correction} $\vu=[14.491,\,-0.8546,\,0,\,0]$: by symmetry $f_1=f_4=a$ and $f_2=f_3=b$. Row 1:
+$2a+2b=14.491$. Row 2: $-0.22a+0.22b+0.22b-0.22a=0.44(b-a)=-0.8546$. Solving: $a=4.594$\,N, $b=2.652$\,N, so
+$\vOmega=[733,\ 557,\ 557,\ 733]$\,rad/s. The right-side rotors (1 and 4) speed up, the left ones slow down, and the
+drone rolls back to level.
+\end{toy}
+
+\begin{toycode}{M1\_3\_SO3\_Control\_Closed\_Loop}{Block 8 (DroneLib.mixer)}
+fr = P.Gamma \ u;                                          % rotor thrusts
+fr = min(max(fr, P.kf*P.Omega_min^2), P.kf*P.Omega_max^2); % motor limits
+Omega = sqrt(fr/P.kf);                                     % motor speeds
+\end{toycode}
+
+\begin{real}
+This block lives inside ArduPilot (its ``motor mixer''); our node never talks to the motors directly. The matrix
+$\Gamma$ above is the one ArduPilot uses for a Quad-X frame, scaled by the Iris arm lengths.
+\end{real}
+
+% ---------------------------------------------------------------------
+\subsection{All of Model 1 together: the closed loop}
+\label{sec:m1loop}
+% ---------------------------------------------------------------------
+
+The last section of \code{M1\_3} connects everything as in \cref{fig:loop}: the true drone (block 1) $\rightarrow$
+noisy gyro and camera $\rightarrow$ EKF (block 4) $\rightarrow$ controller on the \emph{estimate} (blocks 5--7)
+$\rightarrow$ mixer (block 8) $\rightarrow$ the true drone, in gusty wind, following a climbing helix for 25\,s.
+After the start-up transient the drone follows the helix with an RMS error of \textbf{4.7\,cm}, the estimator is
+accurate to \textbf{2.2\,cm}, and the motors stay between 649 and 664\,rad/s.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.6\linewidth]{M1_3_SO3_Control_Closed_Loop_2.png}
+  \caption{The complete Model 1 loop in wind: desired helix (dotted), true flight (blue), EKF estimate (red, dashed).}
+\end{figure}
+
+\begin{toycode}{M1\_3\_SO3\_Control\_Closed\_Loop}{The closed loop}
+ref = DroneLib.helix(t(k));                                   % mission
+[ph, vh, Rh, wh] = DroneLib.unpack(xh);                       % the ESTIMATE
+u = DroneLib.so3_control(ph, vh, Rh, wh, ref, P);             % blocks 5-7
+[Om(:,k), ~, u_app] = DroneLib.mixer(u, P);                   % block 8
+x  = DroneLib.rk4(x, u_app, dt, P, gust);                     % block 1, the real drone
+[xh, Pk] = DroneLib.ekf_predict(xh, Pk, u_app, dt, P, Q);     % block 4
+\end{toycode}
+
+\subsection*{Recap of Model 1}
+\begin{center}\small
+\begin{tabularx}{\linewidth}{@{}c >{\raggedright\arraybackslash}p{2.8cm} >{\raggedright\arraybackslash}p{2.9cm} >{\raggedright\arraybackslash}p{2.4cm} X@{}}
+\toprule
+\textbf{\#} & \textbf{Block} & \textbf{In} & \textbf{Out} & \textbf{The idea in one sentence}\\
+\midrule
+1 & Dynamics & thrust, torque & motion & Push along the body's up-axis, gravity pulls down, torque spins the body.\\
+2 & Linearization & operating point & $A$, $B$ & Zoomed in, the drone behaves like a linear system.\\
+3 & Error dynamics & $A$, $B$, $\Delta t$ & $F$ & Small errors grow linearly, and fast ($t^3$), without feedback.\\
+4 & EKF (VIO) & commands, sensors & $\hx_k$, $P_k$ & Predict with physics, correct with camera and IMU, weighted by trust.\\
+5 & Position control & $\hp,\hv$, target & $\va_d$ & Pull towards the target like a spring with a damper.\\
+6 & Force \& attitude & $\va_d$, yaw & $\vF_d$, $R_d$ & To accelerate sideways, lean; thrust direction = force direction.\\
+7 & SO(3) attitude & $\hR,\hw,R_d,\vF_d$ & $\vtau$, $T$ & Twist downhill on the attitude error; the energy always decreases.\\
+8 & Allocation & $T$, $\vtau$ & $\Omega_1..\Omega_4$ & Share thrust and torque among four rotors; speed $\propto\sqrt{\text{thrust}}$.\\
+\bottomrule
+\end{tabularx}
+\end{center}

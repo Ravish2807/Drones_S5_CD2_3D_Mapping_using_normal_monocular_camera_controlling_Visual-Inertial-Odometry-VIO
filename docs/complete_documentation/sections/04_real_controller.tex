@@ -1,0 +1,136 @@
+% =====================================================================
+\section{How Our ROS~2 Node Actually Controls the Drone}
+\label{sec:realctrl}
+% =====================================================================
+
+\Cref{sec:model1} explained each equation. This section follows our real program, \code{drones\_controller},
+from start-up through one complete control step, line by line, with numbers. At the end you should be able to point
+at any line of \code{controller\_node.py} or \code{so3\_controller.py} and say which equation it is and why it is there.
+
+\subsection{Start-up: reading the parameters and building the controller}
+
+When the node starts, it declares every parameter with a default value. ROS~2 then replaces the defaults with the
+values in \code{controller.yaml}. For example:
+\pyfile{94}{122}{\node}{controller\_node.py --- some of the parameter declarations}
+Then it creates the two objects that do the work: the \emph{trajectory generator} (where should I be?) and the
+\emph{SO(3) controller} (how do I get there?). The gains are turned into diagonal matrices $K_p,K_v,K_R,K_\omega$ and the
+inertia into $J$:
+\pyfile{242}{255}{\node}{controller\_node.py --- the two working objects}
+\pyfile{19}{30}{\so}{so3\_controller.py --- \_\_init\_\_(): gains become diagonal matrices}
+Next it subscribes to the estimator's output and starts a timer that calls \code{control\_loop()} at
+\code{control\_rate} = 25 times per second (one call every 40\,ms):
+\pyfile{261}{273}{\node}{controller\_node.py --- subscribing to the state estimate}
+\pyfile{338}{343}{\node}{controller\_node.py --- the control timer}
+
+\begin{warn}[Small inconsistency to know about]
+The default \code{control\_rate} in the code is 50\,Hz, but \code{controller.yaml} sets 25\,Hz. When the node is launched
+with the YAML file the rate is 25\,Hz. If it is started without the YAML, it runs at 50\,Hz. The YAML value is the one
+we use everywhere in this document.
+\end{warn}
+
+\subsection{Between control steps: receiving the state (block 4's output)}
+
+Whenever ArduPilot publishes a new estimate, a \emph{callback} stores it. \code{pose\_callback} stores $\vp$ and turns the
+quaternion into $R$ (shown in \cref{sec:m1b1}). \code{twist\_callback} stores $\vv$ and $\vw$:
+\pyfile{419}{433}{\node}{controller\_node.py --- twist\_callback()}
+Both remember \emph{when} the data arrived, so that the control step can refuse to use old data.
+
+\subsection{One control step, line by line}
+
+Every 40\,ms the timer calls \code{control\_loop()}:
+\pyfile{526}{543}{\node}{controller\_node.py --- control\_loop(), first part}
+\begin{enumerate}
+  \item \code{state\_is\_valid()}: is every part of the state present, younger than 0.5\,s and a finite number? If not,
+        \emph{do nothing} this step (safety).
+  \item \code{get\_desired\_state()}: the mission. Today it is a fixed waypoint, so $\vp_d=[0,0,2]$, $\vv_d=\va_d=\bm0$,
+        $\psi_d=0$, $\vw_d=\dot\vw_d=\bm0$:
+        \pyfile{11}{29}{\traj}{trajectory\_generator.py --- get\_desired\_state()}
+  \item \code{controller.compute()}: blocks 5, 6 and 7, in that order:
+        \pyfile{221}{258}{\so}{so3\_controller.py --- compute(): blocks 5 $\rightarrow$ 6 $\rightarrow$ 7}
+  \item Publish every intermediate result on \code{/drones\_controller/...}, so we can plot them while flying.
+  \item If \code{enable\_command} is true, send a velocity command (next subsection).
+\end{enumerate}
+
+\begin{toy}[one complete control step of our node, with real numbers]
+The estimate says the drone is at $\vp=[0.1,\,-0.2,\,1.5]$\,m, climbing at $\vv=[0,0,0.3]$\,m/s, level ($R=I$) and not
+turning ($\vw=\bm0$). The waypoint is $[0,0,2]$. Running the real \code{SO3Controller.compute()} on these numbers gives:
+\begin{center}\small
+\begin{tabular}{@{}l l l l@{}}
+\toprule
+\textbf{Output} & \textbf{Equation} & \textbf{Value} & \textbf{Meaning}\\
+\midrule
+\code{e\_p} & (15) & $[-0.1,\ 0.2,\ 0.5]$\,m & target is 10\,cm west, 20\,cm north, 50\,cm up\\
+\code{e\_v} & (15) & $[0,\ 0,\ -0.3]$\,m/s & already climbing a bit\\
+\code{F\_d} & (16)--(17) & $[-0.225,\ 0.450,\ 15.540]$\,N & push mostly up, slightly towards the target\\
+\code{R\_d} & (18)--(19) & tilt of 1.85$^\circ$ & lean slightly towards $-x$, $+y$\\
+\code{e\_R} & (20) & $[0.0289,\ 0.0145,\ -0.0002]$ & the drone is level but should lean\\
+\code{e\_omega} & (21) & $[0,\ 0,\ 0]$ & no spin, none wanted\\
+\code{M\_d} & (22) & $[-0.1158,\ -0.0579,\ 0.0004]$\,N\,m & twist towards the lean\\
+\bottomrule
+\end{tabular}
+\end{center}
+Check the torque: $-K_R\ve_R=-[4(0.0289),\ 4(0.0145),\ 2(-0.0002)]=[-0.1158,\ -0.0579,\ 0.0004]$, and $\ve_\omega=0$ adds
+nothing. A torque about $-x$ tips the top of the drone towards $+y$, and a torque about $-y$ tips it towards $-x$: exactly the
+direction of $\vF_d$. Every number agrees with the toy model (\cref{sec:m1b5,sec:m1b6,sec:m1b7}).
+\end{toy}
+
+\subsection{What is actually sent to the drone: the velocity command}
+
+ArduPilot's ROS~2 interface \code{/ap/v1/cmd\_vel} accepts a \emph{velocity}, not a force and torque. So our node does
+not send $\vF_d$ or $\vtau$ (they are published only for monitoring). Instead \code{publish\_velocity\_command()} turns
+the position and velocity errors into a velocity request:
+\pyfile{670}{696}{\node}{controller\_node.py --- publish\_velocity\_command(): the velocity law}
+\[
+\vv_{\text{cmd}}=0.8\,\ve_p+0.2\,\ve_v,\qquad\text{and if }\|\vv_{\text{cmd}}\|>1\text{ m/s, scale it down to length 1 m/s}.
+\]
+This is again a spring (0.8: ``go towards the target, faster when further away'') and a damper (0.2: ``slow down if you are
+already moving''). The scaling keeps the \emph{direction} and enforces \code{max\_velocity}.
+
+\begin{toy}[the velocity command]
+\textbf{Close to the target} (same state as above): $\vv_{\text{cmd}}=0.8[-0.1,0.2,0.5]+0.2[0,0,-0.3]=[-0.08,\ 0.16,\ 0.34]$\,m/s,
+length 0.38\,m/s, below the limit, sent as it is.
+
+\textbf{Far from the target}: drone at $[3,\,-2,\,0.5]$, at rest. $\ve_p=[-3,\,2,\,1.5]$, so
+$\vv_{\text{cmd}}=[-2.4,\ 1.6,\ 1.2]$, length 3.12\,m/s, too fast. Scaled by $1/3.12$: $[-0.768,\ 0.512,\ 0.384]$\,m/s,
+length exactly 1\,m/s, still pointing straight at the target.
+\end{toy}
+
+ArduPilot then does the rest. Inside the flight controller it runs its own version of blocks 5--8: a velocity controller
+that asks for an acceleration, which becomes a lean angle, which an attitude controller turns into torques, which the
+mixer turns into motor speeds. So the whole chain of \cref{sec:model1} still happens; our node does the outer
+``where should I go'' part and ArduPilot the inner, fast part.
+
+\begin{warn}[Two things to check in the simulator]
+\begin{itemize}
+  \item \textbf{The sign of $z$.} The last lines send \code{linear.z = -velocity\_command[2]}:
+        \pyfile{709}{719}{\node}{controller\_node.py --- filling the message}
+        The pose and twist that we read are in ENU ($z$ up), and the header says \code{"map"}. If ArduPilot reads this
+        command in ENU too, the minus sign makes the drone go \emph{down} when it should go up. It is only right if the
+        interface expects $z$ pointing down (NED). This must be checked once in SITL: command a small climb and watch
+        the altitude.
+  \item \textbf{Safety switch.} \code{enable\_command} is \code{false} in the YAML, so by default the node only computes and
+        publishes; nothing moves until we deliberately switch it on.
+\end{itemize}
+\end{warn}
+
+\subsection{Summary: from equation to line of code}
+
+\begin{center}\small
+\begin{tabularx}{\linewidth}{@{}l l X@{}}
+\toprule
+\textbf{Equation} & \textbf{Block} & \textbf{Where in our code}\\
+\midrule
+(1)--(4) & dynamics & Gazebo (not in our code); result read in \code{pose\_callback}, \code{twist\_callback}\\
+$R$ from quaternion & -- & \code{state\_adapter.py}: \code{quaternion\_to\_rotation\_matrix()}, lines 4--42\\
+(5)--(14) & EKF (VIO) & ArduPilot EKF3; freshness check in \code{state\_is\_valid()}, lines 447--496\\
+(15) & position errors & \code{so3\_controller.py}: \code{compute\_position\_errors()}, lines 32--40\\
+(16)--(17) & desired force & \code{so3\_controller.py}: \code{compute\_desired\_force()}, lines 42--74\\
+(18)--(19) & desired attitude & \code{so3\_controller.py}: \code{compute\_desired\_attitude()}, lines 76--126\\
+(20) & attitude error & \code{so3\_controller.py}: \code{compute\_attitude\_error()}, lines 128--142\\
+(21) & rate error & \code{so3\_controller.py}: \code{compute\_angular\_velocity\_error()}, lines 144--158\\
+(22) & torque & \code{so3\_controller.py}: \code{compute\_moment()}, lines 160--210\\
+(23)--(25) & thrust, mixer & ArduPilot (our node sends a velocity instead)\\
+$\vv_{\text{cmd}}$ & command & \code{controller\_node.py}: \code{publish\_velocity\_command()}, lines 644--734\\
+\bottomrule
+\end{tabularx}
+\end{center}

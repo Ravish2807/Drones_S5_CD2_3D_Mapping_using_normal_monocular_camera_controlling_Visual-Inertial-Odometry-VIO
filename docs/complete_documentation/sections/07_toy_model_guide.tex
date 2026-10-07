@@ -1,0 +1,54 @@
+\clearpage
+% =====================================================================
+\section{Using the Toy Model}
+\label{sec:toyguide}
+% =====================================================================
+
+\subsection{The files}
+
+\begin{center}\small
+\begin{tabularx}{\linewidth}{@{}l l X@{}}
+\toprule
+\textbf{File in \code{toy\_model3/}} & \textbf{Blocks} & \textbf{What you see when you run it}\\
+\midrule
+\code{M1\_1\_Dynamics\_Linearization.mlx} & M1: 1--3 & hover check, 10$^\circ$ tilt, gyroscopic coupling, open-loop drift (\code{ode45}), Jacobians and their numerical check, linear vs.\ nonlinear error\\
+\code{M1\_2\_Error\_State\_EKF.mlx} & M1: 4 & the altitude filter by hand, then the full 12-state filter with camera and gyro, accuracy and the $3\sigma$ band\\
+\code{M1\_3\_SO3\_Control\_Closed\_Loop.mlx} & M1: 5--8 & each control equation with the toy numbers, recovery from 60$^\circ$, the motor mixer, the full closed loop, the velocity command of our node\\
+\code{M2\_1\_Flight\_Data\_DMDc.mlx} & M2: 1--2 & recording five flights, DMDc by hand and on the drone, comparison with physics, test on unseen data\\
+\code{M2\_2\_LQR\_Bellman\_Riccati\_DARE.mlx} & M2: 3--6 & Bellman step, Riccati table, scalar DARE, the drone's $K$, cost check\\
+\code{M2\_3\_MPC\_QP\_Apply\_to\_Drone.mlx} & M2: 7--10 & two-step QP by hand, the drone MPC, MPC = LQR when no limit is active, receding horizon, nonlinear flight\\
+\code{DroneLib.m} & all & the helper functions: dynamics, RK4, Exp/Log, Jacobians, controller, mixer, EKF steps, DARE, QP solver\\
+\code{pdf/*.mlx.pdf} & all & every live script already run and exported, with all outputs and figures\\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\subsection{How to run them}
+
+\begin{enumerate}
+  \item Open MATLAB (tested with R2024a; no toolboxes are needed) and make \code{toy\_model3} the current folder, because
+        every script calls \code{DroneLib}.
+  \item Open a live script and press \emph{Run}, or run it section by section (\emph{Run Section}) while reading this document.
+  \item Model~2 files must be run in order: \code{M2\_1} creates \code{dmdc\_model.mat} (the learned $A$, $B$),
+        \code{M2\_2} adds the LQR results to it, and \code{M2\_3} uses both.
+  \item To export a live script as PDF, change \code{PUBLISH = not(ready);} at the top to \code{PUBLISH = ready;}. The last
+        section then writes \code{pdf/<name>.mlx.pdf}, exactly like the course notes.
+\end{enumerate}
+
+\subsection{How each live script is organised}
+
+Every file follows the same pattern as the course notes: a header, then for each block an orange title, the equations in
+LaTeX with their numbers $(1),(2),\dots$ or $(M2.x)$, a short derivation, a toy example with hand-checkable numbers, and the
+code that reproduces those numbers. Sections that start a new topic begin with \code{clearvars -except PUBLISH ready}, so
+each part can be run on its own.
+
+\subsection{Things to try}
+
+\begin{itemize}
+  \item In the closed-loop section of \code{M1\_3}, add \code{P.Kv = 2*P.Kv;} after \code{P = DroneLib.params();} (a stronger
+        damper) or \code{P.Kp = 0.5*P.Kp;} (a weaker spring), run it again and compare \code{tracking\_rmse\_cm}.
+  \item In \code{M1\_2}, make the camera noise ten times larger (\code{sig\_p = 0.5}) and see $K$ trust the camera less.
+  \item In \code{M2\_1}, remove the random pushes (\code{exc = zeros(4,1)}) and watch \code{rank\_Omega} drop below 16: DMDc can
+        no longer tell the drone from the pilot.
+  \item In \code{M2\_3}, change the speed limit \code{x\_max(1:3)} to 0.5\,m/s and see MPC fly more slowly but still reach the target.
+\end{itemize}

@@ -1,0 +1,57 @@
+% =====================================================================
+\section{How Everything Fits Together}
+\label{sec:together}
+% =====================================================================
+
+\subsection{One trip around the loop, in words}
+
+Follow the drone for one 40\,ms step of \cref{fig:loop}, with every equation in its place.
+
+\begin{enumerate}
+  \item \textbf{The drone moves} according to Newton and Euler, equations (1)--(4). Wind pushes it a little.
+  \item \textbf{The sensors measure it.} The gyroscope reads $\vw$ 100 times a second. The camera takes a picture 25 times a
+        second; visual odometry compares it with the previous pictures and gives a pose $(\tilde\vp,\tilde R)$. These same poses,
+        together with the images, are what the 3D map is built from.
+  \item \textbf{The estimator (VIO) works out the state.} Between camera frames it predicts with the physics, equations
+        (10)--(11), using the Jacobians of blocks 2--3. When a measurement arrives, it corrects, equations (12)--(14), trusting
+        each source according to its noise. Result: $\hx=(\hp,\hv,\hR,\hw)$, published on \code{/ap/v1/*/filtered}.
+  \item \textbf{Our node checks the estimate} is fresh and finite (\code{state\_is\_valid}).
+  \item \textbf{Where should I be?} The waypoint generator gives $\vp_d=[0,0,2]$, $\psi_d=0$.
+  \item \textbf{How should I accelerate?} Position errors and the spring-damper law, equations (15)--(16).
+  \item \textbf{Which way should I lean, and how hard should I push?} Equations (17)--(19) give $\vF_d$ and $R_d$.
+  \item \textbf{How should I twist?} The SO(3) attitude law, equations (20)--(22), gives $\vtau$; equation (23) gives $T$.
+  \item \textbf{What do we send?} Our node publishes all of these for monitoring and sends the velocity
+        $\vv_{\text{cmd}}=0.8\ve_p+0.2\ve_v$ (at most 1\,m/s) to ArduPilot.
+  \item \textbf{ArduPilot finishes the job}: its own velocity, attitude and rate loops produce $T$ and $\vtau$, and its mixer,
+        equations (24)--(25), sets the four motor speeds. The drone moves, and we are back at step 1.
+\end{enumerate}
+
+\subsection{Model 1 or Model 2?}
+
+\begin{center}\small
+\begin{tabularx}{\linewidth}{@{}l X X@{}}
+\toprule
+ & \textbf{Model 1 (physics)} & \textbf{Model 2 (data)}\\
+\midrule
+Where the model comes from & Newton and Euler; needs $m$, $J$, rotor data & Recorded flights (DMDc); needs nothing measured by hand\\
+Kind of model & Nonlinear, attitude as a rotation matrix & Linear, near hover, attitude as 3 small angles\\
+Works for & Any attitude except upside down & Small tilts (in our data, below 6.5$^\circ$)\\
+Controller & Geometric: position loop $\rightarrow$ attitude loop & LQR (a fixed gain table) or MPC (a small optimisation every step)\\
+Limits (speed, thrust, tilt) & Only by clipping afterwards & Written into the MPC problem itself\\
+Cost per step on the drone & A few $3\times3$ matrix products & LQR: one $4\times12$ product; MPC: a QP of about 2.6\,ms\\
+Where in our project & \code{so3\_controller.py}, \code{controller\_node.py} & Toy model \code{M2\_1}--\code{M2\_3}\\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+The two are not rivals. Model~1's estimator provides the state that Model~2's controllers need, and Model~2's DMDc is a
+check on Model~1's physics: the learned $A$ and $B$ agree with the Jacobians of block 2 to about 1--3\%, and the data
+reproduces the 1.5\,kg mass to within 0.4\%.
+
+\subsection{Why the camera matters for control}
+
+The single most important link in the whole chain is the estimate $\hx$. Every controller in this document (SO(3), LQR,
+MPC, and ArduPilot's own) works only as well as the state it is given. Block 3 showed why an IMU alone fails: a tiny
+gyro error grows into metres of position error within seconds ($t^3$). The monocular camera, through VIO, is what keeps
+that error at a few centimetres (block 4: 2.6\,cm instead of drifting away). That is the meaning of the title of our
+project: the drone is \emph{controlled by} visual-inertial odometry, and the same camera poses build the 3D map.

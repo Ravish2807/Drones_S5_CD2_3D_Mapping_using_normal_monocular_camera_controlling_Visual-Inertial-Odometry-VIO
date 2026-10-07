@@ -1,0 +1,155 @@
+% =====================================================================
+%  CD2 drone - complete documentation (single PDF)
+%  Build:  pdflatex CD2_Drone_Documentation.tex   (run it twice for the contents)
+%  Figures come from the toy model in ../../toy_model3, the Python snippets
+%  are read directly from ../../drones_controller.
+% =====================================================================
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[a4paper, margin=2.3cm, headheight=14pt]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage{amsmath,amssymb,bm,mathtools}
+\usepackage{graphicx}
+\usepackage{booktabs,array,tabularx}
+\usepackage{xcolor}
+\usepackage[most]{tcolorbox}
+\usepackage{enumitem}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage{caption}
+\usepackage{listings}
+\usepackage{float}
+\usepackage{pdflscape}
+\usepackage{needspace}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta, positioning}
+\usepackage[hidelinks]{hyperref}
+\usepackage[nameinlink]{cleveref}
+
+\graphicspath{{figures/}}
+
+% ---------------------------------------------------------------- colours
+\definecolor{cHead}{HTML}{B5451B}     % orange-brown, like the MATLAB live script titles
+\definecolor{cText}{HTML}{263238}
+\definecolor{cToy}{HTML}{A0620F}
+\definecolor{cIdea}{HTML}{1565C0}
+\definecolor{cReal}{HTML}{2E7D32}
+\definecolor{cWarn}{HTML}{B23A48}
+\definecolor{cCodeBg}{HTML}{F4F4F4}
+\definecolor{cKey}{HTML}{0000FF}
+\definecolor{cCom}{HTML}{228B22}
+\definecolor{cStr}{HTML}{A020F0}
+
+\hypersetup{colorlinks=true, linkcolor=cHead, urlcolor=cIdea}
+
+\titleformat{\section}{\LARGE\sffamily\color{cHead}}{\thesection}{0.7em}{}
+\titleformat{\subsection}{\Large\sffamily\bfseries\color{cText}}{\thesubsection}{0.6em}{}
+\titleformat{\subsubsection}{\large\sffamily\bfseries\color{cText}}{\thesubsubsection}{0.5em}{}
+\titlespacing*{\section}{0pt}{3ex plus 1ex}{1.5ex}
+\titlespacing*{\subsection}{0pt}{2.5ex plus 1ex}{1.0ex}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\sffamily\color{cText!70}CD2 drone \,|\, complete documentation}
+\fancyhead[R]{\small\sffamily\color{cText!70}\nouppercase{\leftmark}}
+\fancyfoot[C]{\small\sffamily\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{6pt}
+\setlist{itemsep=2pt, topsep=3pt}
+\captionsetup{font=small, labelfont={bf,sf}}
+\renewcommand{\arraystretch}{1.15}
+
+% ---------------------------------------------------------------- maths shortcuts
+\newcommand{\vp}{\bm{p}}  \newcommand{\vv}{\bm{v}}  \newcommand{\vw}{\bm{\omega}}
+\newcommand{\vx}{\bm{x}}  \newcommand{\vu}{\bm{u}}  \newcommand{\vz}{\bm{z}}
+\newcommand{\vg}{\bm{g}}  \newcommand{\va}{\bm{a}}  \newcommand{\vF}{\bm{F}}
+\newcommand{\vb}{\bm{b}}  \newcommand{\ve}{\bm{e}}  \newcommand{\vtau}{\bm{\tau}}
+\newcommand{\vf}{\bm{f}}  \newcommand{\vth}{\bm{\theta}} \newcommand{\vr}{\bm{r}}
+\newcommand{\hp}{\hat{\bm p}} \newcommand{\hv}{\hat{\bm v}} \newcommand{\hw}{\hat{\bm\omega}}
+\newcommand{\hR}{\hat{R}}     \newcommand{\hx}{\hat{\bm x}}  \newcommand{\vOmega}{\bm{\Omega}}
+\newcommand{\skw}[1]{[#1]_{\times}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\SO}{\mathrm{SO}(3)}
+\newcommand{\Exp}{\mathrm{Exp}}
+\newcommand{\Log}{\mathrm{Log}}
+\newcommand{\tr}{\operatorname{tr}}
+\newcommand{\diag}{\operatorname{diag}}
+\newcommand{\code}[1]{\texttt{\small #1}}
+
+% ---------------------------------------------------------------- boxes
+\tcbset{base/.style={enhanced, breakable, boxrule=0.6pt, arc=2pt, left=7pt, right=7pt,
+  top=5pt, bottom=5pt, fonttitle=\sffamily\bfseries\small, before skip=8pt, after skip=8pt,
+  before upper={\setlength{\parskip}{5pt}}}}
+\newtcolorbox{eqbox}[1]{base, colback=cHead!3, colframe=cHead!80, colbacktitle=cHead!80,
+  coltitle=white, title={#1}}
+\newtcolorbox{toy}[1][]{base, colback=cToy!5, colframe=cToy!70, colbacktitle=cToy!14,
+  coltitle=cToy!80!black, title={Toy example\ifx&#1&\else\ --- #1\fi}}
+\newtcolorbox{idea}[1][]{base, colback=cIdea!4, colframe=cIdea!60, colbacktitle=cIdea!12,
+  coltitle=cIdea!80!black, title={\ifx&#1&The idea in plain words\else #1\fi}}
+\newtcolorbox{real}[1][]{base, colback=cReal!5, colframe=cReal!70, colbacktitle=cReal!14,
+  coltitle=cReal!70!black, title={How this controls the real drone\ifx&#1&\else\ --- #1\fi}}
+\newtcolorbox{warn}[1][]{base, colback=cWarn!5, colframe=cWarn!80, colbacktitle=cWarn!15,
+  coltitle=cWarn!80!black, title={\ifx&#1&Be careful\else #1\fi}}
+
+% ---------------------------------------------------------------- code listings
+\lstdefinestyle{common}{basicstyle=\ttfamily\small, backgroundcolor=\color{cCodeBg},
+  frame=single, rulecolor=\color{black!20}, framesep=4pt, xleftmargin=6pt, xrightmargin=2pt,
+  keywordstyle=\color{cKey}, commentstyle=\color{cCom}, stringstyle=\color{cStr},
+  showstringspaces=false, breaklines=true, columns=fullflexible, keepspaces=true,
+  numberstyle=\tiny\color{black!50}, aboveskip=6pt, belowskip=6pt, upquote=true}
+\lstdefinestyle{mat}{style=common, language=Matlab, morekeywords={DroneLib}}
+\lstdefinestyle{py}{style=common, language=Python, numbers=left, numbersep=6pt, emptylines=0}
+% \pyfile{first line}{last line}{file}{caption}
+\newcommand{\pyfile}[4]{\lstinputlisting[style=py, firstline=#1, lastline=#2, firstnumber=#1,
+  title={\small\sffamily #4}]{#3}}
+\newcommand{\so}{../../drones_controller/drones_controller/so3_controller.py}
+\newcommand{\node}{../../drones_controller/drones_controller/controller_node.py}
+\newcommand{\sad}{../../drones_controller/drones_controller/state_adapter.py}
+\newcommand{\yaml}{../../drones_controller/config/controller.yaml}
+\newcommand{\traj}{../../drones_controller/drones_controller/trajectory_generator.py}
+% \toycode{file}{section} ... MATLAB code from the toy model
+\lstnewenvironment{toycode}[2]{\lstset{style=mat, title={\small\sffamily Toy model: \texttt{toy\_model3/#1.mlx}, section ``#2''}}}{}
+
+% =====================================================================
+\begin{document}
+
+\begin{titlepage}
+  \centering
+  \vspace*{1.2cm}
+  {\Huge\sffamily\color{cHead} How Our Drone Knows Where It Is\\[4pt] and How It Is Controlled\\[14pt]}
+  {\Large\sffamily\color{cText} The complete mathematics of the CD2 drone,\\ explained step by step with toy examples\\[24pt]}
+  {\large\sffamily 3D Mapping of an Environment using a Normal Monocular Camera\\
+   and Controlling the Drone by Visual-Inertial Odometry (VIO)\\[6pt]
+   Introduction to Drones -- 22AIE448\\[26pt]}
+  {\large\sffamily\bfseries Group CD2}\\[6pt]
+  {\sffamily Ravishanmugam K \;\textbullet\; Ishwarya Murugesan \;\textbullet\; Aparna Bharani \;\textbullet\; Cibikumar B \;\textbullet\; Akhilan S}\\[4pt]
+  {\sffamily School of Artificial Intelligence, Amrita Vishwa Vidyapeetham}
+  \vfill
+  \begin{minipage}{0.88\linewidth}\small\color{cText}
+  \textbf{What this document is.} One place that explains everything in our project: the maths
+  of how a drone moves, how it estimates where it is from a camera and an IMU, how it is controlled, and how
+  each equation appears in our MATLAB toy model (\code{toy\_model3}) and in our ROS~2 controller
+  (\code{drones\_controller}). Nothing is assumed except school algebra and a little calculus. Every new idea
+  gets a small example with numbers that you can check with a calculator.
+  \end{minipage}
+\end{titlepage}
+
+\tableofcontents
+\newpage
+
+\input{sections/00_read_me_first}
+\input{sections/01_maths_toolbox}
+\input{sections/02_project_setup}
+\input{sections/03_model1}
+\input{sections/04_real_controller}
+\input{sections/05_model2}
+\input{sections/06_together}
+\input{sections/07_toy_model_guide}
+\appendix
+\input{sections/08_appendix}
+
+\end{document}

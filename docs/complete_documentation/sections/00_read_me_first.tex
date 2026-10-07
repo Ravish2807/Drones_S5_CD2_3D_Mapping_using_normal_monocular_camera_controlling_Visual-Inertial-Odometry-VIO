@@ -1,0 +1,116 @@
+% =====================================================================
+\section{Read This First: the Big Picture}
+\label{sec:bigpicture}
+% =====================================================================
+
+\subsection{What our project does, in one paragraph}
+
+Our drone carries an ordinary camera (one lens, a \emph{monocular} camera) and an IMU (an Inertial Measurement
+Unit: a gyroscope that measures how fast the drone is turning, and an accelerometer). From the camera images we
+work out how the drone has moved; this is called \emph{visual odometry}. Mixing that with the IMU is called
+\emph{Visual-Inertial Odometry} (VIO). VIO tells the drone where it is, and the same camera poses are used to build
+a 3D map of the room. A controller then uses ``where am I'' to decide how to move to ``where I should be''.
+In our setup the drone is the Iris quadrotor flying in the Gazebo simulator, ArduPilot (running as SITL,
+\emph{Software In The Loop}) is the flight computer, and our own ROS~2 node \code{drones\_controller} is the
+controller.
+
+\subsection{The four questions a drone must answer, 25 times every second}
+
+\begin{center}\small
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{4.4cm} X >{\raggedright\arraybackslash}p{3.0cm}@{}}
+\toprule
+\textbf{Question} & \textbf{What answers it in this document} & \textbf{Where}\\
+\midrule
+1.\ \emph{How does a drone move at all?} & Physics: Newton's law for moving and Euler's law for turning & \Cref{sec:m1b1}--\ref{sec:m1b3}\\
+2.\ \emph{Where am I right now?} & The error-state Kalman filter that mixes camera and IMU: our VIO & \Cref{sec:m1b4}\\
+3.\ \emph{Where should I go, and how hard should I push?} & A controller: geometric SO(3) control (Model 1) or optimal LQR / MPC (Model 2) & \Cref{sec:m1b5}--\ref{sec:m1b7}, \ref{sec:model2}\\
+4.\ \emph{How do I make four motors do that?} & Control allocation: splitting thrust and turning force between the four rotors & \Cref{sec:m1b8}\\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\subsection{The whole loop in one picture}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[node distance=6mm and 14mm, every node/.style={font=\sffamily\small},
+  box/.style={draw, rounded corners=2pt, align=center, minimum height=11mm, inner sep=4pt, fill=#1!8, draw=#1!70},
+  arr/.style={-{Latex[length=2.2mm]}, thick}]
+  \node[box=cText] (drone) {\textbf{The drone}\\(Gazebo Iris)\\equations (1)--(4)};
+  \node[box=cIdea, right=of drone] (sens) {\textbf{Sensors}\\camera 25\,Hz\\IMU 100\,Hz};
+  \node[box=cReal, right=of sens] (ekf) {\textbf{Estimator}\\EKF = VIO\\block 4};
+  \node[box=cHead, below=13mm of ekf] (ctrl) {\textbf{Controller}\\blocks 5--7\\(or LQR / MPC)};
+  \node[box=cToy, left=of ctrl] (mix) {\textbf{Motor mixer}\\block 8};
+  \node[box=cText, left=of mix] (mot) {\textbf{4 motors}\\$\Omega_1..\Omega_4$};
+  \node[box=cIdea, right=of ctrl] (ref) {\textbf{Mission}\\waypoint\\$\vp_d$, yaw};
+  \draw[arr] (drone) -- node[above]{motion} (sens);
+  \draw[arr] (sens) -- node[above]{$\vz_k$} (ekf);
+  \draw[arr] (ekf) -- node[right]{$\hx_k$} (ctrl);
+  \draw[arr] (ref) -- (ctrl);
+  \draw[arr] (ctrl) -- node[above]{$T,\vtau$} (mix);
+  \draw[arr] (mix) -- node[above]{speeds} (mot);
+  \draw[arr] (mot) -- node[left]{thrust} (drone);
+\end{tikzpicture}
+\caption{The closed loop. The drone moves, the sensors measure it, the estimator works out the state $\hx$,
+the controller compares it with the mission and decides thrust $T$ and torque $\vtau$, the mixer turns that into
+four motor speeds, and the drone moves again. This repeats every 40\,ms (25\,Hz).}
+\label{fig:loop}
+\end{figure}
+
+\subsection{Two ways of building the controller: Model 1 and Model 2}
+
+We studied the problem in two ways. Both end with the same four motor speeds.
+
+\begin{itemize}
+  \item \textbf{Model 1, the physics way} (\cref{sec:model1}). Write down Newton's and Euler's laws for the drone,
+        use them to estimate the state (the EKF) and control the drone with a controller that works directly with
+        rotation matrices. This is the structure of our ROS~2 node.
+  \item \textbf{Model 2, the data way} (\cref{sec:model2}). Fly, record, let the computer find a simple linear model
+        that explains the recording (DMDc), and then compute the best possible controller for that model (LQR), or
+        the best plan that also respects limits such as ``never faster than 1\,m/s'' (MPC).
+\end{itemize}
+
+The two flow diagrams (\cref{fig:flow1,fig:flow2}) show every block with its equations. Every block number in
+those diagrams is a subsection number in this document.
+
+
+
+\subsection{How every block is explained}
+
+Every block follows the same pattern, with the same coloured boxes:
+
+\begin{center}\small
+\begin{tabularx}{\linewidth}{@{}l X@{}}
+\toprule
+\textbf{Part} & \textbf{What it gives you}\\
+\midrule
+\textcolor{cIdea}{\textbf{The idea in plain words}} (blue) & What the block does, with no maths\\
+\textcolor{cHead}{\textbf{Equation box}} (orange) & The equations, numbered as in the flow diagram\\
+Derivation & Where each equation comes from, one small step at a time\\
+\textcolor{cToy}{\textbf{Toy example}} (brown) & Small numbers that you can check with a calculator\\
+Toy model code (grey) & The lines of the MATLAB live script in \code{toy\_model3} that compute the equation\\
+\textcolor{cReal}{\textbf{How this controls the real drone}} (green) & The lines of our Python controller (with line numbers) and what they do on the drone\\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\textbf{The toy model.} \code{toy\_model3} contains six MATLAB live scripts (\code{.mlx}) and one helper file
+\code{DroneLib.m}. Each live script mixes explanation, equations and code, like the course notes. The
+numbers printed in this document are the numbers those scripts print. \Cref{sec:toyguide} explains how to run them.
+
+\begin{landscape}
+\begin{figure}[p]
+  \centering
+  \includegraphics[width=\linewidth,height=0.92\textheight,keepaspectratio]{flow_model1.png}
+  \caption{Model 1: nonlinear physics, error-state EKF (our VIO) and geometric SO(3) control.}
+  \label{fig:flow1}
+\end{figure}
+\end{landscape}
+
+\begin{figure}[p]
+  \centering
+  \includegraphics[width=0.86\linewidth]{flow_model2.png}
+  \caption{Model 2: a linear model learned from flight data (DMDc), then optimal control by LQR (left branch) or MPC (right branch).}
+  \label{fig:flow2}
+\end{figure}
+\clearpage
