@@ -1,0 +1,401 @@
+
+==============================================================================
+  MODEL 1 | STEP 1 | PHYSICAL SYSTEM AND NONLINEAR DYNAMICS
+==============================================================================
+    p_dot = v
+    v_dot = g + (T/m) R e3
+    R_dot = R [w]x
+    w_dot = J^-1 (tau - w x J w)
+------------------------------------------------------------------------------
+
+Physical parameters (from drones_controller/config/controller.yaml)
+  [IN ] m            1x1     kg           vehicle mass
+          = 1.5
+  [IN ] g            3x1     m/s^2        gravity vector, ENU world frame
+          = [ 0.0000  0.0000 -9.8100]'
+  [IN ] J            3x3     kg m^2       body inertia matrix
+          |  0.0200  0.0000  0.0000 |
+          |  0.0000  0.0200  0.0000 |
+          |  0.0000  0.0000  0.0400 |
+
+Toy example A : hover equilibrium
+  [IN ] R            3x3     -            level attitude
+          |  1.0000  0.0000  0.0000 |
+          |  0.0000  1.0000  0.0000 |
+          |  0.0000  0.0000  1.0000 |
+  [IN ] T            1x1     N            thrust = m g0
+          = 14.715
+  [OUT] v_dot        3x1     m/s^2        zero -> the drone hangs still
+          = [ 0.0000  0.0000  0.0000]'
+  [OUT] w_dot        3x1     rad/s^2      zero -> no rotation starts
+          = [ 0.0000  0.0000  0.0000]'
+  [OUT] R_dot        3x3     1/s          zero -> attitude constant
+          |  0.0000  0.0000  0.0000 |
+          |  0.0000  0.0000  0.0000 |
+          |  0.0000  0.0000  0.0000 |
+
+Toy example B : 10 deg roll with hover thrust
+  [IN ] R            3x3     -            rotation of 10 deg about x
+          |  1.0000  0.0000  0.0000 |
+          |  0.0000  0.9848 -0.1736 |
+          |  0.0000  0.1736  0.9848 |
+  [OUT] v_dot        3x1     m/s^2        accelerates to -y and sinks slightly
+          = [ 0.0000 -1.7035 -0.1490]'
+          hand calculation: g0*[0, -sin(10deg), cos(10deg)-1] = [0, -1.7035, -0.1490]
+
+Toy example C : gyroscopic coupling (tau = 0)
+  [IN ] w            3x1     rad/s        body rates
+          = [ 1.0000  0.0000  1.0000]'
+  [OUT] w_dot        3x1     rad/s^2      J^-1(-w x Jw) = [0 1 0]'
+          = [ 0.0000  1.0000  0.0000]'
+
+Open-loop simulation (4 s, RK4, dt = 0.01 s)
+  [IN ] u(1.05 s)    4x1     N, N m       hover thrust + 0.1 s roll-torque pulse
+          = [ 14.7150  0.0100  0.0000  0.0000]'
+  [OUT] p(4 s)       3x1     m            final position (drifted)
+          = [ 0.0000 -2.0970  1.9227]'
+  [OUT] tilt(4 s)    1x1     deg          final tilt angle (keeps growing)
+          = 8.45113
+
+Saved P, x_hover, u_hover -> C:\SEM 5\Drones\PROJECT\Drones_S5_CD2_3D_Mapping_using_normal_monocular_camera_controlling_Visual-Inertial-Odometry-VIO\toy_model2\model1_nonlinear_ekf_so3\results\model1_data.mat
+
+==============================================================================
+  MODEL 1 | STEP 2 | TAYLOR EXPANSION AND JACOBIANS
+==============================================================================
+    f(x,u) ~ f(xh,uh) + A (x - xh) + B (u - uh)
+    A = df/dx |(xh,uh)      B = df/du |(xh,uh)
+------------------------------------------------------------------------------
+
+Operating point: hover at p = [0 0 2] m, R = I, w = 0, T = m g0
+  [IN ] xhat         18x1    mixed        hover state [p; v; vec(R); w]
+          (array: min  0, max  2, Frobenius norm 2.646)
+  [IN ] uhat         4x1     N, N m       hover input
+          = [ 14.7150  0.0000  0.0000  0.0000]'
+  [OUT] A            12x12   mixed        state Jacobian (12x12)
+          (array: min -9.81, max  9.81, Frobenius norm 14.09)
+  [OUT] B            12x4    mixed        input Jacobian (12x4)
+          (array: min  0, max  50, Frobenius norm 75)
+
+  Key block of A at hover, d(v_dot)/d(theta) = -g0 [e3]x :
+         0    9.8100         0
+   -9.8100         0         0
+         0         0         0
+
+  Key block of B at hover, d(w_dot)/d(tau) = J^-1 :
+    50     0     0
+     0    50     0
+     0     0    25
+
+
+Numerical check at a tilted, rotating, accelerating state:
+  [CHK] max|A-An|    1x1     -            analytic vs numerical A
+          = 2.26337e-08
+  [CHK] max|B-Bn|    1x1     -            analytic vs numerical B
+          = 8.43769e-07
+
+Toy example: horizontal acceleration caused by a pitch angle
+   theta [deg] | linear g0*theta | true g0*sin(theta) | error %
+          1.00 |          0.1712 |             0.1712 |   0.005
+          2.87 |          0.4905 |             0.4903 |   0.042
+          5.00 |          0.8561 |             0.8550 |   0.127
+         10.00 |          1.7122 |             1.7035 |   0.510
+         20.00 |          3.4243 |             3.3552 |   2.060
+         28.65 |          4.9054 |             4.7035 |   4.292
+
+Saved A_hover, B_hover -> C:\SEM 5\Drones\PROJECT\Drones_S5_CD2_3D_Mapping_using_normal_monocular_camera_controlling_Visual-Inertial-Odometry-VIO\toy_model2\model1_nonlinear_ekf_so3\results\model1_data.mat
+
+==============================================================================
+  MODEL 1 | STEP 3 | LOCAL ERROR DYNAMICS (LINEARIZED)
+==============================================================================
+    dx = x (-) xhat = [dp; dv; dtheta; dw]
+    d(dx)/dt = A dx + B du
+------------------------------------------------------------------------------
+  [IN ] A            12x12   mixed        continuous error-state matrix (Step 2)
+          (array: min -9.81, max  9.81, Frobenius norm 14.09)
+  [IN ] dt           1x1     s            EKF / IMU sample time (100 Hz)
+          = 0.01
+  [OUT] F            12x12   -            F = I + A dt (first order)
+          (array: min -0.0981, max  1, Frobenius norm 3.467)
+  [CHK] max|F-expm|  1x1     -            difference to exact expm(A dt): second order, (A dt)^2/2
+          = 0.0004905
+
+Toy example: propagate an initial error for 2 s (extra thrust du = +0.5 N)
+  [IN ] dx(0) small  12x1    mixed        2 deg roll error
+          = [ 0.1000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0349  0.0000  0.0000  0.0000  0.0000  0.2000]'
+  [IN ] du           4x1     N, N m       input deviation
+          = [ 0.5000  0.0000  0.0000  0.0000]'
+  [OUT] dx(2s) lin   12x1    mixed        linear prediction
+          = [ 0.1000 -0.6849  0.6667  0.0000 -0.6849  0.6667  0.0349  0.0000  0.4000  0.0000  0.0000  0.2000]'
+  [OUT] dx(2s) true  12x1    mixed        true nonlinear error
+          = [ 0.1000 -0.7080  0.6543  0.0000 -0.7080  0.6543  0.0344 -0.0070  0.4000  0.0000  0.0000  0.2000]'
+  [CHK] rel.err 2deg 1x1     %            linear model is excellent
+          = 2.62299
+  [CHK] rel.err 30deg 1x1     %            linear model degrades for big errors
+          = 26.2736
+
+  Hand check: dv_z(2 s) = du/m * t = 0.5/1.5*2 = 0.6667 m/s (linear: 0.6667)
+
+Saved F_hover, dt_ekf -> C:\SEM 5\Drones\PROJECT\Drones_S5_CD2_3D_Mapping_using_normal_monocular_camera_controlling_Visual-Inertial-Odometry-VIO\toy_model2\model1_nonlinear_ekf_so3\results\model1_data.mat
+
+==============================================================================
+  MODEL 1 | STEP 4 | ERROR-STATE EXTENDED KALMAN FILTER
+==============================================================================
+    predict : xh = f(xh,u)          P = F P F' + Q
+    correct : K = P H'(H P H' + Rn)^-1   xh = xh (+) K(z - h(xh))   P = (I - K H) P
+------------------------------------------------------------------------------
+
+Toy example: one predict + one correct on altitude (scalar EKF)
+  [IN ] xhat_k, P_k  1x2     m, m^2       prior altitude and variance
+          = [ 10.0000  3.5000]'
+  [OUT] xhat-, P-    1x2     m, m^2       after prediction (uncertainty grows)
+          = [ 10.5000  4.0000]'
+  [IN ] z, R         1x2     m, m^2       GPS measurement and its variance
+          = [ 12.5000  1.0000]'
+  [OUT] K            1x1     -            Kalman gain = 4/(4+1)
+          = 0.8
+  [OUT] xhat+, P+    1x2     m, m^2       after correction (uncertainty shrinks)
+          = [ 12.1000  0.8000]'
+
+Filter inputs
+  [IN ] u_k          4x1     N, N m       applied thrust/torque (first sample)
+          = [ 15.4275 -0.2677  0.1046 -0.0018]'
+  [IN ] z_cam        6x1     m, rad       camera/VIO pose, 25 Hz
+          = [ 0.3745 -0.3851  1.7670  0.0228  0.0051  0.0064]'
+  [IN ] z_gyro       3x1     rad/s        gyroscope, 100 Hz
+          = [-0.0032 -0.0047 -0.0120]'
+  [IN ] P_0          12x1    mixed        initial variances (diag)
+          = [ 0.0900  0.0900  0.0900  0.0400  0.0400  0.0400  0.0100  0.0100  0.0100  0.0025  0.0025  0.0025]'
+  [IN ] R_cam        6x1     mixed        camera noise variances (diag)
+          = [ 0.0025  0.0025  0.0025  0.0004  0.0004  0.0004]'
+
+Filter outputs
+  [OUT] xhat_N       18x1    mixed        final estimate [p; v; vec(R); w]
+          (array: min -0.0972, max  3.012, Frobenius norm 4.19)
+  [OUT] diag P_N     12x1    mixed        final variances
+          = [ 0.0002  0.0002  0.0002  0.0005  0.0005  0.0002  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000]'
+  [CHK] RMSE p       1x1     m            position error after 2 s
+          = 0.0255087
+  [CHK] raw cam      1x1     m            raw camera position error (for comparison)
+          = 0.0854932
+  [CHK] RMSE v       1x1     m/s          velocity error (never measured directly!)
+          = 0.0385025
+  [CHK] RMSE th      1x1     deg          attitude error
+          = 0.20243
+  [CHK] RMSE w       1x1     rad/s        body-rate error
+          = 0.00254427
+  [CHK] in 3-sigma   1x1     %            samples where all 12 errors lie inside +-3 sigma
+          = 99
+
+Saved xhat_ekf, P_ekf, t_ekf, Qd, Rcam, Rgyro -> C:\SEM 5\Drones\PROJECT\Drones_S5_CD2_3D_Mapping_using_normal_monocular_camera_controlling_Visual-Inertial-Odometry-VIO\toy_model2\model1_nonlinear_ekf_so3\results\model1_data.mat
+
+==============================================================================
+  MODEL 1 | STEP 5 | POSITION CONTROL (OUTER LOOP)
+==============================================================================
+    e_p = p_d - p_hat     e_v = v_d - v_hat
+    a_d = pdd_d + Kp e_p + Kv e_v
+------------------------------------------------------------------------------
+
+Part A : toy example (hover setpoint, drone 50 cm low and climbing)
+  [IN ] p_d          3x1     m            desired position (controller.yaml)
+          = [ 0.0000  0.0000  2.0000]'
+  [IN ] v_d          3x1     m/s          desired velocity
+          = [ 0.0000  0.0000  0.0000]'
+  [IN ] pdd_d        3x1     m/s^2        desired acceleration (feed-forward)
+          = [ 0.0000  0.0000  0.0000]'
+  [IN ] p_hat        3x1     m            estimated position
+          = [ 0.1000 -0.2000  1.5000]'
+  [IN ] v_hat        3x1     m/s          estimated velocity
+          = [ 0.0000  0.0000  0.3000]'
+  [IN ] Kp           1x3     1/s^2        diag of position gain
+          = [ 1.5000  1.5000  2.0000]'
+  [IN ] Kv           1x3     1/s          diag of velocity gain
+          = [ 1.2000  1.2000  1.5000]'
+  [OUT] e_p          3x1     m            position error
+          = [-0.1000  0.2000  0.5000]'
+  [OUT] e_v          3x1     m/s          velocity error
+          = [ 0.0000  0.0000 -0.3000]'
+  [OUT] a_d          3x1     m/s^2        desired acceleration
+          = [-0.1500  0.3000  0.5500]'
+
+Part B : chained from Step 4 (final EKF estimate, helix reference at t = 20 s)
+  [IN ] p_d          3x1     m            helix reference position
+          = [ 1.4840  1.7183  3.0000]'
+  [IN ] v_d          3x1     m/s          helix reference velocity
+          = [-0.0873  0.5936  0.0500]'
+  [IN ] pdd_d        3x1     m/s^2        helix reference acceleration
+          = [-0.2374 -0.0349  0.0000]'
+  [IN ] p_hat        3x1     m            from Step 4
+          = [ 1.4833  1.7160  3.0116]'
+  [IN ] v_hat        3x1     m/s          from Step 4
+          = [-0.0972  0.5706  0.0719]'
+  [OUT] e_p          3x1     m            position error
+          = [ 0.0007  0.0023 -0.0116]'
+  [OUT] e_v          3x1     m/s          velocity error
+          = [ 0.0099  0.0230 -0.0219]'
+  [OUT] a_d          3x1     m/s^2        desired acceleration -> Step 6
+          = [-0.2244 -0.0040 -0.0560]'
+
+Part C : error dynamics per axis (if the inner loop is perfect)
+   axis |  Kp  |  Kv  | wn [rad/s] | zeta | 2% settling time [s]
+     x  | 1.50 | 1.20 |   1.225    | 0.490 | 6.67
+     y  | 1.50 | 1.20 |   1.225    | 0.490 | 6.67
+     z  | 2.00 | 1.50 |   1.414    | 0.530 | 5.33
+
+Saved ref_chain, a_d_chain, a_d_toy -> C:\SEM 5\Drones\PROJECT\Drones_S5_CD2_3D_Mapping_using_normal_monocular_camera_controlling_Visual-Inertial-Odometry-VIO\toy_model2\model1_nonlinear_ekf_so3\results\model1_data.mat
+
+==============================================================================
+  MODEL 1 | STEP 6 | FORCE AND ATTITUDE GENERATION
+==============================================================================
+    F_d = m (a_d - g)
+    b3d = F_d / ||F_d||
+    b2d = b3d x b1c / ||.||,  b1d = b2d x b3d,  R_d = [b1d b2d b3d]
+------------------------------------------------------------------------------
+
+Part A : toy example
+  [IN ] a_d          3x1     m/s^2        desired acceleration (Step 5, Part A)
+          = [-0.1500  0.3000  0.5500]'
+  [IN ] g            3x1     m/s^2        gravity vector (ENU)
+          = [ 0.0000  0.0000 -9.8100]'
+  [IN ] m            1x1     kg           mass
+          = 1.5
+  [IN ] psi_d        1x1     rad          desired yaw
+          = 0
+  [OUT] F_d          3x1     N            desired force vector
+          = [-0.2250  0.4500  15.5400]'
+  [OUT] ||F_d||      1x1     N            required thrust magnitude
+          = 15.5481
+  [OUT] b3d          3x1     -            desired thrust direction (unit)
+          = [-0.0145  0.0289  0.9995]'
+  [OUT] R_d          3x3     -            desired attitude
+          |  0.9999  0.0000 -0.0145 |
+          |  0.0004  0.9996  0.0289 |
+          |  0.0145 -0.0289  0.9995 |
+  [CHK] tilt         1x1     deg          angle between b3d and vertical
+          = 1.85433
+  [CHK] ||Rd'Rd-I||  1x1     -            orthonormality of R_d
+          = 1.11131e-16
+  [CHK] det(R_d)     1x1     -            proper rotation (= +1)
+          = 1
+
+Part B : chained from Step 5
+  [IN ] a_d          3x1     m/s^2        from Step 5
+          = [-0.2244 -0.0040 -0.0560]'
+  [OUT] F_d          3x1     N            desired force -> Step 7
+          = [-0.3367 -0.0059  14.6310]'
+  [OUT] R_d          3x3     -            desired attitude -> Step 7
+          |  0.9997 -0.0000 -0.0230 |
+          | -0.0000  1.0000 -0.0004 |
+          |  0.0230  0.0004  0.9997 |
+
+Saved F_d_toy, R_d_toy, F_d_chain, R_d_chain -> C:\SEM 5\Drones\PROJECT\Drones_S5_CD2_3D_Mapping_using_normal_monocular_camera_controlling_Visual-Inertial-Odometry-VIO\toy_model2\model1_nonlinear_ekf_so3\results\model1_data.mat
+
+==============================================================================
+  MODEL 1 | STEP 7 | SO(3) ATTITUDE CONTROL (INNER LOOP)
+==============================================================================
+    e_R = 1/2 (Rd' R - R' Rd)^vee        e_w = w - R' Rd w_d
+    tau = -KR e_R - Kw e_w + w x Jw - J([w]x R'Rd w_d - R'Rd wdot_d)
+    T   = F_d . (R e3)
+------------------------------------------------------------------------------
+
+Part A : toy example (10 deg roll, rolling further at 0.2 rad/s)
+  [IN ] R_hat        3x3     -            estimated attitude (10 deg roll)
+          |  1.0000  0.0000  0.0000 |
+          |  0.0000  0.9848 -0.1736 |
+          |  0.0000  0.1736  0.9848 |
+  [IN ] w_hat        3x1     rad/s        estimated body rate
+          = [ 0.2000  0.0000  0.0000]'
+  [IN ] R_d          3x3     -            desired attitude (level)
+          |  1.0000  0.0000  0.0000 |
+          |  0.0000  1.0000  0.0000 |
+          |  0.0000  0.0000  1.0000 |
+  [IN ] F_d          3x1     N            desired force (hover)
+          = [ 0.0000  0.0000  14.7150]'
+  [OUT] e_R          3x1     -            [sin(10 deg), 0, 0]
+          = [ 0.1736  0.0000  0.0000]'
+  [OUT] e_w          3x1     rad/s        rate error
+          = [ 0.2000  0.0000  0.0000]'
+  [OUT] tau          3x1     N m          restoring torque (negative roll)
+          = [-0.8546  0.0000  0.0000]'
+  [OUT] T            1x1     N            thrust = m g0 cos(10 deg)
+          = 14.4914
+
+Part B : chained (R_hat, w_hat from Step 4; R_d, F_d from Step 6)
+  [IN ] R_hat        3x3     -            from Step 4
+          |  0.9997 -0.0010 -0.0231 |
+          |  0.0009  1.0000 -0.0057 |
+          |  0.0231  0.0057  0.9997 |
+  [IN ] w_hat        3x1     rad/s        from Step 4
+          = [ 0.0077  0.0011  0.0010]'
+  [OUT] e_R          3x1     -            attitude error
+          = [ 0.0053 -0.0001  0.0009]'
+  [OUT] e_w          3x1     rad/s        rate error
+          = [ 0.0077  0.0011  0.0010]'
+  [OUT] tau          3x1     N m          torque command -> Step 8
+          = [-0.0273 -0.0005 -0.0023]'
+  [OUT] T            1x1     N            thrust command -> Step 8
+          = 14.6347
+
+Part C : recovery from a 60 deg tilt, Lyapunov function V = 1/2 e_w'J e_w + Psi
+  [CHK] angle(3 s)   1x1     deg          with e_w = w - R'R_d w_d  (converges)
+          = 1.98013e-06
+  [CHK] t blow-up    1x1     s            with e_w = w_d - w as in image: |w| > 50 rad/s (tumbling)
+          = 0.066
+  [CHK] V monotone   1x1     -            V never increases with correct sign (1 = true, up to RK4 round-off)
+          = 1
+  [CHK] V(3s)/V(0)   1x1     -            energy-like function has decayed
+          = 9.81587e-16
+
+Saved u_cmd_chain, u_cmd_toy -> C:\SEM 5\Drones\PROJECT\Drones_S5_CD2_3D_Mapping_using_normal_monocular_camera_controlling_Visual-Inertial-Odometry-VIO\toy_model2\model1_nonlinear_ekf_so3\results\model1_data.mat
+
+==============================================================================
+  MODEL 1 | STEP 8 | ACTUATOR COMMANDS AND FEEDBACK
+==============================================================================
+    [T; tau] = Gamma f,  f_i = kf Omega_i^2
+    Omega = sqrt( Gamma^-1 [T; tau] / kf )
+------------------------------------------------------------------------------
+
+Part A : allocation matrix and toy examples
+  [IN ] Gamma        4x4     -, m         rows: T, tau_x, tau_y, tau_z  (Iris geometry)
+          |  1.0000  1.0000  1.0000  1.0000 |
+          | -0.2200  0.2200  0.2200 -0.2200 |
+          | -0.1300  0.1300 -0.1300  0.1300 |
+          | -0.0160 -0.0160  0.0160  0.0160 |
+  [IN ] kf           1x1     N s^2        rotor thrust constant
+          = 8.54858e-06
+  [IN ] u hover      4x1     N, N m       hover command
+          = [ 14.7150  0.0000  0.0000  0.0000]'
+  [OUT] f            4x1     N            each rotor carries a quarter of the weight
+          = [ 3.6787  3.6788  3.6787  3.6788]'
+  [OUT] Omega        4x1     rad/s        rotor speeds
+          = [ 655.9990  655.9990  655.9990  655.9990]'
+          = 6264 RPM each
+  [IN ] u toy        4x1     N, N m       command from Step 7 Part A
+          = [ 14.4914 -0.8546  0.0000  0.0000]'
+  [OUT] f            4x1     N            right-side rotors (1,4) push harder -> rolls back to level
+          = [ 4.5940  2.6517  2.6517  4.5940]'
+  [OUT] Omega        4x1     rad/s        rotor speeds
+          = [ 733.0743  556.9522  556.9522  733.0743]'
+  [CHK] u_applied    4x1     N, N m       equals the command (no saturation)
+          = [ 14.4914 -0.8546 -0.0000  0.0000]'
+
+Part B : chained from Step 7
+  [IN ] u            4x1     N, N m       from Step 7 Part B
+          = [ 14.6347 -0.0273 -0.0005 -0.0023]'
+  [OUT] Omega        4x1     rad/s        motor speeds sent to the drone
+          = [ 660.2672  654.5767  648.2592  653.6667]'
+  [OUT] u_applied    4x1     N, N m       wrench produced by the rotors
+          = [ 14.6347 -0.0273 -0.0005 -0.0023]'
+
+Part C : closed-loop flight (truth -> sensors -> EKF -> control -> motors)
+  [OUT] Omega range  1x2     rad/s        motor speeds stay inside [100, 1100]
+          = [ 618.8726  709.1241]'
+  [CHK] track RMSE   1x1     m            |p - p_d| after 10 s
+          = 0.0680169
+  [CHK] est RMSE     1x1     m            |p - p_hat| after 10 s
+          = 0.0255785
+  [CHK] max |e_R|    1x1     -            attitude error after 10 s
+          = 0.0112992
+
+Saved closed_loop -> C:\SEM 5\Drones\PROJECT\Drones_S5_CD2_3D_Mapping_using_normal_monocular_camera_controlling_Visual-Inertial-Odometry-VIO\toy_model2\model1_nonlinear_ekf_so3\results\model1_data.mat
+
+Model 1 complete. Figures in C:\SEM 5\Drones\PROJECT\Drones_S5_CD2_3D_Mapping_using_normal_monocular_camera_controlling_Visual-Inertial-Odometry-VIO\toy_model2\model1_nonlinear_ekf_so3\figures

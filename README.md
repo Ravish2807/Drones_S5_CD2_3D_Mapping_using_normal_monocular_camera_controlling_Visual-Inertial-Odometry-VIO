@@ -25,8 +25,8 @@
 | Name | Roll Number | Email |
 |---|---|---|
 | **Ravishanmugam K** | `CB.SC.U4AIE24347` | `ravish2007801@gmail.com` |
-| **Ishwarya M** | `CB.SC.U4AIE24220` | `ishwarya15m@gmail.com` |
-| **Aparna B** | `CB.SC.U4AIE24304` | `aparnabharani2006@gmail.com` |
+| **Ishwarya Murugesan** | `CB.SC.U4AIE24220` | `ishwarya15m@gmail.com` |
+| **Aparna Bharani** | `CB.SC.U4AIE24304` | `aparnabharani2006@gmail.com` |
 | **Cibikumar B** | `CB.SC.U4AIE24212` | `cibikumar30@gmail.com` |
 | **Akhilan S** | `CB.SC.U4AIE24362` | `akhilan1010@gmail.com` |
 

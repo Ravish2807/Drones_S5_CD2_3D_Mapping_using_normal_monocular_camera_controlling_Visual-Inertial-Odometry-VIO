@@ -1,0 +1,379 @@
+
+==============================================================================
+  MODEL 2 | STEP 1 | NONLINEAR FLIGHT DATA
+==============================================================================
+    x_k = [p_k - p_ref; v_k; Log(R_k); w_k]   (12x1)
+    u_k = [T_k - m g0; tau_k]                 (4x1)
+    sampled at t_k = k dt
+------------------------------------------------------------------------------
+  [IN ] dt           1x1     s            sample time (25 Hz)
+          = 0.04
+  [IN ] runs         1x1     -            number of recorded flights
+          = 5
+  [IN ] T_fly        1x1     s            duration of each flight
+          = 25
+  [IN ] u_trim       4x1     N, N m       hover input (operating point)
+          = [ 14.7150  0.0000  0.0000  0.0000]'
+  [IN ] excAmp       4x1     N, N m       random excitation amplitude
+          = [ 2.0000  0.0300  0.0300  0.0100]'
+
+Recorded data
+  [OUT] x_k (k=1)    12x1    mixed        first logged state of flight 1
+          = [-0.5836 -0.2389  0.0708 -0.2716 -0.1133 -0.0818 -0.0443  0.0211 -0.0421  0.0008 -0.0003 -0.0003]'
+  [OUT] u_k (k=1)    4x1     N, N m       first logged input of flight 1
+          = [ 0.9312 -0.0120  0.0789  0.0690]'
+  [OUT] X run 1      12x626  mixed        12 x 626 state history
+          (array: min -0.6532, max  0.4365, Frobenius norm 8.686)
+  [OUT] U run 1      4x625   mixed        4 x 625 input history
+          (array: min -2.789, max  2.895, Frobenius norm 27.98)
+  [CHK] max tilt     1x1     deg          largest roll/pitch: data stays in the near-hover (linear) regime
+          = 6.46106
+
+Saved P, runs, dt, nSub, u_trim -> C:\SEM 5\Drones\PROJECT\Drones_S5_CD2_3D_Mapping_using_normal_monocular_camera_controlling_Visual-Inertial-Odometry-VIO\toy_model2\model2_dmdc_lqr_mpc\results\model2_data.mat
+
+==============================================================================
+  MODEL 2 | STEP 2 | DMDC - LEARN A AND B FROM DATA
+==============================================================================
+    X = [x_1 ... x_{N-1}]   X+ = [x_2 ... x_N]   U = [u_1 ... u_{N-1}]
+    [A B] = X+ * pinv([X; U])        x_{k+1} ~ A x_k + B u_k
+------------------------------------------------------------------------------
+
+Part A : scalar toy example
+  [IN ] X            1x3     -            states x_1..x_3
+          = [ 1.0000  1.4000  0.7600]'
+  [IN ] X+           1x3     -            states x_2..x_4
+          = [ 1.4000  0.7600  0.9340]'
+  [IN ] U            1x3     -            inputs u_1..u_3
+          = [ 1.0000 -1.0000  0.5000]'
+  [OUT] [a b]        1x2     -            recovered model (true: 0.9, 0.5)
+          = [ 0.9000  0.5000]'
+
+Part B : DMDc on the drone flight data
+  [IN ] X            12x2500 mixed        state snapshots (12 x 2500)
+          (array: min -0.6532, max  0.515, Frobenius norm 17.59)
+  [IN ] X+           12x2500 mixed        shifted snapshots
+          (array: min -0.6532, max  0.515, Frobenius norm 17.59)
+  [IN ] U            4x2500  N, N m       input snapshots (4 x M)
+          (array: min -3.124, max  3.462, Frobenius norm 57.93)
+  [OUT] A            12x12   -            learned state matrix (12x12)
+          (array: min -0.3862, max  1.001, Frobenius norm 3.503)
+  [OUT] B            12x4    -            learned input matrix (12x4)
+          (array: min -0.0163, max  2.001, Frobenius norm 3.004)
+  [CHK] rank[X;U]    1x1     -            must be 16 = 12 + 4 (enough excitation)
+          = 16
+  [CHK] sv ratio     1x1     -            condition number of [X;U]
+          = 409.125
+  [CHK] fit          1x1     -            relative one-step residual on training data
+          = 0.0183238
+
+Comparison with the exact discretised Jacobians (Model 1, Step 2 + ZOH)
+   entry        meaning                         DMDc      physics
+   A(1,4)  dt              (p_x from v_x)           0.0399    0.0400
+   A(4,8)  ~ g0 dt         (v_x from theta_y)       0.3909    0.3924
+   A(5,7)  ~ -g0 dt        (v_y from theta_x)      -0.3862   -0.3924
+   B(6,1)  dt/m            (v_z from dT)            0.0268    0.0267
+   B(10,2) dt/J_x          (w_x from tau_x)         2.0007    2.0000
+   B(12,4) dt/J_z          (w_z from tau_z)         1.0096    1.0000
+  [CHK] relErr A     1x1     -            ||A - A_phys|| / ||A_phys||
+          = 0.00954483
+  [CHK] relErr B     1x1     -            ||B - B_phys|| / ||B_phys||
+          = 0.00809864
+  [CHK] 1s pred err  1x1     m            DMDc model, unseen flight (position after 1 s)
+          = 0.0121485
+  [CHK] 1s pred err  1x1     m            physics model, same test (for reference)
+          = 0.011377
+
+Saved A_dmd, B_dmd, A_phys, B_phys -> C:\SEM 5\Drones\PROJECT\Drones_S5_CD2_3D_Mapping_using_normal_monocular_camera_controlling_Visual-Inertial-Odometry-VIO\toy_model2\model2_dmdc_lqr_mpc\results\model2_data.mat
+
+==============================================================================
+  MODEL 2 | STEP 3 | BELLMAN EQUATION AND QUADRATIC COST
+==============================================================================
+    J = sum_k (x_k'Q x_k + u_k'R u_k)
+    V(x) = min_u [x'Qx + u'Ru + V(Ax + Bu)],   V(x) = x'Px
+------------------------------------------------------------------------------
+
+Part A : scalar Bellman backup at x = 1 with V_next(x) = x^2
+  [IN ] a, b         1x2     -            scalar model
+          = [ 1.1000  0.5000]'
+  [IN ] q, r         1x2     -            weights
+          = [ 1.0000  1.0000]'
+  [OUT] u* brute     1x1     -            numerical minimum of the right-hand side
+          = -0.44
+  [OUT] u* = -Kx     1x1     -            closed form, K = abP/(r + b^2 P) = 0.44
+          = -0.44
+  [OUT] V(1)         1x1     -            minimum value
+          = 1.968
+  [OUT] P_new        1x1     -            closed form: q + a^2 P - (abP)^2/(r + b^2 P) = 1.968
+          = 1.968
+
+Part B : drone weights (Bryson's rule)
+  [IN ] x_max        12x1    mixed        largest acceptable deviation per state
+          = [ 0.5000  0.5000  0.5000  1.0000  1.0000  1.0000  0.2000  0.2000  0.5000  1.0000  1.0000  1.0000]'
+  [IN ] u_max        4x1     N, N m       largest acceptable input deviation
+          = [ 5.0000  0.2000  0.2000  0.0500]'
+  [OUT] diag Q       12x1    mixed        state weight
+          = [ 4.0000  4.0000  4.0000  1.0000  1.0000  1.0000  25.0000  25.0000  4.0000  1.0000  1.0000  1.0000]'
+  [OUT] diag R       4x1     mixed        input weight
+          = [ 0.0400  25.0000  25.0000  400.0000]'
+
+Part C : one Bellman backup on the drone (V_next(x) = x'Qx)
+  [IN ] x            12x1    mixed        drone 50 cm off in x, 30 cm in y, 20 cm in z
+          = [ 0.5000 -0.3000  0.2000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000]'
+  [OUT] u* brute     4x1     N, N m       fminsearch on the right-hand side
+          = [-0.0104 -0.0001  0.0001  0.0000]'
+  [OUT] u* = -K1 x   4x1     N, N m       closed form
+          = [-0.0104 -0.0001  0.0001  0.0000]'
+  [CHK] V brute vs x'P1x 1x2     -            the minimum value is quadratic in x
+          = [ 3.0393  3.0393]'
+  [CHK] J(u = 0)     1x1     -            cost after 10 s with u = 0 (keeps growing: drone drifts)
+          = 14592.6
+
+Saved Q, R, x_max, u_max -> C:\SEM 5\Drones\PROJECT\Drones_S5_CD2_3D_Mapping_using_normal_monocular_camera_controlling_Visual-Inertial-Odometry-VIO\toy_model2\model2_dmdc_lqr_mpc\results\model2_data.mat
+
+==============================================================================
+  MODEL 2 | STEP 4 | LQR GAIN AND CONTROL LAW
+==============================================================================
+    K = (R + B'PB)^-1 B'PA
+    u_k = -K x_k
+------------------------------------------------------------------------------
+
+Part A : scalar toy example (P = 3.1215 from the DARE, Step 6)
+  [IN ] a, b, r, P   1x4     -            scalar model, weight and value
+          = [ 1.1000  0.5000  1.0000  3.1215]'
+  [OUT] K            1x1     -            gain = abP/(r + b^2 P)
+          = 0.964298
+  [OUT] a - bK       1x1     -            closed-loop pole (|.| < 1 -> stable)
+          = 0.617851
+          open loop  x_k = 1.1^k x_0   grows 10% per step
+          closed loop x_k = 0.6179^k x_0 shrinks 38% per step
+
+Part B : drone gain from a 2-step-horizon value function (not yet optimal)
+  [IN ] P            12x12   -            value matrix after one Bellman backup
+          (array: min -0.3862, max  50.06, Frobenius norm 72.74)
+  [OUT] K            4x12    mixed        gain (4x12)
+          (array: min -0.01516, max  1.297, Frobenius norm 1.334)
+  [CHK] max|eig(A-BK)| 1x1     -            spectral radius; >= 1 means this short-sighted gain cannot stabilise the drone
+          = 1.00239
+
+Saved K_onestep -> C:\SEM 5\Drones\PROJECT\Drones_S5_CD2_3D_Mapping_using_normal_monocular_camera_controlling_Visual-Inertial-Odometry-VIO\toy_model2\model2_dmdc_lqr_mpc\results\model2_data.mat
+
+==============================================================================
+  MODEL 2 | STEP 5 | RICCATI RECURSION
+==============================================================================
+    P_{k+1} = A'P_k A - A'P_k B (R + B'P_k B)^-1 B'P_k A + Q
+------------------------------------------------------------------------------
+
+Part A : scalar recursion, a = 1.1, b = 0.5, q = r = 1, P_0 = 1
+   k  |  P_k
+   0  |  1.0000
+   1  |  1.9680
+   2  |  2.5960
+   3  |  2.9049
+   4  |  3.0362
+   5  |  3.0885
+   6  |  3.1088
+   7  |  3.1166
+   8  |  3.1196
+  [OUT] P_inf        1x1     -            converged after 35 iterations
+          = 3.12145
+
+Part B : drone, starting from P_0 = Q
+  [IN ] P_0          12x12   -            start: terminal weight = Q
+          (array: min  0, max  25, Frobenius norm 36.33)
+  [OUT] P_inf        12x12   -            steady-state value matrix (12x12)
+          (array: min -91.63, max  380.1, Frobenius norm 642)
+  [CHK] iterations   1x1     -            to reach relative change < 1e-12
+          = 236
+  [CHK] min eig P    1x1     -            positive -> V(x) = x'Px > 0 for every x ~= 0
+          = 3.2673
+
+Saved P_rec, riccati_iterations -> C:\SEM 5\Drones\PROJECT\Drones_S5_CD2_3D_Mapping_using_normal_monocular_camera_controlling_Visual-Inertial-Odometry-VIO\toy_model2\model2_dmdc_lqr_mpc\results\model2_data.mat
+
+==============================================================================
+  MODEL 2 | STEP 6 | DARE - STEADY-STATE RICCATI SOLUTION
+==============================================================================
+    P = A'PA - A'PB (R + B'PB)^-1 B'PA + Q
+    K = (R + B'PB)^-1 B'PA
+------------------------------------------------------------------------------
+
+Part A : scalar DARE, a = 1.1, b = 0.5, q = r = 1
+  [OUT] P formula    1x1     -            root of 0.25P^2 - 0.46P - 1 = 0
+          = 3.12145
+  [OUT] P solver     1x1     -            dare_solve (eigenvector method)
+          = 3.12145
+  [OUT] K            1x1     -            LQR gain
+          = 0.964297
+
+Part B : drone
+  [IN ] A, B         1x4     -            sizes of the learned model
+          = [ 12.0000  12.0000  12.0000  4.0000]'
+  [OUT] P            12x12   -            DARE solution (12x12)
+          (array: min -91.63, max  380.1, Frobenius norm 642)
+  [OUT] K            4x12    mixed        final LQR gain (4x12)
+          (array: min -0.3213, max  9.039, Frobenius norm 11.6)
+  [CHK] DARE residual 1x1     -            relative, should be ~1e-12
+          = 4.19387e-14
+  [CHK] ||P-P_rec||/||P|| 1x1     -            agrees with the Riccati recursion of Step 5
+          = 1.10944e-11
+  [CHK] max|eig(A-BK)| 1x1     -            spectral radius < 1 -> stable
+          = 0.94958
+  [CHK] J simulated  1x1     -            sum of x'Qx + u'Ru along the closed loop
+          = 41.4373
+  [CHK] x0'P x0      1x1     -            predicted optimal cost - identical
+          = 41.4373
+
+  Reading K (u = -K x), largest entries of two rows:
+  thrust      dT    = -9.04*dz -6.92*v_z            (altitude hold)
+  roll torque tau_x = +0.273*dy +0.321*v_y -1.444*roll -0.276*w_x  (lean to move sideways)
+
+Saved P_dare, K_lqr -> C:\SEM 5\Drones\PROJECT\Drones_S5_CD2_3D_Mapping_using_normal_monocular_camera_controlling_Visual-Inertial-Odometry-VIO\toy_model2\model2_dmdc_lqr_mpc\results\model2_data.mat
+
+==============================================================================
+  MODEL 2 | STEP 7 | MPC - FINITE-HORIZON PROBLEM
+==============================================================================
+    min  sum_{k=0}^{N-1} (x_k'Q x_k + u_k'R u_k) + x_N'P_f x_N
+    s.t. x_{k+1} = A x_k + B u_k,  u_min <= u_k <= u_max,  |C x_k| <= x_max
+------------------------------------------------------------------------------
+
+Part A : scalar toy problem
+   min_{u0,u1}  x0^2 + u0^2 + x1^2 + u1^2 + 3.1215 x2^2
+   s.t. x_{k+1} = 1.1 x_k + 0.5 u_k,  x0 = 1,  |u_k| <= 0.5
+
+Part B : drone MPC problem
+  [IN ] N            1x1     steps        prediction horizon (1 s)
+          = 25
+  [IN ] P_f          12x12   -            terminal weight = DARE solution (Step 6)
+          (array: min -91.63, max  380.1, Frobenius norm 642)
+  [IN ] u_min        4x1     N, N m       lower input limits (deviation from hover)
+          = [-9.7150 -0.3000 -0.3000 -0.0500]'
+  [IN ] u_max        4x1     N, N m       upper input limits
+          = [ 10.2850  0.3000  0.3000  0.0500]'
+  [IN ] x_max        5x1     m/s, rad     limits on |v_x|,|v_y|,|v_z|,|roll|,|pitch|
+          = [ 1.0000  1.0000  1.0000  0.3500  0.3500]'
+  [OUT] #vars        1x1     -            decision variables U = [u_0; ...; u_{N-1}]
+          = 100
+  [OUT] #ineq        1x1     -            inequality constraints
+          = 450
+
+Saved mpc -> C:\SEM 5\Drones\PROJECT\Drones_S5_CD2_3D_Mapping_using_normal_monocular_camera_controlling_Visual-Inertial-Odometry-VIO\toy_model2\model2_dmdc_lqr_mpc\results\model2_data.mat
+
+==============================================================================
+  MODEL 2 | STEP 8 | QUADRATIC PROGRAM (STACKED FORM)
+==============================================================================
+    X = Sx x0 + Su U
+    min 1/2 U'HU + f'U  s.t.  G U <= h,  A_eq U = b_eq
+    H = 2(Su'Qbar Su + Rbar),   f = 2 Su'Qbar Sx x0
+------------------------------------------------------------------------------
+
+Part A : scalar QP, a = 1.1, b = 0.5, q = r = 1, P_f = 3.12146, x0 = 1
+  [OUT] Sx           2x1     -            [a; a^2]
+          = [ 1.1000  1.2100]'
+  [OUT] Su           2x2     -            [b 0; ab b]
+          |  0.5000  0.0000 |
+          |  0.5500  0.5000 |
+  [OUT] H            2x2     -            2(Su'Qbar Su + I)
+          |  4.3885  1.7168 |
+          |  1.7168  3.5607 |
+  [OUT] f            2x1     -            2 Su'Qbar Sx x0
+          = [ 5.2547  3.7770]'
+  [OUT] U* (no limits) 2x1     -            first entry = -K x0 = -0.9643 (MPC = LQR)
+          = [-0.9643 -0.5958]'
+  [OUT] U* (|u|<=0.5) 2x1     -            both inputs saturate at -0.5
+          = [-0.5000 -0.5000]'
+  [OUT] U* (x2 = 0)  2x1     -            with equality A_eq U = b_eq forcing x_2 = 0
+          = [-1.3057 -0.9837]'
+  [CHK] x2           1x1     -            terminal state really is 0
+          = 0
+
+Part B : drone, small offset (5 cm) - constraints inactive
+  [IN ] x0           12x1    mixed        current deviation state
+          = [ 0.0500 -0.0300  0.0200  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000]'
+  [OUT] u0* MPC      4x1     N, N m       first optimal input
+          = [-0.1845 -0.0084 -0.0139 -0.0002]'
+  [CHK] -K x0 LQR    4x1     N, N m       identical: P_f = P makes MPC = LQR when no limit is active
+          = [-0.1845 -0.0084 -0.0139 -0.0002]'
+  [CHK] IPM iters    1x1     -            interior-point iterations
+          = 7
+
+Part C : drone, large offset (2 m) - constraints active
+  [IN ] x0           12x1    mixed        drone 1.5 m, 1.0 m, 1.2 m away from the setpoint
+          = [ 1.5000 -1.0000 -1.2000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000]'
+  [OUT] H            100x100 -            Hessian 100x100
+          (array: min -339.3, max  3.078e+04, Frobenius norm 2.557e+05)
+  [OUT] f            100x1   -            linear term (depends on x0)
+          (array: min -8.462, max  3022, Frobenius norm 8127)
+  [OUT] G            450x100 -            constraint matrix 450x100
+          (array: min -9.279, max  9.279, Frobenius norm 98.88)
+  [OUT] u0*          4x1     N, N m       first input of the optimal plan
+          = [ 10.2850 -0.2789 -0.3000  0.0019]'
+  [CHK] max|v| plan  1x1     m/s          predicted speed never exceeds 1 m/s
+          = 1
+  [CHK] LQR demand   1x1     -            unconstrained LQR would ask for this multiple of the allowed input
+          = 1.38864
+  [CHK] converged    1x1     -            10 IPM iterations, 7.2 ms
+          = 1
+
+Saved qp_example -> C:\SEM 5\Drones\PROJECT\Drones_S5_CD2_3D_Mapping_using_normal_monocular_camera_controlling_Visual-Inertial-Odometry-VIO\toy_model2\model2_dmdc_lqr_mpc\results\model2_data.mat
+
+==============================================================================
+  MODEL 2 | STEP 9 | MPC CONTROL INPUT (RECEDING HORIZON)
+==============================================================================
+    U* = [u_0*, ..., u_{N-1}*] = argmin QP(x_k)
+    apply u_k = u_0*,  k <- k + 1,  repeat
+------------------------------------------------------------------------------
+  [IN ] x_0          12x1    mixed        initial deviation
+          = [ 1.5000 -1.0000 -1.2000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000]'
+  [OUT] U* at k=0    4x3     N, N m       first 3 of 25 planned inputs (columns)
+          |  10.2850  8.5278  6.5853 |
+          | -0.2789 -0.1071 -0.0051 |
+          | -0.3000 -0.2268 -0.0442 |
+          |  0.0019  0.0021  0.0023 |
+  [OUT] u_0* (k=0)   4x1     N, N m       the only one actually applied
+          = [ 10.2850 -0.2789 -0.3000  0.0019]'
+  [CHK] max|v| MPC   1x1     m/s          speed limit 1 m/s respected
+          = 1
+  [CHK] max|v| LQR   1x1     m/s          clipped LQR has no notion of a speed limit
+          = 1.17218
+  [CHK] ||x(8s)|| MPC 1x1     -            converged to the setpoint
+          = 1.33882e-05
+  [CHK] relaxed      1x1     -            samples where state limits had to be dropped
+          = 0
+  [CHK] solve time   1x1     ms           mean QP time (budget: 40 ms)
+          = 2.38985
+
+Saved lin_sim -> C:\SEM 5\Drones\PROJECT\Drones_S5_CD2_3D_Mapping_using_normal_monocular_camera_controlling_Visual-Inertial-Odometry-VIO\toy_model2\model2_dmdc_lqr_mpc\results\model2_data.mat
+
+==============================================================================
+  MODEL 2 | STEP 10 | APPLY TO THE DRONE
+==============================================================================
+    u_k = u_trim + du_k = [T_k; tau_k]
+    f = Gamma^-1 u_k,   Omega_i = sqrt(f_i / kf)
+------------------------------------------------------------------------------
+
+Part A : a single control sample
+  [IN ] x_k          12x1    mixed        measured deviation state
+          = [ 1.5000 -1.0000 -1.2000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000]'
+  [OUT] du_k         4x1     N, N m       MPC output u_0*
+          = [ 10.2850 -0.2789 -0.3000  0.0019]'
+  [OUT] u_k          4x1     N, N m       [T; tau] after adding hover thrust
+          = [ 25.0000 -0.2789 -0.3000  0.0019]'
+  [OUT] f            4x1     N            rotor thrusts
+          = [ 7.1147  5.3271  6.5391  6.0191]'
+  [OUT] Omega        4x1     rad/s        motor speeds sent to the ESCs
+          = [ 912.2875  789.4006  874.6073  839.1083]'
+  [CHK] MPC max|v|   1x1     m/s          largest velocity component in flight
+          = 0.993595
+  [CHK] MPC err(10s) 1x1     m            distance to setpoint at t = 10 s
+          = 0.0147355
+  [CHK] MPC Omega    1x2     rad/s        motor speed range
+          = [ 583.5014  913.2445]'
+  [CHK] LQR max|v|   1x1     m/s          largest velocity component in flight
+          = 1.11806
+  [CHK] LQR err(10s) 1x1     m            distance to setpoint at t = 10 s
+          = 0.0314658
+  [CHK] LQR Omega    1x2     rad/s        motor speed range
+          = [ 612.8059  911.3372]'
+
+Saved flight -> C:\SEM 5\Drones\PROJECT\Drones_S5_CD2_3D_Mapping_using_normal_monocular_camera_controlling_Visual-Inertial-Odometry-VIO\toy_model2\model2_dmdc_lqr_mpc\results\model2_data.mat
+
+Model 2 complete. Figures in C:\SEM 5\Drones\PROJECT\Drones_S5_CD2_3D_Mapping_using_normal_monocular_camera_controlling_Visual-Inertial-Odometry-VIO\toy_model2\model2_dmdc_lqr_mpc\figures
