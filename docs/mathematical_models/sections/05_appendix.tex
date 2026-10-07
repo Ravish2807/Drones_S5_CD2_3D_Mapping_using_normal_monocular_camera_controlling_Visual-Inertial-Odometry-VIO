@@ -1,0 +1,95 @@
+% =====================================================================
+\section{Proofs of the SO(3) identities}
+\label{app:so3}
+% =====================================================================
+
+\textbf{\eqref{eq:id1}.} $\skw{\bm a}^\top=-\skw{\bm a}$ by inspection of \eqref{eq:hat}. $\skw{\bm a}\bm a=\bm a\times\bm a=0$, and
+$\skw{\bm a}\bm b=\bm a\times\bm b=-\bm b\times\bm a=-\skw{\bm b}\bm a$.
+
+\textbf{\eqref{eq:id2}.} For any $\bm b$: $R\skw{\bm a}R^\top\bm b=R\big(\bm a\times R^\top\bm b\big)=(R\bm a)\times(RR^\top\bm b)=(R\bm a)\times\bm b$,
+because a rotation preserves cross products ($R(\bm x\times\bm y)=R\bm x\times R\bm y$ for $\det R=+1$).
+
+\textbf{\eqref{eq:id3}.} Split $M=M_s+M_a$ into symmetric and skew parts. The trace of (symmetric $\times$ skew) is zero, so
+$\tr(M\skw{\bm\eta})=\tr(M_a\skw{\bm\eta})$. With $M_a=\skw{\bm m}$, $\bm m=\tfrac12(M-M^\top)^\vee$, a direct calculation gives
+$\tr(\skw{\bm m}\skw{\bm\eta})=-2\,\bm m^\top\bm\eta$. Hence $\tr(M\skw{\bm\eta})=-\bm\eta^\top(M-M^\top)^\vee$.
+
+\textbf{Trace and angle.} For $R=\Exp(\theta\bm n)$, \eqref{eq:exp} gives $\tr R=3-(1-\cos\theta)\cdot2=1+2\cos\theta$ (since
+$\tr\skw{\bm n}=0$ and $\tr\skw{\bm n}^2=-2$). This is used for $\Psi=1-\cos\varphi$ and for $\Log$.
+
+% =====================================================================
+\section{Matrix-calculus rules used}
+\label{app:calc}
+% =====================================================================
+
+For vectors $\vx,\bm b$ and matrices $M$ (symmetric where stated), $K$, $N$:
+\[
+\frac{\partial(\bm b^\top\vx)}{\partial\vx}=\bm b,\qquad
+\frac{\partial(\vx^\top M\vx)}{\partial\vx}=2M\vx\ (M=M^\top),
+\]
+\[
+\frac{\partial\,\tr(KN)}{\partial K}=N^\top,\qquad
+\frac{\partial\,\tr(KMK^\top)}{\partial K}=2KM\ (M=M^\top).
+\]
+The first two give the LQR gain (Model~2, block~4) and the QP gradient $H\mathbf U+\bm f$ (Model~2, block~8). The last two give the
+Kalman gain (Model~1, block~4).
+
+\textbf{Least squares.} $\min_G\|Y-G\Omega\|_F^2$ has gradient $-2(Y-G\Omega)\Omega^\top$. It is zero at
+$G=Y\Omega^\top(\Omega\Omega^\top)^{-1}=Y\Omega^\dagger$ when $\Omega$ has full row rank (DMDc, Model~2 block~2).
+
+% =====================================================================
+\section{References}
+% =====================================================================
+
+\begin{enumerate}[label={[\arabic*]}, leftmargin=*]
+\item T.~Lee, M.~Leok, N.\,H.~McClamroch, ``Geometric tracking control of a quadrotor UAV on SE(3)'',
+      \emph{IEEE CDC}, 2010 (arXiv:1003.2005). Basis of Model 1, blocks 5--7.
+\item J.~Sol\`a, ``Quaternion kinematics for the error-state Kalman filter'', arXiv:1711.02508, 2017. Basis of Model 1, block 4.
+\item J.\,L.~Proctor, S.\,L.~Brunton, J.\,N.~Kutz, ``Dynamic mode decomposition with control'',
+      \emph{SIAM J.\ Applied Dynamical Systems} 15(1), 2016. Model 2, block 2.
+\item D.\,P.~Bertsekas, \emph{Dynamic Programming and Optimal Control}, Vol.~I, Athena Scientific. Model 2, blocks 3--6.
+\item J.\,B.~Rawlings, D.\,Q.~Mayne, M.\,M.~Diehl, \emph{Model Predictive Control: Theory, Computation, and Design}, 2nd ed., 2017.
+      Model 2, blocks 7--9.
+\item T.~Qin, P.~Li, S.~Shen, ``VINS-Mono: a robust and versatile monocular visual-inertial state estimator'',
+      \emph{IEEE T-RO}, 2018.
+\item ArduPilot SITL and Gazebo Iris model documentation; project parameters from
+      \code{controller.yaml} (package \code{drones\_controller}, folder \code{config}).
+\end{enumerate}
+
+% =====================================================================
+\section{Glossary}
+\label{app:glossary}
+% =====================================================================
+
+\begin{center}\small
+\begin{tabularx}{\linewidth}{@{}l X@{}}
+\toprule
+\textbf{Term} & \textbf{Meaning}\\
+\midrule
+ArduPilot SITL & ArduPilot flight software running on a PC (Software-In-The-Loop), flying a simulated drone\\
+Attitude & orientation of the drone; here the rotation matrix $R$\\
+Body frame & axes fixed to the drone: $x$ forward, $y$ left, $z$ up (FLU)\\
+Covariance & matrix of variances/co-variations of errors; the EKF's ``how unsure am I''\\
+DARE & Discrete Algebraic Riccati Equation; gives the infinite-horizon LQR solution\\
+DMDc & Dynamic Mode Decomposition with control; fits $\vx_{k+1}=A\vx_k+B\vu_k$ to data by least squares\\
+EKF & Extended Kalman Filter: Kalman filter applied to a nonlinear model through linearization\\
+ENU & East--North--Up world frame used by ArduPilot's ROS 2 topics\\
+Error-state & the filter tracks the small error $\delta\vx$, not the full state, so attitude is handled correctly\\
+Gazebo & 3D physics simulator in which the Iris quadrotor flies\\
+Gimbal lock & singularity of Euler angles at $\pm90^\circ$ pitch; avoided by working with $R$ directly\\
+IMU & Inertial Measurement Unit: gyroscope (rates) and accelerometer\\
+Innovation & measurement minus what the filter expected to measure\\
+Jacobian & matrix of partial derivatives; the ``slope'' of a vector function\\
+Kalman gain $K$ & how strongly the estimate is pulled towards a measurement\\
+LQR & Linear Quadratic Regulator: optimal linear feedback $\vu=-K\vx$\\
+Lyapunov function & energy-like quantity that never increases; proves stability\\
+MPC & Model Predictive Control: repeatedly solve a finite-horizon optimal problem with constraints\\
+QP & Quadratic Program: minimise a quadratic cost subject to linear constraints\\
+Receding horizon & apply only the first planned input, then re-plan one step later\\
+RK4 & 4th-order Runge--Kutta: accurate way to step a differential equation forward\\
+ROS 2 & Robot Operating System; our controller node talks to ArduPilot through it\\
+SO(3) & the set of all 3D rotation matrices ($R^\top R=I$, $\det R=1$)\\
+VIO & Visual-Inertial Odometry: estimating motion by fusing camera and IMU\\
+ZOH & Zero-Order Hold: input kept constant between samples\\
+\bottomrule
+\end{tabularx}
+\end{center}

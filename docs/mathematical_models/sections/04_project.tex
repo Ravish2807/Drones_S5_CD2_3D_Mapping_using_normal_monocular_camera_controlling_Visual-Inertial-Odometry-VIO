@@ -1,0 +1,73 @@
+% =====================================================================
+\section[How the Two Models Fit Together]{How the Two Models Fit Together in Our Project}
+\label{sec:project}
+% =====================================================================
+
+\subsection{One drone, two ways of thinking}
+
+\begin{center}\small
+\begin{tabularx}{\linewidth}{@{}l X X@{}}
+\toprule
+ & \textbf{Model 1 (model-based)} & \textbf{Model 2 (data-driven)}\\
+\midrule
+Where the model comes from & Newton/Euler physics, needs $m$, $J$, rotor constants & Logged flight data (DMDc), no parameters needed\\
+Model type & Nonlinear, continuous time, attitude on $\SO$ & Linear, discrete time, around hover\\
+Estimation & Error-state EKF fusing camera (VIO) and IMU & Uses the estimate of Model~1 as its measured state\\
+Controller & Geometric $\SO$ cascade (position $\to$ attitude) & LQR (gain table) or MPC (online QP)\\
+Valid range & Any attitude except upside-down & Near hover (small tilts)\\
+Limits / constraints & Only by saturation & Explicit in MPC (\code{max\_velocity}, tilt, thrust)\\
+On-board cost per step & A few $3\times3$ products & LQR: one $4\times12$ product; MPC: a QP (about 2\,ms)\\
+Code in the repository & \code{so3\_controller.py}, \code{state\_adapter.py} & toy model \code{model2\_dmdc\_lqr\_mpc/}\\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\subsection{The complete picture}
+
+\begin{enumerate}[leftmargin=*]
+  \item The monocular camera produces images, visual odometry turns them into a pose, and the IMU produces rates.
+  \item The \textbf{error-state EKF} (M1.10--M1.14) fuses them with the physics (M1.1--M1.4, linearized by M1.5--M1.9)
+        into one state estimate $\hx$. This is the ``VIO'' of our title. The same state, with the camera poses, is what
+        the 3D map is built from.
+  \item Either the \textbf{geometric controller} (M1.15--M1.23) or a \textbf{data-driven LQR/MPC} (M2.5--M2.16) turns
+        $\hx$ and the mission waypoints into thrust and torques.
+  \item The \textbf{allocation} (M1.24--M1.25 = M2.17--M2.18) turns them into four motor speeds, and the drone moves.
+  \item Logged flights can be fed back into DMDc to keep Model~2's $A,B$ up to date.
+\end{enumerate}
+
+\subsection{The toy model: \texttt{toy\_model2}}
+
+Every block of both flows is a MATLAB script that prints its \textbf{inputs} and \textbf{outputs} (name, size, unit,
+meaning, value). It first reproduces the hand-worked toy example of this document (Part~A) and then passes real data
+to the next step (Part~B). Results are saved to \code{results/*.mat} and figures to \code{figures/}. No toolbox is
+required: a QP solver and a DARE solver are included.
+
+\begin{center}\small
+\begin{tabularx}{\linewidth}{@{}l l X@{}}
+\toprule
+\textbf{Folder / script} & \textbf{Equations} & \textbf{Inputs $\rightarrow$ outputs}\\
+\midrule
+\multicolumn{3}{@{}l}{\code{toy\_model2/model1\_nonlinear\_ekf\_so3/} \quad(run \code{run\_all\_model1})}\\
+\code{step1\_nonlinear\_dynamics} & M1.1--4 & $\vx,\vu\rightarrow\dot{\vx}$; open-loop flight\\
+\code{step2\_taylor\_jacobian} & M1.5--6 & $(\hx,\hu)\rightarrow A,B$; numerical check\\
+\code{step3\_local\_error\_dynamics} & M1.7--9 & $A,B,\Delta t\rightarrow F$; linear vs.\ true error\\
+\code{step4\_error\_state\_ekf} & M1.10--14 & $\vu_k,\vz_k\rightarrow\hx_k,P_k$\\
+\code{step5\_position\_control} & M1.15--16 & $\hp,\hv,\vp_d,\vv_d,\ddot{\vp}_d\rightarrow\ve_p,\ve_v,\va_d$\\
+\code{step6\_force\_attitude} & M1.17--19 & $\va_d,\psi_d\rightarrow\vF_d,\vb_{3d},R_d$\\
+\code{step7\_attitude\_control} & M1.20--23 & $\hR,\hw,R_d,\vF_d\rightarrow\ve_R,\ve_\omega,\vtau,T$\\
+\code{step8\_actuators\_feedback} & M1.24--25 & $T,\vtau\rightarrow\vOm$; full closed loop\\
+\midrule
+\multicolumn{3}{@{}l}{\code{toy\_model2/model2\_dmdc\_lqr\_mpc/} \quad(run \code{run\_all\_model2})}\\
+\code{step1\_flight\_data} & M2.1 & drone + excitation $\rightarrow\{\vx_k\},\{\vu_k\}$\\
+\code{step2\_dmdc} & M2.2--4 & $X,X^+,U\rightarrow A,B$\\
+\code{step3\_bellman\_cost} & M2.5--7 & $A,B\rightarrow Q,R$; Bellman check\\
+\code{step4\_lqr\_gain} & M2.8--9 & $A,B,R,P\rightarrow K$\\
+\code{step5\_riccati\_recursion} & M2.10 & $P_0\rightarrow P_\infty$\\
+\code{step6\_dare} & M2.11 & $A,B,Q,R\rightarrow P,K$\\
+\code{step7\_mpc\_problem} & M2.12 & limits, $N$, $P_f\rightarrow$ MPC problem\\
+\code{step8\_qp\_formulation} & M2.13--15 & problem, $\vx_0\rightarrow H,\bm f,G,\bm h,\mathbf U^*$\\
+\code{step9\_mpc\_control\_input} & M2.16 & $\vx_k\rightarrow\vu_0^*$ (receding horizon)\\
+\code{step10\_apply\_to\_drone} & M2.17--18 & $\vu_0^*$ or $-K\vx_k\rightarrow\vOm$; nonlinear flight\\
+\bottomrule
+\end{tabularx}
+\end{center}

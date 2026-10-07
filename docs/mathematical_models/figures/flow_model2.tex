@@ -1,0 +1,201 @@
+% Model 2 - data-driven model (DMDc) and optimal control (LQR / MPC).
+% Build:  pdflatex flow_model2.tex  (twice, for equal block heights)
+\documentclass[border=10pt]{standalone}
+\usepackage{tikz}
+\input{flow_preamble}
+
+\begin{document}
+\sffamily
+\newlength{\blkw}\setlength{\blkw}{8.2cm}
+%------------------------------------------------------------------ blocks
+\defblock[equal height group=r1]{b1}{\blkw}{cPlant}{1}{Nonlinear Flight Data}{drone / simulation}{%
+  $\begin{gathered}
+    \vx_k=\begin{bmatrix}\vp_k-\vp_{\mathrm{ref}}\\ \vv_k\\ \mathrm{Log}(R_k)\\ \vw_k\end{bmatrix}\in\R^{12},\qquad
+    \vu_k=\begin{bmatrix}T_k-mg_0\\ \vtau_k\end{bmatrix}\in\R^{4}\\[2pt]
+    \text{sampled at } t_k = k\,\Delta t,\quad k=1,\dots,N
+  \end{gathered}$}
+  {flights with a stabilising pilot $+$ random excitation}
+  {state history $\{\vx_k\}$, input history $\{\vu_k\}$}
+
+\defblock[equal height group=r1]{b2}{\blkw}{cOuter}{2}{DMDc}{system identification}{%
+  $\begin{gathered}
+    X=[\vx_1\cdots\vx_{N-1}],\qquad X^{+}=[\vx_2\cdots\vx_{N}]\\
+    U=[\vu_1\cdots\vu_{N-1}]\\[3pt]
+    [\,A\ \ B\,]=X^{+}\begin{bmatrix}X\\ U\end{bmatrix}^{\dagger}
+    \ \Rightarrow\ \vx_{k+1}\approx A\vx_k+B\vu_k
+  \end{gathered}$}
+  {$X,X^{+}\in\R^{12\times(N-1)}$,\ \ $U\in\R^{4\times(N-1)}$}
+  {$A\in\R^{12\times12}$,\ \ $B\in\R^{12\times4}$ (discrete time)}
+
+\defblock[equal height group=r2]{b3}{\blkw}{cGuid}{3}{Bellman Equation}{optimal control}{%
+  $\begin{gathered}
+    J=\sum_{k=0}^{\infty}\left(\vx_k^{\top}Q\,\vx_k+\vu_k^{\top}R\,\vu_k\right)\\[2pt]
+    V(\vx_k)=\min_{\vu_k}\Big[\vx_k^{\top}Q\vx_k+\vu_k^{\top}R\vu_k+V(\vx_{k+1})\Big]\\[1pt]
+    V(\vx)=\vx^{\top}P\,\vx\quad\text{(quadratic value function)}
+  \end{gathered}$}
+  {$A,B$; weights $Q\succeq0$, $R\succ0$}
+  {optimal input is linear: $\vu^{*}=-K\vx$}
+
+\defblock[equal height group=r2]{b7}{\blkw}{cInner}{7}{Model Predictive Control}{constrained}{%
+  $\begin{gathered}
+    \min_{\vu_0,\dots,\vu_{N-1}}\ \sum_{k=0}^{N-1}\left(\vx_k^{\top}Q\vx_k+\vu_k^{\top}R\vu_k\right)
+      +\vx_N^{\top}P_f\,\vx_N\\[1pt]
+    \text{s.t.}\ \ \vx_{k+1}=A\vx_k+B\vu_k,\quad \vu_k\in\mathcal{U},\quad \vx_k\in\mathcal{X}
+  \end{gathered}$}
+  {$A,B,Q,R$, horizon $N$, limits $\mathcal{U},\mathcal{X}$, $P_f$}
+  {finite-horizon optimal control problem}
+
+\defblock[equal height group=r3]{b4}{\blkw}{cGuid}{4}{Linear Quadratic Regulator}{optimal control}{%
+  $\begin{gathered}
+    K=\left(R+B^{\top}PB\right)^{-1}B^{\top}PA\\[2pt]
+    \vu_k=-K\,\vx_k
+  \end{gathered}$}
+  {$A,B,R$ and value matrix $P$}
+  {feedback gain $K\in\R^{4\times12}$}
+
+\defblock[equal height group=r3]{b8}{\blkw}{cInner}{8}{Quadratic Program}{stacked form}{%
+  $\begin{gathered}
+    \min_{\mathbf U}\ \tfrac12\mathbf U^{\top}H\mathbf U+\bm{f}^{\top}\mathbf U\quad
+    \text{s.t.}\ \ G\mathbf U\le\bm{h},\ \ A_{eq}\mathbf U=\bm{b}_{eq}\\[2pt]
+    H=2\big(S_u^{\top}\bar{Q}S_u+\bar{R}\big),\qquad \bm{f}=2S_u^{\top}\bar{Q}S_x\vx_0
+  \end{gathered}$}
+  {MPC problem, current state $\vx_0$}
+  {$H\in\R^{4N\times4N}$, $\bm f$, $G$, $\bm h$ $\rightarrow$ QP solver}
+
+\defblock[equal height group=r4]{b5}{\blkw}{cGuid}{5}{Riccati Recursion}{iterative}{%
+  $P_{k+1}=A^{\top}P_kA-A^{\top}P_kB\left(R+B^{\top}P_kB\right)^{-1}B^{\top}P_kA+Q$}
+  {$A,B,Q,R$; start $P_0=Q$}
+  {sequence $P_0,P_1,\dots\rightarrow P_\infty$}
+
+\defblock[equal height group=r4]{b9}{\blkw}{cInner}{9}{MPC Control Input}{receding horizon}{%
+  $\mathbf U^{*}=[\,\vu_0^{*},\vu_1^{*},\dots,\vu_{N-1}^{*}\,]
+   \ \longrightarrow\ \text{apply only } \vu_0^{*},\ \text{then re-solve at } k+1$}
+  {QP data $(H,\bm f,G,\bm h)$ at time $k$}
+  {$\vu_0^{*}\in\R^4$}
+
+\defblock[equal height group=r5]{b6}{\blkw}{cGuid}{6}{DARE}{steady state}{%
+  $P=A^{\top}PA-A^{\top}PB\left(R+B^{\top}PB\right)^{-1}B^{\top}PA+Q$}
+  {$A,B,Q,R$}
+  {$P\in\R^{12\times12}$, $P\succ0$ $\Rightarrow$ final $K$}
+
+\defblock{b10}{17.6cm}{cPlant}{10}{Apply to Drone}{actuation}{%
+  $\vu_k=\vu_{\mathrm{trim}}+\begin{cases}\vu_0^{*} & \text{(MPC)}\\ -K\vx_k & \text{(LQR)}\end{cases}
+   =\begin{bmatrix}T_k\\ \vtau_k\end{bmatrix}
+   \ \longrightarrow\ \vf=\Gamma^{-1}\vu_k
+   \ \longrightarrow\ \Omega_i=\sqrt{f_i/k_f}$}
+  {measured state $\vx_k$, controller output}
+  {motor speeds $\vOm\in\R^4$ $\rightarrow$ the drone moves to $\vx_{k+1}$}
+
+%------------------------------------------------------------------ notation panel
+\newsavebox{\notation}
+\sbox{\notation}{\scriptsize\renewcommand{\arraystretch}{1.18}%
+\begin{tabular}{@{}>{$}l<{$}l>{$}l<{$}l@{\hspace{6pt}}c@{\hspace{6pt}}>{$}l<{$}l>{$}l<{$}l@{}}
+\multicolumn{4}{@{}l}{\textbf{\color{cOuter}Data and learned model (blocks 1--2)}} & &
+\multicolumn{4}{l}{\textbf{\color{cGuid}Optimal control (blocks 3--6)}}\\[2pt]
+\vx_k & state deviation from hover & \R^{12} & m, m/s, rad, rad/s &&
+J & total cost of the flight & \R & -- \\
+\vu_k & input deviation $[T_k-mg_0;\vtau_k]$ & \R^{4} & N, N\,m &&
+Q & state weight, $Q\succeq0$ & \R^{12\times12} & 1/(state unit)$^2$\\
+\vp_k,\vv_k,\vw_k & position, velocity, body rate & \R^3 & m, m/s, rad/s &&
+R & input weight, $R\succ0$ (not the attitude) & \R^{4\times4} & 1/N$^2$, 1/(N\,m)$^2$\\
+R_k,\ \mathrm{Log}(R_k) & attitude, its rotation vector & \SO,\ \R^3 & --, rad &&
+V(\vx) & value function (lowest cost from $\vx$) & \R & --\\
+\vp_{\mathrm{ref}} & hover point $[0,0,2]^{\top}$ & \R^3 & m &&
+P,\ P_k & value matrix (iteration $k$) & \R^{12\times12} & as $Q$\\
+m g_0 & hover thrust ($1.5\times9.81$) & \R & N (14.715) &&
+K & LQR feedback gain & \R^{4\times12} & mixed\\
+\Delta t,\ t_k & sample time, $t_k=k\Delta t$ & \R & s (0.04) &&
+\multicolumn{4}{l}{\textbf{\color{cInner}MPC and QP (blocks 7--9)}}\\
+N\ \text{(blocks 1--2)} & number of recorded samples & \mathbb N & -- &&
+N\ \text{(blocks 7--9)} & prediction horizon & \mathbb N & steps (25)\\
+X,\ X^{+} & snapshots, shifted by one sample & \R^{12\times(N-1)} & mixed &&
+P_f & terminal weight ($=P$ from DARE) & \R^{12\times12} & as $Q$\\
+U & input snapshot matrix & \R^{4\times(N-1)} & N, N\,m &&
+\mathcal U,\ \mathcal X & admissible inputs / states & \text{sets} & --\\
+{[X;U]}^{\dagger} & Moore--Penrose pseudo-inverse & \R^{(N-1)\times16} & -- &&
+\mathbf U & stacked inputs $[\vu_0;\dots;\vu_{N-1}]$ & \R^{4N} & N, N\,m\\
+A & learned state matrix & \R^{12\times12} & -- &&
+S_x,\ S_u & prediction matrices & \R^{12N\times12},\ \R^{12N\times4N} & --\\
+B & learned input matrix & \R^{12\times4} & mixed &&
+\bar Q,\ \bar R & block-diagonal weights & \R^{12N\times12N},\ \R^{4N\times4N} & --\\
+\multicolumn{4}{l}{\textbf{\color{cPlant}Actuation (block 10)}} &&
+H,\ \bm f & QP Hessian, linear term & \R^{4N\times4N},\ \R^{4N} & --\\
+\vu_{\mathrm{trim}} & hover input $[mg_0;0;0;0]$ & \R^4 & N, N\,m &&
+G,\ \bm h & inequality constraints & \R^{n_c\times4N},\ \R^{n_c} & mixed\\
+\Gamma,\ \vf & mixer matrix, rotor thrusts & \R^{4\times4},\ \R^4 & --/m, N &&
+A_{eq},\ \bm b_{eq} & equality constraints & \R^{n_e\times4N},\ \R^{n_e} & mixed\\
+k_f,\ \vOm & thrust constant, rotor speeds & \R,\ \R^4 & N\,s$^2$, rad/s &&
+\vu_0^{*} & first optimal input (applied) & \R^{4} & N, N\,m\\
+\end{tabular}}
+
+%------------------------------------------------------------------ layout
+\begin{tikzpicture}
+  \def\dx{9.4}  \def\gap{1.25}
+  \node[blk, anchor=north west] (b1) at (0, 0)    {\useblock{b1}};
+  \node[blk, anchor=north west] (b2) at (\dx, 0)  {\useblock{b2}};
+  \node[blk, anchor=north west] (b3) at ($(b1.south west) + (0, -1.6)$)   {\useblock{b3}};
+  \node[blk, anchor=north west] (b7) at ($(b2.south west) + (0, -1.6)$)   {\useblock{b7}};
+  \node[blk, anchor=north west] (b4) at ($(b3.south west) + (0, -\gap)$)  {\useblock{b4}};
+  \node[blk, anchor=north west] (b8) at ($(b7.south west) + (0, -\gap)$)  {\useblock{b8}};
+  \node[blk, anchor=north west] (b5) at ($(b4.south west) + (0, -\gap)$)  {\useblock{b5}};
+  \node[blk, anchor=north west] (b9) at ($(b8.south west) + (0, -\gap)$)  {\useblock{b9}};
+  \node[blk, anchor=north west] (b6) at ($(b5.south west) + (0, -\gap)$)  {\useblock{b6}};
+  \node[blk, anchor=north] (b10) at ($(b6.south west)!0.5!(b6.south west -| b9.east) + (0, -1.5)$) {\useblock{b10}};
+
+  % branch titles
+  \node[font=\scriptsize\bfseries, text=cGuid, anchor=south west] at ($(b3.north west)+(0,0.08)$) {LQR BRANCH \,(infinite horizon)};
+  \node[font=\scriptsize\bfseries, text=cInner, anchor=south west] at ($(b7.north west)+(0,0.08)$) {MPC BRANCH \,(finite horizon + constraints)};
+
+  % data -> model -> both branches
+  \draw[sig] (b1.east) -- node[lbl, above=2pt] {$\{\vx_k\},\{\vu_k\}$} (b2.west);
+  \coordinate (split) at ($(b2.south)+(0,-0.6)$);
+  \draw[line width=0.9pt, color=cText] (b2.south) -- (split);
+  \fill[cText] (split) circle (1.6pt);
+  \draw[sig] (split) -- (b7.north);
+  \draw[sig] (split) -| node[lbl, pos=0.25] {$A,B$} (b3.north);
+
+  % LQR chain
+  \draw[sig] (b3.south) -- node[lbl, right=3pt] {$V$ quadratic $\Rightarrow$ $\vu^*$ linear in $\vx$} (b4.north);
+  \draw[sig] (b4.south) -- node[lbl, right=3pt] {needs $P$} (b5.north);
+  \draw[sig] (b5.south) -- node[lbl, right=3pt] {$P_k\rightarrow P_\infty$ ($k\to\infty$)} (b6.north);
+  \draw[mdl, color=cGuid] (b6.west) -- ++(-0.55,0) |- node[lbl, pos=0.25, rotate=90, yshift=0pt] {converged $P$} (b4.west);
+
+  % MPC chain
+  \draw[sig] (b7.south) -- node[lbl, right=3pt] {stack over $k=0..N-1$} (b8.north);
+  \draw[sig] (b8.south) -- node[lbl, right=3pt] {solve QP $\Rightarrow \mathbf U^{*}$} (b9.north);
+  \draw[mdl, color=cGuid] (b6.east) -- ++(0.6,0) |- node[lbl, pos=0.3, rotate=90] {$P_f = P$ (terminal cost of the MPC)} (b7.west);
+
+  % to the drone
+  \draw[sig] (b6.south) -- node[lbl, right=3pt] {$\vu_k=-K\vx_k$} (b6.south |- b10.north);
+  \draw[sig] (b9.south) -- node[lbl, right=3pt] {$\vu_0^{*}$} (b9.south |- b10.north);
+
+  % feedback loops
+  \draw[sig, dashed] (b10.east) -- ++(0.7,0) |- node[lbl, pos=0.25, rotate=90] {measured $\vx_{k+1}$ (every $\Delta t$)} (b9.east);
+  \draw[sig, dashed, color=cPlant] (b10.west) -- ++(-0.9,0) |- node[lbl, pos=0.25, rotate=90] {new logged data $\Rightarrow$ re-identify $A,B$} (b1.west);
+
+  % design-time / run-time note under the legend
+  \node[aux, anchor=north west, text width=17.1cm, align=left] (note) at ($(b10.south west)+(0,-1.0)$) {%
+    \textbf{When does each block run?}\quad
+    \textbf{Offline, once:}\ 1 (record) $\rightarrow$ 2 (DMDc) $\rightarrow$ 3--6 ($P$, $K$).\quad
+    \textbf{Online, every $\Delta t=40$\,ms:}\ LQR: 10 only;\ MPC: 8 $\rightarrow$ 9 $\rightarrow$ 10.\\[2pt]
+    {\color{cText!75}Toy-model settings: $N=25$ (1\,s horizon),\ $|v_i|\le1$\,m/s (\texttt{max\_velocity} in controller.yaml),\
+     $|\phi|,|\theta|\le20^\circ$,\ $5\,\mathrm{N}\le T\le25\,\mathrm{N}$.}};
+
+  % notation and dimensions panel
+  \node[draw=cText!50, fill=cText!3, rounded corners=3pt, inner sep=7pt, anchor=north west,
+        label={[anchor=south west, font=\small\bfseries, text=cText]north west:Notation and dimensions}]
+    at ($(note.south west) + (0, -0.8)$) {\usebox{\notation}};
+
+  % title and legend
+  \node[anchor=south west, font=\large\bfseries, text=cText] (ttl) at ($(b1.north west) + (0, 1.25)$)
+    {Model 2 \,|\, Data-Driven Linear Model (DMDc) and Optimal Control (LQR / MPC)};
+  \node[anchor=north west, font=\small, text=cText!80] at (ttl.south west)
+    {Learn $A,B$ from flight data, design the controller on the learned model, fly the nonlinear drone};
+  \matrix[anchor=north west, column sep=4pt, font=\scriptsize\sffamily, text=cText]
+    at ($(b10.south west) + (0, -0.35)$) {
+    \draw[sig] (0,0) -- (0.9,0); & \node{signal / result passed on}; &[12pt]
+    \draw[mdl, color=cGuid] (0,0) -- (0.9,0); & \node{matrix re-used by another block}; &[12pt]
+    \draw[sig, dashed] (0,0) -- (0.9,0); & \node{feedback from the drone}; \\
+  };
+\end{tikzpicture}
+\end{document}

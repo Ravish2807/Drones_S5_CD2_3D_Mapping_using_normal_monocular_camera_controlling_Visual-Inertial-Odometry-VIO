@@ -1,0 +1,66 @@
+% Shared preamble for the two equation-flow diagrams.
+\usepackage{amsmath,amssymb,bm,array}
+\usepackage[most]{tcolorbox}
+\usetikzlibrary{positioning,arrows.meta,calc,fit,backgrounds}
+
+% ---- palette: one colour per functional layer ----
+\definecolor{cPlant}{HTML}{37474F}   % physical hardware (drone, motors)
+\definecolor{cModel}{HTML}{A0620F}   % modelling / linearisation
+\definecolor{cEst}{HTML}{2E7D32}     % estimation
+\definecolor{cOuter}{HTML}{1565C0}   % outer loop / data-driven model
+\definecolor{cGuid}{HTML}{4527A0}    % force & attitude generation / optimal control
+\definecolor{cInner}{HTML}{AD1457}   % inner loop / MPC
+\definecolor{cRef}{HTML}{546E7A}
+\definecolor{cText}{HTML}{263238}
+
+% ---- notation (identical to the main document) ----
+\newcommand{\vp}{\bm{p}}  \newcommand{\vv}{\bm{v}}  \newcommand{\vw}{\bm{\omega}}
+\newcommand{\vx}{\bm{x}}  \newcommand{\vu}{\bm{u}}  \newcommand{\vz}{\bm{z}}
+\newcommand{\vg}{\bm{g}}  \newcommand{\va}{\bm{a}}  \newcommand{\vF}{\bm{F}}
+\newcommand{\vb}{\bm{b}}  \newcommand{\ve}{\bm{e}}  \newcommand{\vtau}{\bm{\tau}}
+\newcommand{\vf}{\bm{f}}  \newcommand{\vOm}{\bm{\Omega}}
+\newcommand{\hp}{\hat{\bm p}} \newcommand{\hv}{\hat{\bm v}} \newcommand{\hw}{\hat{\bm\omega}}
+\newcommand{\hR}{\hat{R}}     \newcommand{\hx}{\hat{\bm x}}
+\newcommand{\skw}[1]{[#1]_{\times}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\SO}{\mathrm{SO}(3)}
+\newcommand{\diag}{\operatorname{diag}}
+
+% ---- block = coloured title bar + equations + I/O footer ----
+\newtcolorbox{flowbox}[3][]{enhanced, colback=white, colframe=#2, colbacktitle=#2,
+  coltitle=white, title={#3}, fonttitle=\sffamily\bfseries\small,
+  boxrule=0.8pt, arc=3pt, left=5pt, right=5pt, top=4pt, bottom=4pt,
+  toptitle=2pt, bottomtitle=2pt, colbacklower=#2!7,
+  segmentation style={draw=#2!45, line width=0.5pt},
+  fontupper=\small, fontlower=\scriptsize\sffamily\color{cText}, width=\linewidth, #1}
+\newcommand{\num}[2]{\tcbox[on line, colback=white, colframe=white, colupper=#1, arc=6pt,
+  boxsep=0pt, left=2.6pt, right=2.6pt, top=0.6pt, bottom=0.6pt,
+  fontupper=\sffamily\bfseries\small]{#2}}
+\newcommand{\ltag}[1]{\hfill{\mdseries\scriptsize\MakeUppercase{#1}}}
+\newcommand{\io}[2]{\textbf{IN}\enspace #1\par\smallskip\textbf{OUT}\enspace #2}
+
+% \defblock[opts]{name}{width}{colour}{number}{title}{tag}{body}{in}{out}
+\makeatletter
+\newcommand{\defblock}[9][]{\def\db@opts{#1}\def\db@name{#2}\def\db@w{#3}\def\db@c{#4}%
+  \def\db@n{#5}\def\db@t{#6}\def\db@tag{#7}\def\db@body{#8}\def\db@in{#9}\db@cont}
+\newcommand{\db@cont}[1]{%
+  \expandafter\newsavebox\csname blk@\db@name\endcsname
+  \expandafter\sbox\csname blk@\db@name\endcsname{%
+    \begin{minipage}{\db@w}%
+      \edef\db@exp{\noexpand\begin{flowbox}[\db@opts]{\db@c}}\db@exp
+        {\num{\db@c}{\db@n}\ \db@t\ltag{\db@tag}}%
+        \centering\db@body
+        \tcblower\raggedright\io{\db@in}{#1}%
+      \end{flowbox}%
+    \end{minipage}}}
+\makeatother
+\newcommand{\useblock}[1]{\expandafter\usebox\csname blk@#1\endcsname}
+
+\tikzset{
+  blk/.style={inner sep=0pt, outer sep=0pt},
+  sig/.style={-{Stealth[length=2.6mm]}, line width=0.9pt, color=cText},
+  mdl/.style={-{Stealth[length=2.6mm]}, line width=0.9pt, dashed, color=cModel},
+  lbl/.style={font=\scriptsize\sffamily, text=cText, fill=white, inner sep=1.6pt, align=center},
+  aux/.style={draw=cRef, fill=cRef!6, rounded corners=3pt, line width=0.7pt,
+              font=\scriptsize\sffamily, text=cText, align=center, inner sep=5pt},
+}

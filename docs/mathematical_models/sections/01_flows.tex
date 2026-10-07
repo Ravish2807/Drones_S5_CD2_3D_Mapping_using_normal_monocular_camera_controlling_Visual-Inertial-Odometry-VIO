@@ -1,0 +1,40 @@
+% =====================================================================
+\section{The Two Equation Flows}
+\label{sec:flows}
+% =====================================================================
+
+The project uses two complementary mathematical pipelines. Both end in the same four motor speeds.
+
+\begin{itemize}
+  \item \textbf{Model~1 -- model-based} (\cref{fig:flow1}). Newton's and Euler's laws give a nonlinear model.
+        The model is linearized only where a linear model is really needed: inside the EKF, to propagate uncertainty.
+        Estimation (VIO) and geometric control on $\SO$ then run in a closed loop. This is the structure of our ROS~2
+        node \code{drones\_controller}.
+  \item \textbf{Model~2 -- data-driven} (\cref{fig:flow2}). A linear model is \emph{learned} from logged flight
+        data (DMDc). An optimal controller is then designed on it: LQR (infinite horizon, no limits) or MPC
+        (finite horizon, explicit limits such as \code{max\_velocity}).
+\end{itemize}
+
+\textbf{How to read the diagrams.} Each block has a coloured title bar (number, name, functional layer), the
+equations, and a footer that lists exactly what goes \textbf{IN} and what comes \textbf{OUT}, with dimensions.
+Arrow labels name the signal that travels between blocks. Block numbers equal the subsection numbers of
+\cref{sec:model1,sec:model2} and the step numbers of the MATLAB toy model.
+
+\begin{landscape}
+\begin{figure}[p]
+  \centering
+  \includegraphics[width=\linewidth,height=16.4cm,keepaspectratio]{flow_model1.pdf}
+  \caption{Model~1 equation flow: nonlinear model-based estimation and geometric $\SO$ control. The top row
+  models and estimates the state, the bottom row controls it, and the left edge closes the loop through the
+  motors. Dashed arrows carry model information (Jacobians) and solid arrows carry run-time signals.}
+  \label{fig:flow1}
+\end{figure}
+\end{landscape}
+
+\begin{figure}[p]
+  \centering
+  \includegraphics[width=\linewidth,height=0.93\textheight,keepaspectratio]{flow_model2.pdf}
+  \caption{Model~2 equation flow: data-driven linear model (DMDc) followed by two optimal-control branches,
+  LQR (left) and MPC (right), that meet when the command is applied to the drone.}
+  \label{fig:flow2}
+\end{figure}

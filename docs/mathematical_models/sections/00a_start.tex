@@ -1,0 +1,137 @@
+% =====================================================================
+\section{Start Here}
+\label{sec:start}
+% =====================================================================
+
+This guide explains, from the ground up, all the mathematics our group used to make a drone know where it is
+and fly where we want it to. You do not need to have seen any of it before. If you can multiply a matrix by a
+vector and take a derivative, you can follow every page. The rest (Jacobians, covariance, eigenvalues and so on)
+is explained in \cref{sec:refresher} with small examples.
+
+\subsection{The big picture in plain words}
+
+Flying a drone autonomously means answering four questions, again and again, many times per second.
+
+\begin{center}\small
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{4.1cm} X >{\raggedright\arraybackslash}p{2.8cm}@{}}
+\toprule
+\textbf{Question} & \textbf{What answers it} & \textbf{Where}\\
+\midrule
+\emph{How does a drone move at all?} & Physics: Newton's laws for a spinning, tilting body & Model 1, blocks 1--3\\
+\emph{Where am I right now?} & Combining camera and IMU with the physics (the EKF; this is our ``VIO'') & Model 1, block 4\\
+\emph{Where should I go, and how do I get there?} & A controller: geometric (Model 1) or optimal (Model 2) & M1 blocks 5--7, M2 blocks 3--9\\
+\emph{How do I make the motors do it?} & Splitting thrust and torque into four motor speeds & M1 block 8, M2 block 10\\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+We worked through this in two different ways, which are the two flow diagrams of \cref{sec:flows}.
+\begin{itemize}
+  \item \textbf{Model 1} starts from \emph{physics}. Write down the equations of motion, use them to estimate the
+        state, and control it with a controller that works directly with rotations (no Euler angles).
+  \item \textbf{Model 2} starts from \emph{data}. Fly, record, let the computer find a linear model that explains
+        the recording, and then compute the best possible controller for that model.
+\end{itemize}
+
+\subsection{How every block is explained}
+
+Each block of both flow diagrams gets its own subsection, always in the same order, with the same colours:
+
+\begin{center}\small
+\begin{tabularx}{\linewidth}{@{}l X@{}}
+\toprule
+\textbf{Part} & \textbf{What it gives you}\\
+\midrule
+Coloured equation box & The equations exactly as in the flow diagram, with their number (M1.x, M2.x)\\
+Symbol table & Every symbol: what it means, its size (dimension) and its unit\\
+Derivation & Where the equation comes from, step by step, nothing skipped\\
+\textcolor{cModel}{\textbf{Toy example}} (orange box) & Small numbers you can check with a calculator\\
+\textcolor{cEst}{\textbf{In our drone project}} (green box) & What it means for our drone, in plain language\\
+Toy model (grey box) & Which MATLAB script in \code{toy\_model2/} runs it and prints the same numbers\\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\textbf{Three ways to read this guide.}
+\begin{enumerate}[leftmargin=*]
+  \item \emph{Ten-minute tour:} this section, the two flow diagrams, and the recap tables at the end of each model
+        (\cref{sec:m1recap,sec:m2recap}).
+  \item \emph{Understanding:} read only the green ``In our drone project'' boxes and the toy examples, in order.
+  \item \emph{Full learning:} everything in order, and run the matching MATLAB step next to each block.
+\end{enumerate}
+
+% ---------------------------------------------------------------------
+\subsection{Maths refresher}
+\label{sec:refresher}
+% ---------------------------------------------------------------------
+
+Only the tools that appear later are covered here, each with the smallest possible example.
+
+\paragraph{Vectors, matrices, transpose.} A vector $\bm a\in\R^3$ is a column of 3 numbers, and a matrix
+$M\in\R^{m\times n}$ has $m$ rows and $n$ columns. The \textbf{dimension} written next to every symbol in this
+guide is exactly this size. The transpose $M^\top$ swaps rows and columns, and $\bm a^\top\bm b$ is the dot product.
+\begin{toybox}
+$\begin{bmatrix}1&2\\3&4\end{bmatrix}\begin{bmatrix}1\\1\end{bmatrix}=\begin{bmatrix}3\\7\end{bmatrix}$,\qquad
+$[1,2,3]\,[4,5,6]^\top=4+10+18=32$.\qquad A $4\times12$ matrix times a 12-vector gives a 4-vector.
+\end{toybox}
+
+\paragraph{Dots mean ``rate of change''.} $\dot{\vp}=d\vp/dt$ is velocity and $\ddot{\vp}$ is acceleration. An equation
+$\dot{\vx}=\vf(\vx,\vu)$ is a \emph{differential equation}: it tells you how fast the state changes. A computer
+steps it forward in small time steps $\Delta t$, e.g.\ $\vx(t+\Delta t)\approx\vx(t)+\Delta t\,\vf(\vx,\vu)$
+(Euler's method; we use the more accurate RK4).
+
+\paragraph{Discrete time.} Computers work in ticks $t_k=k\,\Delta t$. A subscript $k$ means ``at tick $k$'', so
+$\vx_{k+1}=A\vx_k+B\vu_k$ says: next state $=$ matrix $\times$ current state $+$ matrix $\times$ current input.
+
+\paragraph{Partial derivatives and the Jacobian.} $\partial f/\partial x$ is how much $f$ changes when only $x$ is
+nudged. For a vector function $\vf$ of a vector $\vx$, all these numbers form a matrix, the \textbf{Jacobian}
+$A=\partial\vf/\partial\vx$, where entry $(i,j)$ is $\partial f_i/\partial x_j$. Near a point, the function behaves like
+the linear map $\delta\vf\approx A\,\delta\vx$. This is the multi-dimensional version of ``slope''.
+\begin{toybox}
+$\vf(x,y)=\begin{bmatrix}x\,y\\ x+y^2\end{bmatrix}$ at $(x,y)=(2,1)$:\quad
+$A=\begin{bmatrix}y&x\\1&2y\end{bmatrix}=\begin{bmatrix}1&2\\1&2\end{bmatrix}$.
+Nudging $(x,y)$ by $(0.1,0)$ changes $\vf$ by $\approx A[0.1,0]^\top=[0.1,0.1]^\top$. The exact change is
+$[0.1,0.1]^\top$.
+\end{toybox}
+
+\paragraph{Linear versus nonlinear.} A model is linear if doubling the input doubles the effect, as in
+$\vx_{k+1}=A\vx_k+B\vu_k$. Drones are nonlinear because of $\sin$, $\cos$ and products such as $\vw\times J\vw$. Linear
+models are far easier to analyse, so we \emph{linearize}: approximate the nonlinear model by its Jacobian near an
+operating point such as hover.
+
+\paragraph{Mean, variance, covariance, Gaussian.} The mean is the average value. The variance $\sigma^2$ is the
+average squared distance from the mean, and $\sigma$ is the ``typical error''. For a vector of errors, the
+\textbf{covariance matrix} $P=\mathbb E[\bm e\bm e^\top]$ holds the variance of each component on its diagonal and
+how components move together off the diagonal. A Gaussian $\mathcal N(\mu,\sigma^2)$ is the bell curve: about 68\% of
+samples lie within $\pm\sigma$ and 99.7\% within $\pm3\sigma$.
+\begin{toybox}
+Measurements $9.8,\ 10.1,\ 10.1$: mean $10.0$, deviations $-0.2,\,0.1,\,0.1$, variance $(0.04+0.01+0.01)/3=0.02$,
+$\sigma=0.14$. A rule we use constantly: if $\bm e'=F\bm e$, then its covariance is $P'=FPF^\top$.
+\end{toybox}
+
+\paragraph{Minimising a function.} At the lowest point of a smooth function the slope is zero. For a quadratic
+$g(u)=a u^2+b u+c$ with $a>0$: $g'(u)=2au+b=0$ gives $u^*=-b/(2a)$. The matrix version, $g(\vu)=\vu^\top M\vu+\bm b^\top\vu$
+with $M$ positive definite, gives $\vu^*=-\tfrac12M^{-1}\bm b$. Both LQR and the Kalman gain are derived exactly this way.
+\begin{toybox}
+$g(u)=u^2-4u+1$: $g'(u)=2u-4=0\Rightarrow u^*=2$, and $g(2)=-3$ is the minimum.
+\end{toybox}
+
+\paragraph{Positive definite.} $M\succ0$ means $\vx^\top M\vx>0$ for every non-zero $\vx$: a ``bowl'' that opens upwards
+in every direction. Cost weights $Q$ and $R$, and covariances $P$, are of this kind.
+
+\paragraph{Eigenvalues and stability.} If $M\bm v=\lambda\bm v$, then $\bm v$ is a direction that $M$ only stretches, by
+the factor $\lambda$. For $\vx_{k+1}=M\vx_k$, each such direction is multiplied by $\lambda$ every tick:
+\[
+\begin{aligned}
+|\lambda|<1\ \text{for all eigenvalues} &\ \Rightarrow\ \text{the state dies out (stable)},\\
+|\lambda|>1\ \text{for at least one} &\ \Rightarrow\ \text{it blows up (unstable)}.
+\end{aligned}
+\]
+\begin{toybox}
+$x_{k+1}=1.1\,x_k$: $1,\,1.1,\,1.21,\,1.33,\dots$ blows up. $x_{k+1}=0.62\,x_k$: $1,\,0.62,\,0.38,\,0.24,\dots$ dies out.
+Section~\ref{sec:m2b4} uses exactly this pair: LQR turns the first into the second.
+\end{toybox}
+
+\paragraph{Rotations.} The attitude $R$ is a $3\times3$ matrix whose columns are the drone's own forward, left and up
+axes, written in world coordinates. It is \emph{not} three angles. \Cref{sec:so3} gives all the tools needed to work
+with it (hat map, $\Exp$, $\Log$).

@@ -1,0 +1,187 @@
+% =====================================================================
+\section{Notation, Conventions and Tools}
+\label{sec:notation}
+% =====================================================================
+
+Both models describe the same physical object, a quadrotor, so they share one notation.
+This section fixes it once. If a symbol appears later without explanation, it is defined here.
+
+\subsection{Reference frames}
+
+\begin{itemize}
+  \item \textbf{World frame} $\mathcal{W}$: East--North--Up (ENU), fixed to the ground. Its third axis
+        $\ve_3=[0,0,1]^\top$ points \emph{up}. ArduPilot's ROS~2 topics \code{/ap/v1/pose/filtered} and
+        \code{/ap/v1/twist/filtered} are expressed in this frame.
+  \item \textbf{Body frame} $\mathcal{B}$: Forward--Left--Up (FLU), fixed to the drone, origin at the centre
+        of mass. The propellers push along the body $z$-axis.
+  \item \textbf{Attitude} $R\in\SO$ rotates body vectors into world vectors:
+        $\bm a^{\mathcal W}=R\,\bm a^{\mathcal B}$. Its columns are the body axes written in the world frame,
+        $R=[\vb_1\ \vb_2\ \vb_3]$.
+\end{itemize}
+
+With ENU, gravity is the \emph{vector} $\vg=[0,0,-g_0]^\top$ with $g_0=9.81$\,m/s$^2$. This is why
+the desired force later reads $\vF_d=m(\va_d-\vg)$: subtracting a downward vector adds an upward push.
+
+\subsection{Typographic conventions}
+
+\begin{center}\small
+\begin{tabularx}{\linewidth}{@{}l X@{}}
+\toprule
+\textbf{Convention} & \textbf{Meaning}\\
+\midrule
+$\vp,\ \vv,\ \vw$ (bold lower case) & column vectors\\
+$R,\ J,\ A,\ P$ (upright capitals) & matrices\\
+$\hat{(\cdot)}$ & estimate produced by the EKF, e.g.\ $\hp$, $\hR$\\
+$(\cdot)_d$ & desired / reference value, e.g.\ $\vp_d$, $R_d$\\
+$(\cdot)_k$ & value at the sampling instant $t_k=k\,\Delta t$\\
+$\delta(\cdot)$ & small deviation (error) from an operating point\\
+$\skw{\bm a}$ & skew-symmetric (``hat'') matrix of $\bm a$, see \eqref{eq:hat}\\
+$(\cdot)^\vee$ & inverse of the hat map\\
+$\delta\vx$ & 12-number error between two states, see \eqref{eq:dx}; correcting by it: \eqref{eq:correct}\\
+$Q\succeq0,\ R\succ0$ & positive semi-definite / positive definite matrix\\
+$X^\dagger$ & Moore--Penrose pseudo-inverse\\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\textbf{Two different ``$R$''.} $R\in\SO$ is the attitude. In Model~2 and in the EKF the same letter is the
+standard name of an input or noise weight. When both could appear together, the noise covariance is written
+$R_n$. In Model~2 the attitude only appears through $\Log(R_k)$, so ``$R$'' there always means the input weight.
+
+\subsection{Master symbol table}
+
+\begin{center}\small
+\begin{longtable}{@{}>{$}l<{$} p{4.9cm} >{$}l<{$} l p{3.6cm}@{}}
+\toprule
+\textrm{\textbf{Symbol}} & \textbf{Meaning} & \textrm{\textbf{Dim.}} & \textbf{Unit} & \textbf{Project value}\\
+\midrule\endhead
+\vp & position of the centre of mass (world) & \R^3 & m & --\\
+\vv & velocity (world) & \R^3 & m/s & $|v_i|\le1$ (\code{max\_velocity})\\
+R & attitude, body $\to$ world & \SO\subset\R^{3\times3} & -- & --\\
+\vw & angular velocity (body) & \R^3 & rad/s & --\\
+T & total thrust along $\vb_3$ & \R & N & hover $mg_0=14.715$\\
+\vtau & torque about body axes & \R^3 & N\,m & --\\
+\vu=[T;\vtau] & control input (wrench) & \R^4 & N, N\,m & --\\
+m & mass & \R & kg & 1.5\\
+J & inertia matrix & \R^{3\times3} & kg\,m$^2$ & $\diag(0.02,0.02,0.04)$\\
+\vg & gravity vector (ENU) & \R^3 & m/s$^2$ & $[0,0,-9.81]^\top$\\
+K_p,\ K_v & position / velocity gains & \R^{3\times3} & s$^{-2}$, s$^{-1}$ & $\diag(1.5,1.5,2)$, $\diag(1.2,1.2,1.5)$\\
+K_R,\ K_\omega & attitude / rate gains & \R^{3\times3} & N\,m, N\,m\,s & $\diag(4,4,2)$, $\diag(0.8,0.8,0.5)$\\
+\Omega_i & speed of rotor $i$ & \R & rad/s & 100 \dots 1100\\
+k_f & rotor thrust constant, $f_i=k_f\Omega_i^2$ & \R & N\,s$^2$ & $8.549\times10^{-6}$\\
+c_m & yaw-torque-to-thrust ratio & \R & m & 0.016\\
+\Delta t & sample time & \R & s & 0.01 (Model 1), 0.04 (Model 2)\\
+\bottomrule
+\end{longtable}
+\end{center}
+
+The values marked as project values come from \code{drones\_controller/config/controller.yaml}
+(mass, gravity, inertia, all gains, \code{max\_velocity}, \code{control\_rate}=25\,Hz, the setpoint
+$\vp_d=[0,0,2]$\,m). The rotor constants and geometry are those of the ArduPilot Gazebo \emph{Iris}
+quadrotor. It is the vehicle simulated in our SITL set-up and also weighs 1.5\,kg.
+
+\subsection{The SO(3) toolkit}
+\label{sec:so3}
+
+The attitude $R$ is a $3\times3$ matrix with $R^\top R=I$ and $\det R=+1$. It has 9 entries but only
+3 degrees of freedom, so it cannot be added or subtracted like a vector. The following tools are used throughout.
+
+\paragraph{Hat and vee maps.} For $\bm a=[a_1,a_2,a_3]^\top$,
+\begin{equation}
+\label{eq:hat}
+  \skw{\bm a}=\begin{bmatrix}0&-a_3&a_2\\ a_3&0&-a_1\\ -a_2&a_1&0\end{bmatrix},
+  \qquad \skw{\bm a}\,\bm b=\bm a\times\bm b,\qquad \skw{\bm a}^\vee=\bm a.
+\end{equation}
+
+\begin{toybox}[hat map]
+$\bm a=[1,2,3]^\top$, $\bm b=[0,0,1]^\top$:\quad
+$\skw{\bm a}\bm b=\begin{bmatrix}0&-3&2\\3&0&-1\\-2&1&0\end{bmatrix}\begin{bmatrix}0\\0\\1\end{bmatrix}=\begin{bmatrix}2\\-1\\0\end{bmatrix}
+=\bm a\times\bm b$.
+\end{toybox}
+
+\paragraph{Useful identities} (proved in \cref{app:so3}):
+\begin{align}
+  &\skw{\bm a}^\top=-\skw{\bm a},\qquad \skw{\bm a}\bm a=\bm 0,\qquad \skw{\bm a}\bm b=-\skw{\bm b}\bm a, \label{eq:id1}\\
+  &R\,\skw{\bm a}\,R^\top=\skw{R\bm a}\quad (R\in\SO), \label{eq:id2}\\
+  &\tr\!\big(M\skw{\bm\eta}\big)=-\bm\eta^\top\big(M-M^\top\big)^\vee\quad\text{for any }M\in\R^{3\times3}. \label{eq:id3}
+\end{align}
+
+\paragraph{Exponential and logarithm.} A rotation by angle $\theta$ about the unit axis $\bm n$ is
+\begin{equation}
+\label{eq:exp}
+  \Exp(\bm\phi)=I+\sin\theta\,\skw{\bm n}+(1-\cos\theta)\,\skw{\bm n}^2,\qquad \bm\phi=\theta\bm n\in\R^3
+\end{equation}
+(Rodrigues' formula), and $\Log:\SO\to\R^3$ is its inverse, $\Log(R)=\frac{\theta}{2\sin\theta}(R-R^\top)^\vee$
+with $\theta=\arccos\frac{\tr R-1}{2}$. For small $\bm\phi$: $\Exp(\bm\phi)\approx I+\skw{\bm\phi}$.
+
+\begin{toybox}[10$^\circ$ roll]
+$\bm\phi=[0.1745,0,0]^\top$ (10$^\circ$ about $x$) gives
+$\Exp(\bm\phi)=\begin{bmatrix}1&0&0\\0&0.9848&-0.1736\\0&0.1736&0.9848\end{bmatrix}$.
+The small-angle form $I+\skw{\bm\phi}$ has $\pm0.1745$ instead of $\pm0.1736$ off the diagonal and $1$ instead of $0.9848$
+on it, an error below 2\%.
+\end{toybox}
+
+\paragraph{Errors and corrections when the state contains $R$.} The full state $\vx=(\vp,\vv,R,\vw)$ is stored
+with 18 numbers ($3+3+9+3$) but can only move in 12 independent directions, because $R$ has just 3 degrees of
+freedom. Two operations are needed again and again, and they are the only place where $R$ needs special care.
+
+\emph{1. How far is the true state $\vx$ from our estimate $\hx$?} We describe it by the 12-number
+\textbf{error vector}
+\begin{equation}
+\label{eq:dx}
+  \delta\vx=\begin{bmatrix}\delta\vp\\ \delta\vv\\ \delta\vth\\ \delta\vw\end{bmatrix}
+  =\begin{bmatrix}\vp-\hp\\ \vv-\hv\\ \Log(\hR^\top R)\\ \vw-\hw\end{bmatrix}\in\R^{12}.
+\end{equation}
+Position, velocity and rate errors are ordinary differences. The attitude error is the small rotation that turns
+$\hR$ into $R$ ($\hR^\top R$ is ``undo the estimate, then apply the truth''), written as a 3-vector by $\Log$.
+Subtracting the matrices, $R-\hR$, would give 9 numbers that do not describe a rotation.
+
+\emph{2. How do we correct an estimate by a small error $\delta\vx$?} We do the reverse of \eqref{eq:dx}:
+\begin{equation}
+\label{eq:correct}
+  \hp\leftarrow\hp+\delta\vp,\qquad \hv\leftarrow\hv+\delta\vv,\qquad
+  \hR\leftarrow\hR\,\Exp(\delta\vth),\qquad \hw\leftarrow\hw+\delta\vw .
+\end{equation}
+Three parts are plain addition. Only the attitude is corrected by \emph{multiplying} with a small rotation, so that
+$\hR$ remains a proper rotation matrix. Whenever this document says ``correct the estimate by $\delta\vx$'', it means
+exactly these four lines.
+
+\begin{toybox}[correcting an attitude]
+Estimate $\hR=I$ (level, facing east). The filter decides the drone is actually yawed by $\delta\vth=[0,0,0.1]$\,rad
+($5.7^\circ$):
+\[
+\hR\leftarrow I\cdot\Exp([0,0,0.1])=\begin{bmatrix}0.9950&-0.0998&0\\0.0998&0.9950&0\\0&0&1\end{bmatrix},
+\]
+a pure 5.7$^\circ$ turn about the vertical axis. Naive addition $I+\delta$ could never produce the $0.9950$ on the
+diagonal, and repeated additions would slowly turn $\hR$ into a matrix that is no longer a rotation.
+\end{toybox}
+
+\subsection{What was corrected with respect to the original images}
+\label{sec:errata}
+
+Rederiving every equation exposed a few slips in the two hand-drawn flow images. The new flow diagrams
+(\cref{sec:flows}) and this document use the corrected forms. The toy model demonstrates the most important
+one numerically.
+
+\begin{center}\small
+\begin{tabularx}{\linewidth}{@{}c l X@{}}
+\toprule
+\textbf{\#} & \textbf{Image / block} & \textbf{Issue and correction}\\
+\midrule
+1 & 1 / block 7 & $\ve_\omega=\vw_d-\hw$ combined with $-K_\omega\ve_\omega$ is \emph{positive} rate feedback (it pumps
+energy in). Correct: $\ve_\omega=\hw-\hR^\top R_d\vw_d$, as in \code{so3\_controller.py}. In the toy model
+the image's sign makes the drone tumble within 0.07\,s (\cref{fig:m1-att}).\\
+2 & 1 / block 4 & Estimated state printed as $[\hp,\ddot{\vv},\hR,\hw]$; it is $[\hp,\hv,\hR,\hw]$.\\
+3 & 1 / block 4 & $P_{k+1}=AP_kA^\top+Q$ mixes the \emph{continuous} Jacobian $A$ with a discrete step.
+Use $F=I+A\Delta t\approx e^{A\Delta t}$: $P_{k+1}=FP_kF^\top+Q$.\\
+4 & 1 / blocks 2--4 & $\vx-\hx$ and $\hx+K(\cdot)$ do not make sense for the rotation matrix $R$. Use the
+12-number error \eqref{eq:dx} and the correction rule \eqref{eq:correct}; this is what makes the filter an
+\emph{error-state} EKF.\\
+5 & 1 / block 7 & $+J\dot{\vw}_d$ is the small-error approximation of the full feed-forward
+$-J(\skw{\hw}\hR^\top R_d\vw_d-\hR^\top R_d\dot{\vw}_d)$; both are given.\\
+6 & 2 / blocks 1--2 & $\vx_k=[\vp,\vv,R,\vw]_k$ must be a plain vector for DMDc: use $\Log(R_k)$ and deviations
+from hover, $\vu_k=[T_k-mg_0;\vtau_k]$. Otherwise gravity adds a constant term that $x_{k+1}=Ax_k+Bu_k$ cannot represent.\\
+7 & 2 / block 5 & The index of the Riccati recursion counts \emph{iterations} (steps-to-go), not time.\\
+\bottomrule
+\end{tabularx}
+\end{center}

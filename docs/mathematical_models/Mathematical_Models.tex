@@ -1,0 +1,166 @@
+% =====================================================================
+%  Mathematical Models of the CD2 Drone
+%  Build:  pdflatex Mathematical_Models.tex   (run twice for the TOC)
+%  The two flow diagrams are built from figures/flow_model1.tex and
+%  figures/flow_model2.tex; the result plots come from ../../toy_model2.
+% =====================================================================
+\documentclass[11pt,a4paper]{article}
+
+% ---------------------------------------------------------------- packages
+\usepackage[a4paper, margin=2.2cm, headheight=14pt]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage{amsmath,amssymb,amsthm,bm,mathtools}
+\usepackage{graphicx}
+\usepackage{booktabs,array,tabularx,longtable,multirow}
+\usepackage{xcolor}
+\usepackage[most]{tcolorbox}
+\usepackage{enumitem}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage{pdflscape}
+\usepackage{caption}
+\usepackage[hidelinks]{hyperref}
+\usepackage{cleveref}
+
+\graphicspath{{figures/}{../../toy_model2/model1_nonlinear_ekf_so3/figures/}{../../toy_model2/model2_dmdc_lqr_mpc/figures/}}
+
+% ---------------------------------------------------------------- colours
+\definecolor{cPlant}{HTML}{37474F}
+\definecolor{cModel}{HTML}{A0620F}
+\definecolor{cEst}{HTML}{2E7D32}
+\definecolor{cOuter}{HTML}{1565C0}
+\definecolor{cGuid}{HTML}{4527A0}
+\definecolor{cInner}{HTML}{AD1457}
+\definecolor{cText}{HTML}{263238}
+\definecolor{cHead}{HTML}{0D3B66}
+\definecolor{cWarn}{HTML}{B23A48}
+
+\hypersetup{colorlinks=true, linkcolor=cHead, urlcolor=cOuter, citecolor=cHead}
+
+% ---------------------------------------------------------------- headings
+\titleformat{\section}{\Large\sffamily\bfseries\color{cHead}}{\thesection}{0.8em}{}[{\color{cHead}\titlerule[0.8pt]}]
+\titleformat{\subsection}{\large\sffamily\bfseries\color{cHead}}{\thesubsection}{0.7em}{}
+\titleformat{\subsubsection}{\normalsize\sffamily\bfseries\color{cText}}{\thesubsubsection}{0.6em}{}
+\titlespacing*{\section}{0pt}{2.2ex plus 1ex}{1.4ex}
+\titlespacing*{\subsection}{0pt}{2.0ex plus 1ex}{1.0ex}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\sffamily\color{cText!70}CD2 \,|\, Mathematical Models}
+\fancyhead[R]{\small\sffamily\color{cText!70}\nouppercase{\leftmark}}
+\fancyfoot[C]{\small\sffamily\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+\setlist{itemsep=2pt, topsep=4pt}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{5pt}
+\captionsetup{font=small, labelfont={bf,sf}}
+
+% ---------------------------------------------------------------- notation
+\newcommand{\vp}{\bm{p}}  \newcommand{\vv}{\bm{v}}  \newcommand{\vw}{\bm{\omega}}
+\newcommand{\vx}{\bm{x}}  \newcommand{\vu}{\bm{u}}  \newcommand{\vz}{\bm{z}}
+\newcommand{\vg}{\bm{g}}  \newcommand{\va}{\bm{a}}  \newcommand{\vF}{\bm{F}}
+\newcommand{\vb}{\bm{b}}  \newcommand{\ve}{\bm{e}}  \newcommand{\vtau}{\bm{\tau}}
+\newcommand{\vf}{\bm{f}}  \newcommand{\vOm}{\bm{\Omega}} \newcommand{\vth}{\bm{\theta}}
+\newcommand{\vr}{\bm{r}}  \newcommand{\vn}{\bm{n}}
+\newcommand{\vh}{\bm{h}}  \newcommand{\vy}{\bm{y}}  \newcommand{\veta}{\bm{\eta}}
+\newcommand{\hp}{\hat{\bm p}} \newcommand{\hv}{\hat{\bm v}} \newcommand{\hw}{\hat{\bm\omega}}
+\newcommand{\hR}{\hat{R}}     \newcommand{\hx}{\hat{\bm x}} \newcommand{\hu}{\hat{\bm u}}
+\newcommand{\skw}[1]{[#1]_{\times}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\SO}{\mathrm{SO}(3)}
+\newcommand{\so}{\mathfrak{so}(3)}
+\newcommand{\Exp}{\mathrm{Exp}}
+\newcommand{\Log}{\mathrm{Log}}
+\newcommand{\tr}{\operatorname{tr}}
+\newcommand{\diag}{\operatorname{diag}}
+\newcommand{\dims}[1]{\ensuremath{{\scriptstyle[#1]}}}
+
+% ---------------------------------------------------------------- boxes
+\tcbset{base/.style={enhanced, breakable, boxrule=0.7pt, arc=2.5pt, left=7pt, right=7pt,
+  top=5pt, bottom=5pt, fonttitle=\sffamily\bfseries\small}}
+
+% Main equation statement: \begin{eqbox}{colour}{title} ... \end{eqbox}
+\newtcolorbox{eqbox}[2]{base, colback=#1!4, colframe=#1, colbacktitle=#1, coltitle=white,
+  title={#2}, before skip=8pt, after skip=8pt}
+% Toy example
+\newtcolorbox{toybox}[1][]{base, colback=cModel!5, colframe=cModel!70, colbacktitle=cModel!14,
+  coltitle=cModel!80!black, title={Toy example\ifx&#1&\else\ --- #1\fi}, before skip=8pt, after skip=8pt}
+% Layman explanation for the project
+\newtcolorbox{projbox}[1][]{base, colback=cEst!5, colframe=cEst!70, colbacktitle=cEst!14,
+  coltitle=cEst!70!black, title={In our drone project\ifx&#1&\else\ --- #1\fi}, before skip=8pt, after skip=8pt}
+% Implementation pointer
+\newtcolorbox{codebox}{base, colback=cPlant!4, colframe=cPlant!45, boxrule=0.5pt,
+  fontupper=\small, left=6pt, top=3pt, bottom=3pt, before skip=6pt, after skip=8pt}
+% Correction of the original images
+\newtcolorbox{fixbox}[1][]{base, colback=cWarn!5, colframe=cWarn!80, colbacktitle=cWarn!15,
+  coltitle=cWarn!80!black, title={Correction to the original flow image\ifx&#1&\else\ --- #1\fi},
+  before skip=8pt, after skip=8pt}
+% Key idea / remark
+\newtcolorbox{keybox}{base, colback=cOuter!4, colframe=cOuter!50, boxrule=0.5pt, before skip=6pt, after skip=6pt}
+
+% Symbol / dimension table: \begin{dimtable} sym & meaning & dim & unit \\ \end{dimtable}
+\newenvironment{dimtable}{%
+  \par\smallskip\small
+  \tabularx{\linewidth}{@{}>{$}l<{$} X >{$}l<{$} l@{}}
+  \toprule
+  \textrm{\textbf{Symbol}} & \textbf{Meaning} & \textrm{\textbf{Dimension}} & \textbf{Unit}\\
+  \midrule}{%
+  \bottomrule\endtabularx\par\smallskip}
+
+\newcommand{\code}[1]{\texttt{\small #1}}
+\newcommand{\inproj}{\textsf{\textbf{Project:}}~}
+\newcommand{\intoy}{\textsf{\textbf{Toy model:}}~}
+
+\newtheorem*{lemma}{Lemma}
+
+% =====================================================================
+\begin{document}
+
+% ---------------------------------------------------------------- title page
+\begin{titlepage}
+  \centering
+  \vspace*{1.5cm}
+  {\color{cHead}\rule{\linewidth}{1.2pt}}\\[14pt]
+  {\Huge\sffamily\bfseries\color{cHead} Mathematical Models of the Drone\\[6pt]}
+  {\Large\sffamily\color{cText} A Learning Guide: every equation derived, explained\\ with toy examples, and connected to our drone\\[10pt]}
+  {\color{cHead}\rule{\linewidth}{1.2pt}}\\[22pt]
+  {\large\sffamily 3D Mapping of an Environment using a Normal Monocular Camera\\
+   and Controlling the Drone by Visual-Inertial Odometry (VIO)\\[22pt]}
+  \begin{minipage}{0.86\linewidth}\centering\small
+  \begin{tabular}{ll}
+    \toprule
+    \textbf{Model 1} & Nonlinear dynamics $\rightarrow$ linearization $\rightarrow$ error-state EKF\\
+                     & $\rightarrow$ geometric SO(3) control $\rightarrow$ motor allocation\\[3pt]
+    \textbf{Model 2} & Flight data $\rightarrow$ DMDc system identification\\
+                     & $\rightarrow$ Bellman / LQR / Riccati / DARE \ \textbf{and}\ MPC / QP $\rightarrow$ drone\\
+    \bottomrule
+  \end{tabular}
+  \end{minipage}\\[30pt]
+  {\large\sffamily\bfseries Group CD2}\\[6pt]
+  {\sffamily Ravishanmugam K \;\textbullet\; Ishwarya Murugesan \;\textbullet\; Aparna Bharani \;\textbullet\; Cibikumar B \;\textbullet\; Akhilan S}\\[4pt]
+  {\sffamily\small Amrita Vishwa Vidyapeetham}
+  \vfill
+  \begin{minipage}{0.9\linewidth}\small\color{cText}
+  \textbf{Who this is for.} Anyone who wants to understand how our drone works: classmates, future students,
+  or ourselves in a year. No prior knowledge of estimation or control is assumed. Start with
+  \cref{sec:start}, which gives the big picture and a short maths refresher. Every toy example in this guide can
+  be re-run in MATLAB with the scripts in \code{toy\_model2/}, which print the same numbers.
+  \end{minipage}
+\end{titlepage}
+
+\tableofcontents
+\newpage
+
+\input{sections/00a_start}
+\input{sections/00_notation}
+\input{sections/01_flows}
+\input{sections/02_model1}
+\input{sections/03_model2}
+\input{sections/04_project}
+\appendix
+\input{sections/05_appendix}
+
+\end{document}

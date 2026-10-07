@@ -1,0 +1,228 @@
+% Model 1 - nonlinear model-based estimation and geometric SO(3) control.
+% Build:  pdflatex flow_model1.tex  (twice, for equal block heights)
+\documentclass[border=10pt]{standalone}
+\usepackage{tikz}
+\input{flow_preamble}
+
+\begin{document}
+\sffamily
+%------------------------------------------------------------------ blocks
+\newlength{\blkw}\setlength{\blkw}{6.7cm}
+\defblock[equal height group=m1top]{b1}{\blkw}{cPlant}{1}{Nonlinear Dynamics}{plant}{%
+  $\begin{aligned}
+    \dot{\vp} &= \vv\\
+    \dot{\vv} &= \vg + \tfrac{T}{m}\,R\,\ve_3\\
+    \dot{R}   &= R\,\skw{\vw}\\
+    \dot{\vw} &= J^{-1}\!\left(\vtau - \vw\times J\vw\right)
+  \end{aligned}$}
+  {$\vu=[T;\vtau]\in\R^{4}$\ \ (N;\ N\,m)}
+  {$\vx=(\vp,\vv,R,\vw)$:\ \ $\R^3{\times}\R^3{\times}\SO{\times}\R^3$}
+
+\defblock[equal height group=m1top]{b2}{\blkw}{cModel}{2}{Linearization}{model}{%
+  $\begin{gathered}
+    \vf(\vx,\vu)\approx\vf(\hx,\hat{\vu}) + A\,\delta\vx + B\,\delta\vu\\[2pt]
+    A=\left.\dfrac{\partial\vf}{\partial\vx}\right|_{\hx,\hat{\vu}}\qquad
+    B=\left.\dfrac{\partial\vf}{\partial\vu}\right|_{\hx,\hat{\vu}}\\[2pt]
+    \delta\vu=\vu-\hat{\vu},\qquad R=\hR\,\mathrm{Exp}(\delta\bm\theta)
+  \end{gathered}$}
+  {operating point $(\hx,\hat{\vu})$, model $\vf$}
+  {$A\in\R^{12\times12}$,\ \ $B\in\R^{12\times4}$}
+
+\defblock[equal height group=m1top]{b3}{\blkw}{cModel}{3}{Local Error Dynamics}{model}{%
+  $\begin{gathered}
+    \delta\vx=\begin{bmatrix}\delta\vp\\ \delta\vv\\ \delta\bm\theta\\ \delta\vw\end{bmatrix}
+      =\begin{bmatrix}\vp-\hp\\ \vv-\hv\\ \mathrm{Log}(\hR^{\top}R)\\ \vw-\hw\end{bmatrix}\in\R^{12}\\[3pt]
+    \delta\dot{\vx} = A\,\delta\vx + B\,\delta\vu\\[2pt]
+    F = I + A\,\Delta t \;\approx\; e^{A\Delta t}
+  \end{gathered}$}
+  {$A$, $B$, sample time $\Delta t$}
+  {$F\in\R^{12\times12}$ (error transition)}
+
+\defblock[equal height group=m1top]{b4}{\blkw}{cEst}{4}{Error-State EKF}{estimation}{%
+  {\scriptsize\textbf{Prediction}}\\[-1pt]
+  $\begin{aligned}
+    \hx_{k+1} &= \vf_d(\hx_k,\vu_k)\\
+    P_{k+1}   &= F P_k F^{\top} + Q
+  \end{aligned}$\\[3pt]
+  {\scriptsize\textbf{Correction}}\\[-1pt]
+  $\begin{aligned}
+    K   &= P H^{\top}\!\left(H P H^{\top} + R_n\right)^{-1}\\
+    \delta\hat{\vx} &= K\left(\vz - h(\hx)\right)\\
+    \hp,\hv,\hw &\leftarrow \hp{+}\delta\hat{\vp},\ \hv{+}\delta\hat{\vv},\ \hw{+}\delta\hat{\vw}\\
+    \hR &\leftarrow \hR\,\mathrm{Exp}(\delta\hat{\bm\theta})\\
+    P   &\leftarrow (I - K H)\,P
+  \end{aligned}$}
+  {$\vu_k$ (applied), $\vz_k$ (sensors), $F$}
+  {$\hx_k=(\hp,\hv,\hR,\hw)$,\ \ $P_k\in\R^{12\times12}$}
+
+\defblock[equal height group=m1bot]{b5}{\blkw}{cOuter}{5}{Position Control}{outer loop}{%
+  $\begin{gathered}
+    \ve_p = \vp_d - \hp \\
+    \ve_v = \vv_d - \hv\\[3pt]
+    \va_d = \ddot{\vp}_d + K_p\,\ve_p + K_v\,\ve_v
+  \end{gathered}$}
+  {$\hp,\hv$;\ \ $\vp_d,\vv_d,\ddot{\vp}_d$}
+  {$\va_d\in\R^{3}$ (m/s$^2$)}
+
+\defblock[equal height group=m1bot]{b6}{\blkw}{cGuid}{6}{Force \& Attitude}{guidance}{%
+  $\begin{gathered}
+    \vF_d = m\,(\va_d - \vg), \qquad \vb_{3d} = \dfrac{\vF_d}{\|\vF_d\|}\\[3pt]
+    \vb_{2d}=\dfrac{\vb_{3d}\times\vb_{1c}}{\|\vb_{3d}\times\vb_{1c}\|},\qquad
+    \vb_{1d}=\vb_{2d}\times\vb_{3d}\\[2pt]
+    R_d=[\,\vb_{1d}\ \ \vb_{2d}\ \ \vb_{3d}\,]
+  \end{gathered}$}
+  {$\va_d$, desired yaw $\psi_d$}
+  {$\vF_d\in\R^3$ (N),\ \ $R_d\in\SO$}
+
+\defblock[equal height group=m1bot]{b7}{\blkw}{cInner}{7}{SO(3) Attitude Control}{inner loop}{%
+  $\begin{aligned}
+    \ve_R &= \tfrac12\big(R_d^{\top}\hR-\hR^{\top}R_d\big)^{\vee}\\
+    \ve_\omega &= \hw-\hR^{\top}R_d\,\vw_d\\
+    \vtau &= -K_R\ve_R-K_\omega\ve_\omega+\hw\times J\hw\\
+          &\quad -J\big(\skw{\hw}\hR^{\top}R_d\vw_d-\hR^{\top}R_d\dot{\vw}_d\big)\\
+    T &= \vF_d\cdot\hR\,\ve_3
+  \end{aligned}$}
+  {$\hR,\hw$;\ \ $R_d,\vF_d$;\ \ $\vw_d,\dot{\vw}_d$}
+  {$T\in\R$ (N),\ \ $\vtau\in\R^3$ (N\,m)}
+
+\defblock[equal height group=m1bot]{b8}{\blkw}{cPlant}{8}{Control Allocation}{actuators}{%
+  $\begin{gathered}
+    \begin{bmatrix}T\\ \vtau\end{bmatrix}=\Gamma\,\vf,\qquad f_i = k_f\,\Omega_i^2\\[3pt]
+    \Omega_i=\sqrt{\big(\Gamma^{-1}\vu\big)_i/k_f}\\
+    \text{(clipped to } [\Omega_{\min},\Omega_{\max}])
+  \end{gathered}$}
+  {$\vu=[T;\vtau]$, rotor geometry $\Gamma$, $k_f$}
+  {motor speeds $\vOm\in\R^4$ (rad/s)}
+
+%------------------------------------------------------------------ notation panel
+\newcommand{\nh}{\textbf{Symbol} & \textbf{Meaning} & \textbf{Dim.} & \textbf{Unit}}
+\newsavebox{\notation}
+\sbox{\notation}{\scriptsize\renewcommand{\arraystretch}{1.18}%
+\begin{tabular}{@{}>{$}l<{$}l>{$}l<{$}l@{\hspace{6pt}}c@{\hspace{6pt}}>{$}l<{$}l>{$}l<{$}l@{\hspace{6pt}}c@{\hspace{6pt}}>{$}l<{$}l>{$}l<{$}l@{\hspace{6pt}}c@{\hspace{6pt}}>{$}l<{$}l>{$}l<{$}l@{}}
+\multicolumn{4}{@{}l}{\textbf{\color{cPlant}States, inputs, parameters}} & &
+\multicolumn{4}{l}{\textbf{\color{cModel}Linearization and SO(3) tools}} & &
+\multicolumn{4}{l}{\textbf{\color{cEst}Estimation (EKF)}} & &
+\multicolumn{4}{l}{\textbf{\color{cInner}Control and actuation}}\\[2pt]
+\vp & position (world, ENU) & \R^3 & m &&
+\skw{\bm a} & skew matrix, $\skw{\bm a}\bm b=\bm a\times\bm b$ & \R^{3\times3} & -- &&
+\hx & estimated state $(\hp,\hv,\hR,\hw)$ & 18\text{ nos.} & mixed &&
+\vp_d,\vv_d,\ddot{\vp}_d & desired pos./vel./acc. & \R^3 & m, m/s, m/s$^2$\\
+\vv & velocity (world) & \R^3 & m/s &&
+(\cdot)^{\vee} & inverse of $\skw{\cdot}$ & \R^{3} & -- &&
+\Delta t & EKF / IMU sample time & \R & s (0.01) &&
+\ve_p,\ve_v & position / velocity error & \R^3 & m, m/s\\
+R & attitude, body $\to$ world & \SO & -- &&
+\mathrm{Exp},\mathrm{Log} & rot.\ vector $\leftrightarrow$ rot.\ matrix & \R^3\leftrightarrow\SO & rad &&
+P_k & error covariance & \R^{12\times12} & m$^2$, rad$^2$,\,\dots &&
+K_p,K_v & position / velocity gains & \R^{3\times3} & s$^{-2}$, s$^{-1}$\\
+\vw & body angular velocity & \R^3 & rad/s &&
+\hat{(\cdot)} & estimate (EKF output) & \text{--} & -- &&
+Q & process-noise covariance & \R^{12\times12} & as $P$ &&
+\va_d & desired acceleration & \R^3 & m/s$^2$\\
+T & total thrust (body $z$) & \R & N &&
+\hx,\hat{\vu} & operating point & 18,\ \R^4 & mixed &&
+\vz & measurement (cam: 6, gyro: 3) & \R^{m} & m, rad, rad/s &&
+\vF_d & desired force & \R^3 & N\\
+\vtau & body torque & \R^3 & N\,m &&
+\delta\vx & error state $[\delta\vp;\delta\vv;\delta\bm\theta;\delta\vw]$ & \R^{12} & m, m/s, rad, rad/s &&
+h(\cdot) & measurement model & \R^{18}\!\to\!\R^{m} & -- &&
+\psi_d,\ \vb_{1c} & desired yaw, heading & \R,\ \R^3 & rad, --\\
+\vu & input $[T;\vtau]$ & \R^4 & N, N\,m &&
+\delta\bm\theta & attitude error, $R=\hR\,\mathrm{Exp}(\delta\bm\theta)$ & \R^3 & rad &&
+H & measurement Jacobian & \R^{m\times12} & -- &&
+\vb_{1d},\vb_{2d},\vb_{3d} & desired body axes (unit) & \R^3 & --\\
+\vx & state $(\vp,\vv,R,\vw)$ & 12\text{ DOF} & mixed &&
+\delta\vu & input error $\vu-\hat{\vu}$ & \R^4 & N, N\,m &&
+R_n & measurement-noise covariance & \R^{m\times m} & as $\vz^2$ &&
+R_d & desired attitude & \SO & --\\
+m & mass & \R & kg (1.5) &&
+\vf & dynamics $\dot{\vx}=\vf(\vx,\vu)$ & 12 & mixed &&
+K & Kalman gain & \R^{12\times m} & mixed &&
+\ve_R,\ve_\omega & attitude / rate error & \R^3 & --, rad/s\\
+J & inertia $\diag(0.02,0.02,0.04)$ & \R^{3\times3} & kg\,m$^2$ &&
+A & state Jacobian $\partial\vf/\partial\vx$ & \R^{12\times12} & mixed &&
+\vf_d & one discrete step of $\vf$ & 18\to18 & mixed &&
+\vw_d,\dot{\vw}_d & desired rate, rate derivative & \R^3 & rad/s, rad/s$^2$\\
+\vg & gravity $[0,0,-9.81]^{\top}$ & \R^3 & m/s$^2$ &&
+B & input Jacobian $\partial\vf/\partial\vu$ & \R^{12\times4} & mixed &&
+\delta\hat{\vx} & correction computed by the EKF & \R^{12} & mixed &&
+K_R,K_\omega & attitude / rate gains & \R^{3\times3} & N\,m, N\,m\,s\\
+\ve_3 & unit vector $[0,0,1]^{\top}$ & \R^3 & -- &&
+F & discrete error transition & \R^{12\times12} & -- &&
+I & identity matrix & \R^{12\times12} & -- &&
+\Gamma,\ \vf,\ k_f & mixer, rotor thrusts, thrust const. & \R^{4\times4},\R^4,\R & --/m, N, N\,s$^2$\\
+(\cdot)_k & value at $t_k=k\,\Delta t$ & \text{--} & -- &&
+&&&&&
+&&&&&
+\vOm & rotor speeds & \R^4 & rad/s\\
+\end{tabular}}
+
+%------------------------------------------------------------------ layout
+\begin{tikzpicture}[node distance=1cm]
+  \def\dx{8.2}
+  % top row: model & estimation
+  \node[blk, anchor=north west] (b1) at (0, 0)       {\useblock{b1}};
+  \node[blk, anchor=north west] (b2) at (\dx, 0)     {\useblock{b2}};
+  \node[blk, anchor=north west] (b3) at (2*\dx, 0)   {\useblock{b3}};
+  \node[blk, anchor=north west] (b4) at (3*\dx, 0)   {\useblock{b4}};
+  % bottom row: control, flowing right -> left back to the plant
+  \coordinate (r2) at ($(b4.south west) + (0, -3.0)$);
+  \node[blk, anchor=north west] (b5) at (r2)                    {\useblock{b5}};
+  \node[blk, anchor=north west] (b6) at ($(r2) + (-\dx, 0)$)    {\useblock{b6}};
+  \node[blk, anchor=north west] (b7) at ($(r2) + (-2*\dx, 0)$)  {\useblock{b7}};
+  \node[blk, anchor=north west] (b8) at ($(r2) + (-3*\dx, 0)$)  {\useblock{b8}};
+
+  % sensors (above) and reference (below)
+  \node[aux, anchor=south, minimum width=14cm] (sens) at ($(b2.north east)!0.5!(b3.north west) + (0, 1.0)$)
+    {\textbf{SENSORS}\quad IMU gyroscope (100\,Hz)\ \ $\cdot$\ \ monocular camera $\rightarrow$ VIO pose (25\,Hz)
+     \quad$\vz_k=(\tilde{\vp},\tilde{R},\tilde{\vw})$\ \ (tilde = measured, noisy)};
+  \node[aux, anchor=north, minimum width=23cm] (ref) at ($(b6.south)!0.5!(b5.south) + (-\dx/2, -1.0)$)
+    {\textbf{REFERENCE / MISSION}\quad waypoints \& trajectory:\ \
+     $\vp_d(t),\ \vv_d(t),\ \ddot{\vp}_d(t),\ \psi_d(t),\ \vw_d(t),\ \dot{\vw}_d(t)$};
+
+  % top-row model information (dashed) and signals (solid)
+  \draw[mdl] (b1.east) -- node[lbl, above=2pt] {$\vf(\vx,\vu)$} (b2.west);
+  \draw[mdl] (b2.east) -- node[lbl, above=2pt] {$A,\ B$} (b3.west);
+  \draw[mdl] (b3.east) -- node[lbl, above=2pt] {$F$} (b4.west);
+  \draw[sig] (b1.north) |- node[lbl, pos=0.75] {true state $\vx(t)$} (sens.west);
+  \draw[sig] (sens.east) -| node[lbl, pos=0.25] {$\vz_k$} (b4.north);
+
+  % estimate down to the controller, and the R,w branch to the inner loop
+  \coordinate (bus) at ($(b4.south)!0.45!(b5.north)$);
+  \draw[sig] (b4.south) -- node[lbl, right=3pt, pos=0.35] {$\hx_k=(\hp,\hv,\hR,\hw)$} (b5.north);
+  \fill[cText] (bus) circle (1.6pt);
+  \draw[sig] (bus) -| node[lbl, pos=0.25] {$\hR,\ \hw$} (b7.north);
+
+  % bottom-row control chain
+  \draw[sig] (b5.west) -- node[lbl, above=2pt] {$\va_d$} (b6.east);
+  \draw[sig] (b6.west) -- node[lbl, above=2pt] {$\vF_d,\ R_d$} (b7.east);
+  \draw[sig] (b7.west) -- node[lbl, above=2pt] {$T,\ \vtau$} (b8.east);
+
+  % reference into the controllers
+  \draw[sig] (ref.north -| b5) -- node[lbl, pos=0.45] {$\vp_d,\vv_d,\ddot{\vp}_d$} (b5.south);
+  \draw[sig] (ref.north -| b6) -- node[lbl, pos=0.45] {$\psi_d$} (b6.south);
+  \draw[sig] (ref.north -| b7) -- node[lbl, pos=0.45] {$\vw_d,\dot{\vw}_d$} (b7.south);
+
+  % feedback: motors drive the real drone
+  \draw[sig, line width=1.2pt] (b8.north) -- node[lbl, pos=0.5]
+     {motor speeds $\Omega_{1..4}$\\$\Rightarrow$ wrench $(T,\vtau)$ on the drone} (b1.south);
+
+  % title and legend
+  \node[anchor=south west, font=\large\bfseries, text=cText] (ttl) at ($(b1.north west) + (0, 2.3)$)
+    {Model 1 \,|\, Nonlinear Model-Based Estimation and Geometric SO(3) Control};
+  \node[anchor=north west, font=\small, text=cText!80] at (ttl.south west)
+    {Closed loop running on the drone: plant $\rightarrow$ sensors $\rightarrow$ EKF $\rightarrow$
+     outer loop $\rightarrow$ inner loop $\rightarrow$ motors $\rightarrow$ plant};
+  \matrix (leg) [anchor=north west, column sep=4pt, row sep=2pt, font=\scriptsize\sffamily, text=cText]
+    at ($(ref.south west -| b8.west) + (0, -0.5)$) {
+    \draw[sig] (0,0) -- (0.9,0); & \node{runtime signal (every sample $k$)}; &[12pt]
+    \draw[mdl] (0,0) -- (0.9,0); & \node{model information used to build the filter}; &[12pt]
+    \node{ENU world frame ($z$ up), FLU body frame;\ \ hat $\hat{\ }$ = estimate,\ subscript $d$ = desired}; \\
+  };
+
+  % notation and dimensions panel
+  \node[draw=cText!50, fill=cText!3, rounded corners=3pt, inner sep=7pt, anchor=north west,
+        label={[anchor=south west, font=\small\bfseries, text=cText]north west:Notation and dimensions}]
+    at ($(leg.south west) + (0, -0.75)$) {\usebox{\notation}};
+\end{tikzpicture}
+\end{document}

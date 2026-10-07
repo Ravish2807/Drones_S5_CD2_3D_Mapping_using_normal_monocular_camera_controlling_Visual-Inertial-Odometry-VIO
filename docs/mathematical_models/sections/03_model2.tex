@@ -1,0 +1,696 @@
+% =====================================================================
+\section{Model 2 --- Data-Driven Model and Optimal Control}
+\label{sec:model2}
+% =====================================================================
+
+Model~1 needs the physics: $m$, $J$, rotor constants. Model~2 asks a different question: \emph{if we only had
+recorded flight data, could we still build a good controller?} It learns a discrete-time linear model from
+data (blocks 1--2). It then designs an optimal controller on that model in two ways: LQR, which is optimal and
+simple but unaware of limits (blocks 3--6), and MPC, which is optimal and respects limits but needs an optimizer
+(blocks 7--9). Finally it flies the real, nonlinear drone with the result (block~10).
+
+All matrices here are \emph{discrete-time}: $\vx_{k+1}=A\vx_k+B\vu_k$ with $\Delta t=0.04$\,s, which is the 25\,Hz
+\code{control\_rate} of \code{controller.yaml}.
+
+% ---------------------------------------------------------------------
+\subsection{Block 1 --- Nonlinear flight data}
+\label{sec:m2b1}
+% ---------------------------------------------------------------------
+
+\begin{eqbox}{cPlant}{Equation M2.1 \quad Sampled state and input (deviation from hover)}
+\begin{equation}
+  \vx_k=\begin{bmatrix}\vp(t_k)-\vp_{\mathrm{ref}}\\ \vv(t_k)\\ \Log\big(R(t_k)\big)\\ \vw(t_k)\end{bmatrix}\in\R^{12},\qquad
+  \vu_k=\begin{bmatrix}T(t_k)-mg_0\\ \vtau(t_k)\end{bmatrix}\in\R^{4},\qquad t_k=k\,\Delta t . \tag{M2.1}\label{eq:m2.1}
+\end{equation}
+\end{eqbox}
+
+\begin{dimtable}
+\vx_k & state deviation at sample $k$ & \R^{12} & m, m/s, rad, rad/s\\
+\vu_k & input deviation at sample $k$ & \R^{4} & N, N\,m\\
+\vp_{\mathrm{ref}} & hover point & \R^3 & m ($[0,0,2]$)\\
+\Delta t & sample time & \R & s (0.04)\\
+N & number of samples in a flight & \mathbb N & -- (625 per 25\,s flight)\\
+\end{dimtable}
+
+\subsubsection*{Derivation and reasoning}
+
+\textbf{Operating point.} Hover is an equilibrium of \eqref{eq:m1.1}--\eqref{eq:m1.4}: with $\vv=0$, $R=I$, $\vw=0$,
+$T=mg_0$, $\vtau=0$, every derivative is zero. Linearizing about it gives $\delta\dot{\vx}=A_c\delta\vx+B_c\delta\vu$
+with \emph{no constant term}. Measuring the state and input as deviations from hover is what lets the pure linear
+form $\vx_{k+1}=A\vx_k+B\vu_k$ fit the data. If the raw thrust $T$ were used, gravity would appear as a constant
+offset that this form cannot represent (correction~6 in \cref{sec:errata}).
+
+\textbf{Attitude as a vector.} DMDc needs vectors. $\Log(R)$ turns the $3\times3$ rotation into the 3-vector rotation
+angle, which near hover is the familiar (roll, pitch, yaw).
+
+\textbf{Sampling.} The computer applies $\vu_k$ and holds it for $\Delta t$ (zero-order hold). Hence the natural model
+is discrete.
+
+\textbf{Persistent excitation.} A free quadrotor is unstable (\cref{sec:m1b3}), so data is always recorded with some
+stabilising pilot in the loop, here a simple PD controller (the role ArduPilot plays). If the input were
+\emph{only} feedback, $\vu_k=-K_0\vx_k$, the rows of $U$ would be linear combinations of the rows of $X$. The data could
+not separate ``the drone'' from ``the pilot''. A small random excitation is therefore added on top
+($\pm2$\,N thrust, $\pm0.03$\,N\,m torque, held for 0.2\,s), which makes the stacked data matrix full rank.
+
+\begin{toybox}[the recorded data set]
+Five flights of 25\,s at 25\,Hz, each starting from a random point near $[0,0,2]$\,m: $5\times625$ samples of
+$\vx_k\in\R^{12}$ and $\vu_k\in\R^4$, with small logging noise. Flights 1--4 are used for identification and
+flight~5 is kept for validation. The largest roll/pitch in the data is $6.5^\circ$, well inside the
+near-linear range of \cref{sec:m1b2}.
+\end{toybox}
+
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=0.92\linewidth]{step1_flight_data.png}
+  \caption{Toy model, Model~2 step~1: example time histories and the 3D tracks of the five recorded flights.}
+\end{figure}
+
+\begin{projbox}
+In the project, this block is a \code{ros2 bag record} of \code{/ap/v1/pose/filtered},
+\code{/ap/v1/twist/filtered} and the commands we send, recorded from ArduPilot SITL in Gazebo or from the real
+drone. Nothing about mass or inertia needs to be known.
+\end{projbox}
+
+\begin{codebox}
+\intoy \code{model2\_dmdc\_lqr\_mpc/step1\_flight\_data.m}, \code{lib/state\_to\_dev.m}, \code{lib/baseline\_pilot.m}.
+\end{codebox}
+
+% ---------------------------------------------------------------------
+\subsection{Block 2 --- DMDc: Dynamic Mode Decomposition with control}
+\label{sec:m2b2}
+% ---------------------------------------------------------------------
+
+\begin{eqbox}{cOuter}{Equations M2.2 -- M2.4 \quad Snapshot matrices and least-squares model}
+\begin{align}
+  X=\big[\vx_1\ \cdots\ \vx_{N-1}\big],\quad X^+&=\big[\vx_2\ \cdots\ \vx_{N}\big],\quad U=\big[\vu_1\ \cdots\ \vu_{N-1}\big] \tag{M2.2}\label{eq:m2.2}\\
+  \big[\,A\ \ B\,\big]&=X^+\begin{bmatrix}X\\ U\end{bmatrix}^{\dagger} \tag{M2.3}\label{eq:m2.3}\\
+  \vx_{k+1}&\approx A\,\vx_k+B\,\vu_k \tag{M2.4}\label{eq:m2.4}
+\end{align}
+\end{eqbox}
+
+\begin{dimtable}
+X,\ X^+ & state snapshots and the same shifted by one sample & \R^{12\times(N-1)} & mixed\\
+U & input snapshots & \R^{4\times(N-1)} & N, N\,m\\
+\Omega=[X;U] & stacked regressor matrix & \R^{16\times(N-1)} & mixed\\
+\Omega^\dagger & pseudo-inverse of $\Omega$ & \R^{(N-1)\times16} & mixed\\
+A & learned discrete state matrix & \R^{12\times12} & --\\
+B & learned discrete input matrix & \R^{12\times4} & mixed\\
+\end{dimtable}
+
+\subsubsection*{Derivation}
+
+We want the pair $G=[A\ B]$ for which $\vx_{k+1}=A\vx_k+B\vu_k=G\,[\vx_k;\vu_k]$ holds as well as possible for
+\emph{every} recorded sample. Written for all samples at once, this is $X^+\approx G\,\Omega$. The least-squares choice
+minimises the sum of squared one-step prediction errors:
+\[
+  \min_G\ \big\|X^+-G\,\Omega\big\|_F^2 .
+\]
+Setting the gradient to zero, $-2\,(X^+-G\Omega)\Omega^\top=0$, gives the \emph{normal equations}
+$G\,\Omega\Omega^\top=X^+\Omega^\top$. If $\Omega$ has full row rank (16, guaranteed by the excitation), the
+$16\times16$ matrix $\Omega\Omega^\top$ is invertible and
+\[
+  G=X^+\Omega^\top\big(\Omega\Omega^\top\big)^{-1}=X^+\Omega^\dagger .
+\]
+In practice $\Omega^\dagger$ is computed from the SVD $\Omega=U_\Omega\Sigma V_\Omega^\top$ as
+$V_\Omega\Sigma^{-1}U_\Omega^\top$, and tiny singular values can be truncated to suppress noise
+(Proctor, Brunton \& Kutz, 2016). Splitting the columns of $G$ gives $A$ (first 12) and $B$ (last 4).
+
+\textbf{Relation to Model~1.} If the data came from the linearized physics, the exact answer would be the
+zero-order-hold discretization of \eqref{eq:AB}:
+$A=e^{A_c\Delta t}$, $B=\int_0^{\Delta t}e^{A_cs}ds\,B_c$. DMDc recovers these numbers from data alone.
+
+\begin{toybox}[a scalar system by hand]
+True system $x_{k+1}=0.9x_k+0.5u_k$. Three recorded steps:
+$X=[1,\ 1.4,\ 0.76]$, $X^+=[1.4,\ 0.76,\ 0.934]$, $U=[1,\ -1,\ 0.5]$.
+\[
+\Omega\Omega^\top=\begin{bmatrix}3.5376&-0.02\\-0.02&2.25\end{bmatrix},\qquad
+X^+\Omega^\top=\begin{bmatrix}3.17384&1.107\end{bmatrix},
+\]
+\[
+[a\ \ b]=\frac{1}{7.9592}\begin{bmatrix}3.17384&1.107\end{bmatrix}\begin{bmatrix}2.25&0.02\\0.02&3.5376\end{bmatrix}
+=\begin{bmatrix}0.9000&0.5000\end{bmatrix}.
+\]
+The true model is recovered exactly, because the data is noise-free.
+
+\textbf{The drone} (2500 snapshots, rank$[X;U]=16$):
+\begin{center}\small
+\begin{tabular}{@{}llrr@{}}
+\toprule
+entry & physical meaning & DMDc & physics (ZOH)\\
+\midrule
+$A_{1,4}$ & $\Delta t$ (position from velocity) & 0.0399 & 0.0400\\
+$A_{4,8}$ & $\approx g_0\Delta t$ ($v_x$ from pitch) & 0.3909 & 0.3924\\
+$A_{5,7}$ & $\approx-g_0\Delta t$ ($v_y$ from roll) & $-0.3862$ & $-0.3924$\\
+$B_{6,1}$ & $\Delta t/m$ ($v_z$ from thrust) & 0.0268 & 0.0267\\
+$B_{10,2}$ & $\Delta t/J_x$ (roll rate from roll torque) & 2.0007 & 2.0000\\
+$B_{12,4}$ & $\Delta t/J_z$ (yaw rate from yaw torque) & 1.0096 & 1.0000\\
+\bottomrule
+\end{tabular}
+\end{center}
+Overall $\|A-A_{\text{phys}}\|/\|A_{\text{phys}}\|=0.95\%$ and $\|B-B_{\text{phys}}\|/\|B_{\text{phys}}\|=0.81\%$. On the unseen
+flight, the 1-second-ahead position prediction error is 1.21\,cm, compared with 1.14\,cm for the exact physics
+model. The learned mass is $\Delta t/B_{6,1}=1.49$\,kg and the learned roll inertia is $\Delta t/B_{10,2}=0.0200$\,kg\,m$^2$.
+\end{toybox}
+
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=0.9\linewidth]{step2_dmdc_validation.png}
+  \caption{Toy model, Model~2 step~2. Left: eigenvalues of the learned and physical $A$, all at or near $1$
+  (integrators). Right: one-step predictions on a flight that was \emph{not} used for learning.}
+\end{figure}
+
+\begin{projbox}
+DMDc is ``curve fitting for dynamics''. It looks at thousands of moments of the form ``the drone was here, we
+pushed like this, and 40\,ms later it was there'', and finds the single linear rule that explains them best. For our
+drone this means we can re-identify the model whenever something changes (a heavier camera, a new battery, a
+different frame) simply by flying for two minutes.
+\end{projbox}
+
+\begin{codebox}
+\intoy \code{step2\_dmdc.m}, \code{lib/dmdc.m}, \code{lib/c2d\_zoh.m}.
+\end{codebox}
+
+% ---------------------------------------------------------------------
+\subsection{Block 3 --- Bellman equation (optimal control)}
+\label{sec:m2b3}
+% ---------------------------------------------------------------------
+
+\begin{eqbox}{cGuid}{Equations M2.5 -- M2.7 \quad Cost, Bellman equation, quadratic value function}
+\begin{align}
+  J&=\sum_{k=0}^{\infty}\big(\vx_k^\top Q\,\vx_k+\vu_k^\top R\,\vu_k\big) \tag{M2.5}\label{eq:m2.5}\\
+  V(\vx_k)&=\min_{\vu_k}\Big[\vx_k^\top Q\vx_k+\vu_k^\top R\vu_k+V(\vx_{k+1})\Big],\qquad \vx_{k+1}=A\vx_k+B\vu_k \tag{M2.6}\label{eq:m2.6}\\
+  V(\vx)&=\vx^\top P\,\vx \tag{M2.7}\label{eq:m2.7}
+\end{align}
+\end{eqbox}
+
+\begin{dimtable}
+J & total cost of a flight & \R & -- (dimensionless)\\
+Q & state weight, $Q=Q^\top\succeq0$ & \R^{12\times12} & 1/(unit of $x_i$)$^2$\\
+R & input weight, $R=R^\top\succ0$ & \R^{4\times4} & 1/N$^2$, 1/(N\,m)$^2$\\
+V(\vx) & value function: lowest possible cost from state $\vx$ & \R & --\\
+P & value matrix, $P=P^\top\succeq0$ & \R^{12\times12} & as $Q$\\
+\end{dimtable}
+
+\subsubsection*{Derivation}
+
+\textbf{(M2.5) The cost.} $\vx^\top Q\vx$ is a weighted sum of squared errors and $\vu^\top R\vu$ a weighted sum of
+squared effort. Minimising $J$ trades accuracy against effort. We choose the weights by \emph{Bryson's rule},
+$Q_{ii}=1/x_{i,\max}^2$ and $R_{jj}=1/u_{j,\max}^2$, where $x_{i,\max}$ is the largest acceptable deviation. A 50\,cm
+position error then costs as much as a 1\,m/s speed error, a $0.2$\,rad tilt, or 5\,N of extra thrust.
+
+\textbf{(M2.6) Principle of optimality} (Bellman). Split the infinite sum into the first step and the rest:
+\[
+  V(\vx_k)=\min_{\vu_k,\vu_{k+1},\dots}\Big[\ell(\vx_k,\vu_k)+\sum_{j>k}\ell(\vx_j,\vu_j)\Big]
+  =\min_{\vu_k}\Big[\ell(\vx_k,\vu_k)+\underbrace{\min_{\vu_{k+1},\dots}\sum_{j>k}\ell(\vx_j,\vu_j)}_{V(\vx_{k+1})}\Big].
+\]
+Whatever the first move is, the remaining moves must be optimal for the state it leads to. Otherwise we could
+improve them and lower the total. The infinite-dimensional problem collapses to a one-step problem.
+
+\textbf{(M2.7) Quadratic value function.} Suppose $V(\vx_{k+1})=\vx_{k+1}^\top P\vx_{k+1}$. The bracket in \eqref{eq:m2.6}
+is then a quadratic function of $\vu_k$; its minimiser is linear in $\vx_k$ (block~4), and the minimum value is again a
+quadratic form in $\vx_k$ (block~5). The quadratic shape is preserved by the Bellman equation, so the guess
+$V=\vx^\top P\vx$ is self-consistent, and all that remains is to find $P$.
+
+\begin{toybox}[one Bellman step by hand]
+$x_{k+1}=1.1x_k+0.5u_k$ (unstable: grows 10\% per step), $q=r=1$, next-step value $V(x)=1\cdot x^2$, current $x=1$:
+\[
+  \text{RHS}(u)=1+u^2+(1.1+0.5u)^2,\qquad \frac{d}{du}=2u+(1.1+0.5u)=0\ \Rightarrow\ u^*=-\frac{1.1}{2.5}=-0.44,
+\]
+\[
+  V(1)=1+0.1936+(1.1-0.22)^2=1.968 .
+\]
+\code{fminsearch} on the same function returns $u^*=-0.4400$ and $V=1.9680$.
+
+\textbf{Drone} (DMDc model, $V_{\text{next}}=\vx^\top Q\vx$, drone 50/30/20\,cm off target): brute-force minimisation over
+$\vu\in\R^4$ and the closed form both give $\vu^*=[-0.0104,-0.0001,0.0001,0.0000]$ and the same value 3.0393.
+Doing nothing ($\vu=0$) costs 14\,593 after 10\,s and keeps growing.
+\end{toybox}
+
+\begin{projbox}
+$Q$ and $R$ are where \emph{we} write down what ``good flying'' means for our mission. For mapping with a camera we
+care about smooth, gentle motion (blur-free images), so tilt and rate errors are weighted heavily and speed is
+limited to the \code{max\_velocity} of 1\,m/s. The Bellman equation turns that wish list into a mathematical problem with a
+unique best answer.
+\end{projbox}
+
+\begin{codebox}
+\intoy \code{step3\_bellman\_cost.m}, \code{lib/bellman\_backup.m}.
+\end{codebox}
+
+% ---------------------------------------------------------------------
+\subsection{Block 4 --- Linear Quadratic Regulator (LQR)}
+\label{sec:m2b4}
+% ---------------------------------------------------------------------
+
+\begin{eqbox}{cGuid}{Equations M2.8 -- M2.9 \quad Optimal gain and control law}
+\begin{align}
+  K&=\big(R+B^\top PB\big)^{-1}B^\top PA \tag{M2.8}\label{eq:m2.8}\\
+  \vu_k&=-K\,\vx_k \tag{M2.9}\label{eq:m2.9}
+\end{align}
+\end{eqbox}
+
+\begin{dimtable}
+K & state-feedback gain & \R^{4\times12} & N/m, N\,s/m, N\,m/rad, \dots\\
+R+B^\top PB & curvature of the one-step cost in $\vu$ & \R^{4\times4} & --\\
+\end{dimtable}
+
+\subsubsection*{Derivation}
+
+Insert $V(\vx_{k+1})=(A\vx+B\vu)^\top P(A\vx+B\vu)$ into the bracket of \eqref{eq:m2.6} and differentiate with respect to
+$\vu$ (using $\partial(\vu^\top M\vu)/\partial\vu=2M\vu$ for symmetric $M$):
+\[
+  \frac{\partial}{\partial\vu}\Big[\vx^\top Q\vx+\vu^\top R\vu+(A\vx+B\vu)^\top P(A\vx+B\vu)\Big]
+  =2R\vu+2B^\top P(A\vx+B\vu)=\bm0 .
+\]
+Collecting the $\vu$ terms: $(R+B^\top PB)\,\vu=-B^\top PA\,\vx$. Because $R\succ0$ and $P\succeq0$, the matrix
+$R+B^\top PB$ is positive definite. It is therefore invertible, and its positive curvature (the Hessian $2(R+B^\top PB)$)
+guarantees a minimum. Hence $\vu^*=-(R+B^\top PB)^{-1}B^\top PA\,\vx=-K\vx$.
+
+\begin{toybox}[the scalar system]
+With the converged $P=3.1215$ (block~6): $K=\dfrac{ab\,P}{r+b^2P}=\dfrac{1.1\cdot0.5\cdot3.1215}{1+0.25\cdot3.1215}=0.9643$.
+Closed loop: $x_{k+1}=(a-bK)x_k=0.6179\,x_k$. Without control the state grows 10\% per step; with LQR it shrinks
+38\% per step.
+
+\textbf{Drone gain} (from block~6), two of its 48 numbers:
+\[
+\delta T=-9.04\,\delta z-6.92\,v_z,\qquad
+\tau_x=0.273\,\delta y+0.321\,v_y-1.444\,\theta_x-0.276\,\omega_x .
+\]
+If the drone is too high, thrust drops. If it is to the left ($\delta y>0$), it rolls right ($+\tau_x$, which makes $\dot v_y<0$),
+but less so if it is already rolled or rolling.
+
+With only a one-step look-ahead ($P=$ one Bellman step from $Q$), the gain gives a spectral radius
+$\rho(A-BK)=1.0024>1$: \emph{unstable}. The full infinite-horizon $P$ is essential.
+\end{toybox}
+
+\begin{projbox}
+The LQR controller is just a table: a $4\times12$ matrix $K$. Every 40\,ms it multiplies the 12 measured errors by $K$
+and obtains thrust and three torques. It is extremely cheap to run on the drone and, for the cost we chose,
+provably the best possible linear controller. Its weakness is that it knows nothing about limits.
+\end{projbox}
+
+\begin{codebox}
+\intoy \code{step4\_lqr\_gain.m}, \code{lib/lqr\_gain.m}.
+\end{codebox}
+
+% ---------------------------------------------------------------------
+\subsection{Block 5 --- Riccati recursion}
+\label{sec:m2b5}
+% ---------------------------------------------------------------------
+
+\begin{eqbox}{cGuid}{Equation M2.10 \quad Discrete Riccati difference equation}
+\begin{equation}
+  P_{k+1}=A^\top P_kA-A^\top P_kB\big(R+B^\top P_kB\big)^{-1}B^\top P_kA+Q,\qquad P_0=Q\ \text{(or any terminal weight)} \tag{M2.10}\label{eq:m2.10}
+\end{equation}
+\end{eqbox}
+
+\begin{dimtable}
+P_k & value matrix of a problem with $k$ steps to go & \R^{12\times12} & as $Q$\\
+k & iteration index (steps-to-go, \emph{not} time) & \mathbb N & --\\
+\end{dimtable}
+
+\subsubsection*{Derivation}
+
+Substitute the optimal input $\vu^*=-K\vx$ back into the bracket of \eqref{eq:m2.6}:
+\[
+  V_{\text{new}}(\vx)=\vx^\top\Big[Q+K^\top RK+(A-BK)^\top P(A-BK)\Big]\vx .
+\]
+Expand $(A-BK)^\top P(A-BK)=A^\top PA-A^\top PBK-K^\top B^\top PA+K^\top B^\top PBK$ and add $K^\top RK$:
+\[
+\begin{aligned}
+  &K^\top(R+B^\top PB)K=K^\top B^\top PA\quad\text{(by \eqref{eq:m2.8})}\\
+  &\Longrightarrow\ V_{\text{new}}=\vx^\top\big[Q+A^\top PA-A^\top PBK\big]\vx
+   =\vx^\top\big[Q+A^\top PA-A^\top PB(R+B^\top PB)^{-1}B^\top PA\big]\vx .
+\end{aligned}
+\]
+This is \eqref{eq:m2.10}. Starting from the terminal cost $P_0$, each application gives the value matrix of a
+problem that is one step longer. If $(A,B)$ is stabilisable and $Q\succ0$, the sequence converges to the
+infinite-horizon matrix $P_\infty$.
+
+\begin{toybox}[scalar recursion, $a=1.1$, $b=0.5$, $q=r=1$, $P_0=1$]
+\[
+P_{k+1}=1+1.21P_k-\frac{(0.55P_k)^2}{1+0.25P_k}
+\]
+\begin{center}\small
+\begin{tabular}{l*{10}{c}}
+\toprule
+$k$ & 0 & 1 & 2 & 3 & 4 & 5 & 6 & 7 & 8 & $\infty$\\
+$P_k$ & 1 & 1.968 & 2.596 & 2.905 & 3.036 & 3.089 & 3.109 & 3.117 & 3.120 & 3.1215\\
+\bottomrule
+\end{tabular}
+\end{center}
+(35 iterations to $10^{-14}$). For the drone, starting from $P_0=Q$, the relative change falls below $10^{-12}$
+after 236 iterations, and $P_\infty$ is positive definite ($\lambda_{\min}=3.27$).
+\end{toybox}
+
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=0.85\linewidth]{step5_riccati_convergence.png}
+  \caption{Toy model, Model~2 step~5: convergence of the Riccati recursion for the learned drone model.}
+\end{figure}
+
+\begin{projbox}
+Each iteration lets the controller ``look one step further into the future''. After a few hundred steps, which is 10\,s
+of flight at 25\,Hz, looking further no longer changes anything. The drone then plans as if the flight never ends,
+which is what an infinite-horizon LQR is.
+\end{projbox}
+
+\begin{codebox}
+\intoy \code{step5\_riccati\_recursion.m}, \code{lib/riccati\_recursion.m}.
+\end{codebox}
+
+% ---------------------------------------------------------------------
+\subsection{Block 6 --- DARE: Discrete Algebraic Riccati Equation}
+\label{sec:m2b6}
+% ---------------------------------------------------------------------
+
+\begin{eqbox}{cGuid}{Equation M2.11 \quad Steady-state Riccati equation}
+\begin{equation}
+  P=A^\top PA-A^\top PB\big(R+B^\top PB\big)^{-1}B^\top PA+Q \tag{M2.11}\label{eq:m2.11}
+\end{equation}
+\end{eqbox}
+
+\begin{dimtable}
+P & stabilising solution, $P=P^\top\succ0$ & \R^{12\times12} & as $Q$\\
+\end{dimtable}
+
+\subsubsection*{Derivation}
+
+If $P_k\to P$, both sides of \eqref{eq:m2.10} tend to the same limit, which gives \eqref{eq:m2.11}. Two further facts make
+$P$ useful.
+
+\textbf{Optimal cost.} Using the rearranged form of \eqref{eq:m2.11},
+$P=Q+K^\top RK+(A-BK)^\top P(A-BK)$ (from the derivation of block~5), along the closed loop $\vx_{k+1}=(A-BK)\vx_k$:
+\[
+  \vx_k^\top P\vx_k-\vx_{k+1}^\top P\vx_{k+1}=\vx_k^\top Q\vx_k+\vu_k^\top R\vu_k .
+\]
+Summing from $k=0$ to $\infty$ (a telescoping sum, and $\vx_k\to0$) gives $J^*=\vx_0^\top P\vx_0$.
+
+\textbf{Direct solution.} Instead of iterating, the optimality conditions $\vu_k=-R^{-1}B^\top\bm\lambda_{k+1}$,
+$\bm\lambda_k=Q\vx_k+A^\top\bm\lambda_{k+1}$ (co-state $\bm\lambda_k=P\vx_k$) give the linear pencil
+\[
+  \begin{bmatrix}I&BR^{-1}B^\top\\0&A^\top\end{bmatrix}\begin{bmatrix}\vx_{k+1}\\ \bm\lambda_{k+1}\end{bmatrix}
+  =\begin{bmatrix}A&0\\-Q&I\end{bmatrix}\begin{bmatrix}\vx_k\\ \bm\lambda_k\end{bmatrix}.
+\]
+Its 12 stable generalised eigenvectors $[X_1;X_2]$ ($|\lambda|<1$) span $\{\bm\lambda=P\vx\}$, so $P=X_2X_1^{-1}$. This is
+what \code{lib/dare\_solve.m} implements, so no toolbox is needed.
+
+\begin{toybox}[scalar DARE is a quadratic equation]
+$P=1+1.21P-\dfrac{0.3025P^2}{1+0.25P}$. Multiplying by $(1+0.25P)$ and simplifying:
+\[
+  0.25P^2-0.46P-1=0\ \Longrightarrow\ P=\frac{0.46+\sqrt{0.46^2+1}}{0.5}=3.1215
+\]
+(the positive root), the limit of the recursion above. The eigenvector solver returns the same value.
+
+\textbf{Drone:} DARE residual $4.2\times10^{-14}$ (relative); agreement with the 236-step recursion $1.1\times10^{-11}$;
+closed-loop spectral radius $\rho(A-BK)=0.950<1$, so it is stable. From $\vx_0=[0.5,-0.3,0.2,0,\dots]$: the simulated cost
+$\sum(\vx^\top Q\vx+\vu^\top R\vu)=41.4373$ and the predicted $\vx_0^\top P\vx_0=41.4373$ agree.
+\end{toybox}
+
+\begin{projbox}
+The DARE gives the final $P$ in one shot, and from it the gain $K$ that we would upload to the drone. $P$ is also
+reused: it becomes the terminal cost of the MPC (dashed arrow in \cref{fig:flow2}). That is the bridge between the two
+branches.
+\end{projbox}
+
+\begin{codebox}
+\intoy \code{step6\_dare.m}, \code{lib/dare\_solve.m}.
+\end{codebox}
+
+% ---------------------------------------------------------------------
+\subsection{Block 7 --- Model Predictive Control (MPC)}
+\label{sec:m2b7}
+% ---------------------------------------------------------------------
+
+\begin{eqbox}{cInner}{Equation M2.12 \quad Finite-horizon constrained optimal control problem}
+\begin{equation}
+\begin{aligned}
+  \min_{\vu_0,\dots,\vu_{N-1}}\ \ &\sum_{k=0}^{N-1}\big(\vx_k^\top Q\vx_k+\vu_k^\top R\vu_k\big)+\vx_N^\top P_f\,\vx_N\\
+  \text{subject to}\ \ &\vx_{k+1}=A\vx_k+B\vu_k,\quad \vx_0=\vx(t)\ \text{(measured)},\\
+  &\vu_{\min}\le\vu_k\le\vu_{\max},\qquad |C\vx_k|\le\vx_{\max}\quad(k=1..N)
+\end{aligned}\tag{M2.12}\label{eq:m2.12}
+\end{equation}
+\end{eqbox}
+
+\begin{dimtable}
+N & prediction horizon & \mathbb N & steps (25 = 1\,s)\\
+P_f & terminal weight (here $P_f=P$ from the DARE) & \R^{12\times12} & as $Q$\\
+\vu_{\min},\vu_{\max} & input limits (deviation) & \R^4 & N, N\,m\\
+C & selects the limited states ($v_x,v_y,v_z$, roll, pitch) & \R^{5\times12} & --\\
+\vx_{\max} & state limits & \R^5 & m/s, rad\\
+\end{dimtable}
+
+\subsubsection*{Derivation and reasoning}
+
+LQR solves \eqref{eq:m2.5} without limits. Real drones have limits: thrust between roughly 5 and 25\,N, torque that the
+rotors can actually produce, the \code{max\_velocity} of 1\,m/s, and a maximum tilt for a camera mount. Adding
+constraints destroys the closed-form solution, so MPC solves a \emph{finite} version numerically, from the current
+measured state:
+\begin{itemize}
+  \item the sum stops after $N$ steps, which keeps the problem finite;
+  \item the infinite tail $\sum_{k\ge N}$ is replaced by the terminal cost $\vx_N^\top P_f\vx_N$.
+\end{itemize}
+
+\textbf{Why $P_f=P$ from the DARE.} By \cref{sec:m2b6}, $\vx_N^\top P\vx_N$ is \emph{exactly} the optimal cost of
+the rest of the flight if no constraint is active after step $N$. With this choice, whenever the constraints are not
+active, the MPC solution coincides with the LQR solution. Block~8 verifies this numerically.
+
+\begin{toybox}[a two-step problem]
+$a=1.1$, $b=0.5$, $q=r=1$, $N=2$, $P_f=3.1215$, $x_0=1$, $|u_k|\le0.5$:
+\[
+  \min_{u_0,u_1}\ x_0^2+u_0^2+x_1^2+u_1^2+3.1215\,x_2^2\quad\text{s.t.}\ x_{k+1}=1.1x_k+0.5u_k .
+\]
+\textbf{Drone:} $N=25$ (1\,s look-ahead); $5\le T\le25$\,N, i.e.\ $\delta T\in[-9.715,\,10.285]$\,N; $|\tau_{x,y}|\le0.3$,
+$|\tau_z|\le0.05$\,N\,m; $|v_i|\le1$\,m/s; $|\theta_{x,y}|\le0.35$\,rad (20$^\circ$).
+\end{toybox}
+
+\begin{projbox}
+MPC is a chess player. Every 40\,ms it imagines the next second of flight, finds the best sequence of moves that never
+breaks a rule (``never faster than 1\,m/s'', ``never ask a motor for more than it can give''), plays only the first move,
+and thinks again. For camera-based mapping, the speed and tilt limits protect image quality.
+\end{projbox}
+
+\begin{codebox}
+\intoy \code{step7\_mpc\_problem.m}, \code{lib/mpc\_build.m}.
+\end{codebox}
+
+% ---------------------------------------------------------------------
+\subsection{Block 8 --- Optimization formulation: Quadratic Program}
+\label{sec:m2b8}
+% ---------------------------------------------------------------------
+
+\begin{eqbox}{cInner}{Equations M2.13 -- M2.15 \quad Stacked prediction, cost and constraints}
+\begin{align}
+  \mathbf X&=S_x\vx_0+S_u\mathbf U,\qquad
+  \mathbf X=\begin{bmatrix}\vx_1\\ \vdots\\ \vx_N\end{bmatrix},\\
+  \mathbf U=\begin{bmatrix}\vu_0\\ \vdots\\ \vu_{N-1}\end{bmatrix},\\
+  S_x=\begin{bmatrix}A\\ A^2\\ \vdots\\ A^N\end{bmatrix},\\
+  S_u=\begin{bmatrix}B&0&\cdots&0\\ AB&B&\cdots&0\\ \vdots&&\ddots&\vdots\\ A^{N-1}B&\cdots&AB&B\end{bmatrix} \tag{M2.13}\label{eq:m2.13}\\[4pt]
+  &\min_{\mathbf U}\ \tfrac12\mathbf U^\top H\mathbf U+\bm f^\top\mathbf U,\quad
+  H=2\big(S_u^\top\bar QS_u+\bar R\big),\ \ \bm f=2S_u^\top\bar QS_x\vx_0 \tag{M2.14}\label{eq:m2.14}\\[2pt]
+  &\text{s.t.}\quad G\mathbf U\le\bm h,\qquad A_{eq}\mathbf U=\bm b_{eq} \tag{M2.15}\label{eq:m2.15}
+\end{align}
+with $\bar Q=\diag(Q,\dots,Q,P_f)$ and $\bar R=\diag(R,\dots,R)$.
+\end{eqbox}
+
+\begin{dimtable}
+\mathbf X,\ \mathbf U & stacked predicted states / inputs & \R^{12N},\ \R^{4N} & mixed\\
+S_x,\ S_u & prediction matrices & \R^{12N\times12},\ \R^{12N\times4N} & --\\
+\bar Q,\ \bar R & block-diagonal weights & \R^{12N\times12N},\ \R^{4N\times4N} & --\\
+H,\ \bm f & QP Hessian and linear term & \R^{4N\times4N},\ \R^{4N} & --\\
+G,\ \bm h & inequality constraints & \R^{n_c\times4N},\ \R^{n_c} & mixed\\
+A_{eq},\ \bm b_{eq} & equality constraints (optional) & \R^{n_e\times4N},\ \R^{n_e} & mixed\\
+\end{dimtable}
+
+\subsubsection*{Derivation}
+
+\textbf{(M2.13) Prediction.} Apply $\vx_{k+1}=A\vx_k+B\vu_k$ repeatedly:
+$\vx_1=A\vx_0+B\vu_0$, $\vx_2=A^2\vx_0+AB\vu_0+B\vu_1$, and in general
+\[
+  \vx_k=A^k\vx_0+\sum_{j=0}^{k-1}A^{k-1-j}B\vu_j .
+\]
+Stacking $k=1..N$ gives \eqref{eq:m2.13}. The future states are \emph{linear} in the unknown inputs.
+
+\textbf{(M2.14) Cost.} The cost of \eqref{eq:m2.12} is $\vx_0^\top Q\vx_0+\mathbf X^\top\bar Q\mathbf X+\mathbf U^\top\bar R\mathbf U$.
+Substitute $\mathbf X$:
+\[
+  \mathbf U^\top\big(S_u^\top\bar QS_u+\bar R\big)\mathbf U+2\,\vx_0^\top S_x^\top\bar QS_u\,\mathbf U+\underbrace{\vx_0^\top(Q+S_x^\top\bar QS_x)\vx_0}_{\text{does not depend on }\mathbf U}.
+\]
+Dropping the constant and writing it as $\tfrac12\mathbf U^\top H\mathbf U+\bm f^\top\mathbf U$ gives $H$ and $\bm f$ in
+\eqref{eq:m2.14}. $H\succ0$ because $\bar R\succ0$, so the problem is \emph{convex}, with a single global minimum
+and no local traps.
+
+\textbf{(M2.15) Constraints.} Input limits: $[I;-I]\,\mathbf U\le[\mathbf U_{\max};-\mathbf U_{\min}]$. State limits
+$|\bar C\mathbf X|\le\bar{\vx}_{\max}$ become
+$\bar CS_u\mathbf U\le\bar{\vx}_{\max}-\bar CS_x\vx_0$ and $-\bar CS_u\mathbf U\le\bar{\vx}_{\max}+\bar CS_x\vx_0$.
+Stacking everything gives $G\mathbf U\le\bm h(\vx_0)$. Equality constraints appear, for example, as a terminal
+condition $\vx_N=0$, i.e.\ (last block row of $S_u$)$\,\mathbf U=-A^N\vx_0$, or in the ``sparse'' formulation, where both
+$\mathbf X$ and $\mathbf U$ are unknowns and the dynamics themselves are the equalities.
+
+\textbf{Solver.} The toy model solves the QP with a primal--dual interior-point method (\code{lib/qp\_solve.m}).
+It applies Newton steps on the KKT conditions $H\mathbf U+\bm f+G^\top\bm z+A_{eq}^\top\bm y=0$, $G\mathbf U+\bm s=\bm h$,
+$s_iz_i=0$, keeping $\bm s,\bm z>0$. It replaces \code{quadprog}, so no Optimization Toolbox is needed.
+
+\begin{toybox}[the two-step problem of block 7, solved by hand]
+\[
+S_x=\begin{bmatrix}1.1\\1.21\end{bmatrix},\quad S_u=\begin{bmatrix}0.5&0\\0.55&0.5\end{bmatrix},\quad
+\bar Q=\diag(1,\,3.1215),
+\]
+\[
+H=2\left(\begin{bmatrix}1.1942&0.8584\\0.8584&0.7804\end{bmatrix}+I\right)=\begin{bmatrix}4.3885&1.7168\\1.7168&3.5607\end{bmatrix},\qquad
+\bm f=\begin{bmatrix}5.2547\\3.7770\end{bmatrix}.
+\]
+\begin{itemize}
+\item \textbf{No limits:} $\mathbf U^*=-H^{-1}\bm f=[-0.9643,\ -0.5958]$. The first move equals the LQR move
+      $-Kx_0=-0.9643$ \emph{exactly}, as promised by $P_f=P$.
+\item \textbf{With $|u|\le0.5$:} $\mathbf U^*=[-0.5,\ -0.5]$. Both limits are active and the KKT multipliers are positive.
+\item \textbf{With $A_{eq}\mathbf U=b_{eq}$ forcing $x_2=0$} ($[0.55\ \ 0.5]\,\mathbf U=-1.21$): $\mathbf U^*=[-1.3057,\ -0.9837]$.
+      Check: $0.55(-1.3057)+0.5(-0.9837)=-1.21$.
+\end{itemize}
+\textbf{Drone ($N=25$):} 100 decision variables and 450 inequality constraints. For a 5\,cm offset (no limit active) the
+MPC input equals $-K\vx_0$ to all printed digits. For a 2\,m offset the unconstrained LQR would demand 1.39 times the
+allowed input; the QP saturates the thrust at $+10.285$\,N and plans a velocity that touches but never exceeds
+1\,m/s. Solved in 10 interior-point iterations (about 8\,ms).
+\end{toybox}
+
+\begin{projbox}
+Here the physics disappears into a few matrices. To the solver, ``fly the drone well without breaking the
+rules'' is just ``find the lowest point of a bowl ($H$, $\bm f$) inside a fence ($G$, $\bm h$)''. Because the bowl has
+one bottom, the answer is unique and can be found reliably in milliseconds. That is what makes MPC feasible at 25\,Hz.
+\end{projbox}
+
+\begin{codebox}
+\intoy \code{step8\_qp\_formulation.m}, \code{lib/mpc\_build.m}, \code{lib/qp\_solve.m}.
+\end{codebox}
+
+% ---------------------------------------------------------------------
+\subsection{Block 9 --- MPC control input (receding horizon)}
+\label{sec:m2b9}
+% ---------------------------------------------------------------------
+
+\begin{eqbox}{cInner}{Equation M2.16 \quad Receding-horizon control law}
+\begin{equation}
+  \mathbf U^*(\vx_k)=\big[\vu_0^*,\ \vu_1^*,\ \dots,\ \vu_{N-1}^*\big]=\arg\min\text{QP}(\vx_k)
+  \quad\Longrightarrow\quad \vu_k=\vu_0^*(\vx_k),\quad k\leftarrow k+1 \tag{M2.16}\label{eq:m2.16}
+\end{equation}
+\end{eqbox}
+
+\begin{dimtable}
+\mathbf U^*(\vx_k) & optimal plan computed at time $k$ & \R^{4N} & N, N\,m\\
+\vu_0^* & first element of the plan, the only one applied & \R^{4} & N, N\,m\\
+\end{dimtable}
+
+\subsubsection*{Derivation and reasoning}
+
+The plan $\mathbf U^*$ is optimal \emph{for the model}. The model is never perfect (it was learned, and wind is not in
+it). Re-solving at every sample from the newly measured state $\vx_{k+1}$ turns the open-loop plan into a feedback law
+$\vu_k=\kappa(\vx_k)$: errors are corrected 25 times per second instead of accumulating. Applying $\vu_0^*$ and shifting the
+horizon forward by one step is the \emph{receding horizon} principle.
+
+\begin{toybox}[8 s on the learned model]
+Start 1.5\,m, 1.0\,m and 1.2\,m away from the setpoint. At $k=0$ the plan begins with
+$\vu_0^*=[10.285,\,-0.279,\,-0.300,\,0.002]$: full upward thrust and the maximum allowed torque.
+Over the run, MPC respects $|v_i|\le1$\,m/s (maximum 1.000), while LQR clipped to the same input limits reaches 1.172\,m/s.
+MPC converges to $\|\vx\|=1.3\times10^{-5}$. The state limits never had to be relaxed. The mean solve time is 2.2\,ms
+against a 40\,ms budget.
+\end{toybox}
+
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=0.9\linewidth]{step9_receding_horizon.png}
+  \caption{Toy model, Model~2 step~9: receding-horizon MPC versus input-clipped LQR on the learned model.}
+\end{figure}
+
+\begin{projbox}
+``Plan one second ahead, act for 40 milliseconds, look again.'' Because the plan is recomputed from fresh EKF
+estimates, the MPC inherits the robustness of feedback while still respecting every limit.
+\end{projbox}
+
+\begin{codebox}
+\intoy \code{step9\_mpc\_control\_input.m}, \code{lib/mpc\_solve.m}.
+\end{codebox}
+
+% ---------------------------------------------------------------------
+\subsection{Block 10 --- Apply to the drone}
+\label{sec:m2b10}
+% ---------------------------------------------------------------------
+
+\begin{eqbox}{cPlant}{Equations M2.17 -- M2.18 \quad From optimal input to motor speeds}
+\begin{align}
+  \vu_k^{\text{abs}}&=\vu_{\text{trim}}+\begin{cases}\vu_0^*(\vx_k)&\text{(MPC)}\\ -K\vx_k&\text{(LQR)}\end{cases}
+   =\begin{bmatrix}T_k\\ \vtau_k\end{bmatrix},\qquad \vu_{\text{trim}}=\begin{bmatrix}mg_0\\ \bm0\end{bmatrix} \tag{M2.17}\label{eq:m2.17}\\
+  \vf&=\Gamma^{-1}\vu_k^{\text{abs}},\qquad \Omega_i=\sqrt{f_i/k_f}\quad(\text{as in M1.24--M1.25}) \tag{M2.18}\label{eq:m2.18}
+\end{align}
+\end{eqbox}
+
+\begin{dimtable}
+\vu_{\text{trim}} & hover input (operating point) & \R^4 & N, N\,m\\
+\vu_k^{\text{abs}} & absolute thrust and torque & \R^4 & N, N\,m\\
+\vOm & motor speeds & \R^4 & rad/s\\
+\end{dimtable}
+
+\subsubsection*{Derivation}
+
+Models and controllers of Model~2 work in deviations \eqref{eq:m2.1}. The real motors need absolute values, so the
+hover trim is added back. The rest is the same allocation as Model~1 (\cref{sec:m1b8}). The loop is closed by
+measuring the new state of the \emph{nonlinear} drone (in the project: the EKF of Model~1) and starting block~9 again.
+Logged data can also be fed back to block~1 to re-identify the model (outer dashed loop of \cref{fig:flow2}).
+
+\begin{toybox}[one control sample, then a whole flight]
+Drone at $[1.5,\,-1.0,\,0.8]$\,m, at rest; target $[0,0,2]$. The MPC gives $\delta\vu=[10.285,\,-0.279,\,-0.300,\,0.002]$, so
+$\vu=[25.000,\,-0.279,\,-0.300,\,0.002]$, $\vf=[7.115,\,5.327,\,6.539,\,6.019]$\,N and
+$\vOm=[912,\,789,\,875,\,839]$\,rad/s.
+
+\textbf{Nonlinear flight}, 10\,s with gusts and sensor noise, controllers designed only on the DMDc model:
+\begin{center}\small
+\begin{tabular}{lrrr}
+\toprule
+controller & max $|v_i|$ [m/s] & error at 10\,s [m] & motor speeds [rad/s]\\
+\midrule
+MPC & 0.994 & 0.015 & 584 -- 913\\
+LQR (clipped) & 1.118 & 0.031 & 613 -- 911\\
+\bottomrule
+\end{tabular}
+\end{center}
+Both stabilise the real drone. Only MPC honours \code{max\_velocity} = 1\,m/s.
+\end{toybox}
+
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=0.95\linewidth]{step10_nonlinear_flight.png}
+  \caption{Toy model, Model~2 step~10: the nonlinear drone flown by controllers that were designed on a model learned
+  from data.}
+\end{figure}
+
+\begin{projbox}
+This is the moment of truth: a controller designed on a learned, linear, approximate model flies the real, nonlinear,
+gusty, motor-limited drone. In the project this block is the same motor mixer as Model~1, fed through ArduPilot.
+\end{projbox}
+
+\begin{codebox}
+\intoy \code{step10\_apply\_to\_drone.m}, \code{lib/motor\_allocation.m}.
+\end{codebox}
+
+% ---------------------------------------------------------------------
+\subsection{Recap of Model 2}
+\label{sec:m2recap}
+% ---------------------------------------------------------------------
+
+\begin{center}\small
+\begin{tabularx}{\linewidth}{@{}c >{\raggedright\arraybackslash}p{2.9cm} >{\raggedright\arraybackslash}p{3.2cm} >{\raggedright\arraybackslash}p{3.0cm} X@{}}
+\toprule
+\textbf{\#} & \textbf{Block} & \textbf{In} & \textbf{Out} & \textbf{The idea in one sentence}\\
+\midrule
+1 & Flight data & drone, excitation & $\{\vx_k\},\{\vu_k\}$ & Record what the drone did and what we told it, as deviations from hover.\\
+2 & DMDc & $X$, $X^+$, $U$ & $A$, $B$ & Least squares finds the linear rule that best predicts the next sample.\\
+3 & Bellman & $A,B,Q,R$ & $V(\vx)=\vx^\top P\vx$ & The best plan from here is the best first move plus the best plan from where it leads.\\
+4 & LQR & $A,B,R,P$ & $K$ & Minimising a quadratic gives a linear law $\vu=-K\vx$.\\
+5 & Riccati recursion & $P_0$ & $P_\infty$ & Look one more step ahead each iteration until nothing changes.\\
+6 & DARE & $A,B,Q,R$ & $P$, final $K$ & Jump straight to that steady state; $\vx_0^\top P\vx_0$ is the optimal cost.\\
+7 & MPC & model, limits, $P_f$ & optimisation problem & Plan the next second optimally without breaking any rule.\\
+8 & QP & problem, $\vx_0$ & $H,\bm f,G,\bm h$, $\mathbf U^*$ & Substitute the predictions: a convex bowl inside a fence.\\
+9 & MPC input & $\vx_k$ & $\vu_0^*$ & Apply only the first move, then re-plan with fresh data.\\
+10 & Apply to drone & $\vu_0^*$ or $-K\vx_k$ & $\Omega_1..\Omega_4$ & Add hover thrust back, split among rotors, fly the real drone.\\
+\bottomrule
+\end{tabularx}
+\end{center}
