@@ -37,6 +37,7 @@ setup(
         'console_scripts': [
             'controller_node = drones_controller.controller_node:main',
             'teleop = drones_controller.teleop:main',
+            'cmd_vel_bridge = drones_controller.cmd_vel_bridge:main',
         ],
     },
 )
