@@ -67,14 +67,15 @@ class SyntheticDatasetGenerator:
             a = np.zeros(3)
             R = np.eye(3)
             omega_B = np.zeros(3)
-        elif preset == "orbit":
-            R_orbit = 4.0
+        elif preset in ["orbit", "inspect_orbit", "inspect"]:
+            R_orbit = 3.2 if "inspect" in preset else 4.0
             omega_orbit = 2.0 * np.pi / 20.0
-            yaw = omega_orbit * t + np.pi / 2.0
+            # For inspection orbit, camera faces inward toward the center object (yaw = omega*t + pi)
+            yaw = omega_orbit * t + (np.pi if "inspect" in preset else (np.pi / 2.0))
 
-            p = np.array([R_orbit * np.cos(omega_orbit * t), R_orbit * np.sin(omega_orbit * t), 2.0 + 0.5 * np.sin(0.5 * t)])
-            v = np.array([-R_orbit * omega_orbit * np.sin(omega_orbit * t), R_orbit * omega_orbit * np.cos(omega_orbit * t), 0.25 * np.cos(0.5 * t)])
-            a = np.array([-R_orbit * (omega_orbit ** 2) * np.cos(omega_orbit * t), -R_orbit * (omega_orbit ** 2) * np.sin(omega_orbit * t), -0.125 * np.sin(0.5 * t)])
+            p = np.array([R_orbit * np.cos(omega_orbit * t), R_orbit * np.sin(omega_orbit * t), 2.0 + 0.3 * np.sin(0.4 * t)])
+            v = np.array([-R_orbit * omega_orbit * np.sin(omega_orbit * t), R_orbit * omega_orbit * np.cos(omega_orbit * t), 0.12 * np.cos(0.4 * t)])
+            a = np.array([-R_orbit * (omega_orbit ** 2) * np.cos(omega_orbit * t), -R_orbit * (omega_orbit ** 2) * np.sin(omega_orbit * t), -0.048 * np.sin(0.4 * t)])
 
             cz, sz = np.cos(yaw), np.sin(yaw)
             R = np.array([[cz, -sz, 0], [sz, cz, 0], [0, 0, 1]], dtype=np.float64)

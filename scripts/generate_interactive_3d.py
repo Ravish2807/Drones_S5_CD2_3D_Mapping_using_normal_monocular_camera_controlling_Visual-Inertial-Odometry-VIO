@@ -20,6 +20,9 @@ def load_ply_points(ply_path):
         pcd = o3d.io.read_point_cloud(ply_path)
         pts = np.asarray(pcd.points)
         if len(pts) > 0:
+            if len(pts) > 20000:
+                indices = np.random.choice(len(pts), 20000, replace=False)
+                return pts[indices]
             return pts
     except Exception:
         pass

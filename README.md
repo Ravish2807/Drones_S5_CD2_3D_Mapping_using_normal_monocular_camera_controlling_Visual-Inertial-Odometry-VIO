@@ -80,6 +80,7 @@ To keep this documentation clean and easy to navigate, deep technical implementa
 | :--- | :--- | :--- |
 | **Division 1 & 2** | KLT Tracking, 15-State ESKF, 200 Hz IMU propagation, ZUPT | 📖 [`core/README.md`](core/README.md) |
 | **Division 3** | $SE(3)$ Camera Extrinsics ($T_{WC} = T_{WB} T_{BC}$), TUM/CSV Exporters | 📖 [`trajectory/README.md`](trajectory/README.md) |
+| **Phase 3** | VIO-Guided Dense 3D Reconstruction (Keyframing, MVS, Dense Point Cloud, Poisson Mesh) | 📖 [`reconstruction/README.md`](reconstruction/README.md) |
 | **Division 4** | Flight Presets, Umeyama SVD Alignment, ATE/RPE Benchmarks | 📖 [`evaluation/README.md`](evaluation/README.md) |
 | **Artifacts** | Interactive WebGL plots, 3D meshes, exported trajectories | 📖 [`results/README.md`](results/README.md) |
 
@@ -144,7 +145,8 @@ Click on any file or directory below to inspect its code and implementation:
 
 | Module / File | Description |
 | :--- | :--- |
-| 🚀 [`3d_view.py`](3d_view.py) | Dynamic Open3D interactive viewer for dual trajectories and 3D point clouds |
+| 🚀 [`3d_view.py`](3d_view.py) | Dynamic Open3D interactive viewer for dual trajectories, camera frustums & dense 3D maps |
+| 🏗️ [`scripts/run_reconstruction.py`](scripts/run_reconstruction.py) | Master Phase 3 runner: VIO -> Keyframes -> MVS -> Dense Point Cloud -> Poisson Mesh |
 | 🌐 [`scripts/generate_interactive_3d.py`](scripts/generate_interactive_3d.py) | Generates standalone Plotly 3D HTML moveable graph for web browsers |
 | 🎞️ [`scripts/generate_3d_gif.py`](scripts/generate_3d_gif.py) | Renders rotating 3D trajectory GIF animations for GitHub displays |
 | 🤖 [`ros2_nodes/vio_node.py`](ros2_nodes/vio_node.py) | ROS 2 Humble node publisher, subscriber, and real-time auto-saver |
@@ -155,6 +157,10 @@ Click on any file or directory below to inspect its code and implementation:
 | 🛰️ [`trajectory/camera_pose.py`](trajectory/camera_pose.py) | Rigid $SE(3)$ transformation from body ($T_{WB}$) to camera optical center ($T_{WC}$) |
 | 💾 [`trajectory/trajectory_exporter.py`](trajectory/trajectory_exporter.py) | Standard TUM (`.tum`) and CSV trajectory formatting engine |
 | 📏 [`trajectory/trajectory_metrics.py`](trajectory/trajectory_metrics.py) | Umeyama $SE(3)$ alignment, ATE/RPE computation & 3D plotter |
+| 🎯 [`reconstruction/keyframe_selector.py`](reconstruction/keyframe_selector.py) | Dynamic keyframe selection based on translation, rotation, and overlap criteria |
+| 🔍 [`reconstruction/mvs_depth_estimator.py`](reconstruction/mvs_depth_estimator.py) | Plane-sweep and epipolar multi-view stereo depth map estimator |
+| ☁️ [`reconstruction/depth_fusion.py`](reconstruction/depth_fusion.py) | Back-projection, TSDF volumetric fusion, and statistical outlier filtering |
+| 🧩 [`reconstruction/surface_mesher.py`](reconstruction/surface_mesher.py) | Screened Poisson surface reconstruction and 3D obstacle voxel grid meshing |
 | 🧪 [`evaluation/synthetic/evaluate_synthetic.py`](evaluation/synthetic/evaluate_synthetic.py) | Automated benchmark runner across all 5 flight presets |
 | ⚙️ [`config/project_vio.yaml`](config/project_vio.yaml) | Master system configuration, camera intrinsics, and sensor noise covariances |
 | 🖥️ [`config/vio_rviz.rviz`](config/vio_rviz.rviz) | Pre-configured RViz2 layout (Amber camera path, Cyan body path, 3D point cloud) |
