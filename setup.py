@@ -38,6 +38,8 @@ setup(
             'controller_node = drones_controller.controller_node:main',
             'teleop = drones_controller.teleop:main',
             'cmd_vel_bridge = drones_controller.cmd_vel_bridge:main',
+            'arm_and_takeoff = drones_controller.arm_and_takeoff:main',
+            'joystick_teleop = drones_controller.joystick_teleop:main',
         ],
     },
 )

@@ -14,7 +14,7 @@ def generate_launch_description():
 
     enable_command_arg = DeclareLaunchArgument(
         'enable_command',
-        default_value='false',
+        default_value='true',
         description='Whether to enable publishing control commands to /ap/v1/cmd_vel'
     )
 
@@ -26,7 +26,7 @@ def generate_launch_description():
         parameters=[
             controller_config,
             vehicle_config,
-            {'enable_command': LaunchConfiguration('enable_command')}
+            {'safety.enable_command': LaunchConfiguration('enable_command')}
         ]
     )
 

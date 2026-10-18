@@ -175,10 +175,10 @@ class ArduPilotInterface:
             timestamp=now_sec
         )
 
-    def publish_cmd_vel(self, vx: float, vy: float, vz: float, yaw_rate: float = 0.0):
+    def publish_cmd_vel(self, vx: float, vy: float, vz: float, yaw_rate: float = 0.0, frame_id: str = "map"):
         msg = TwistStamped()
         msg.header.stamp = self.node.get_clock().now().to_msg()
-        msg.header.frame_id = "map"
+        msg.header.frame_id = frame_id
 
         msg.twist.linear.x = float(vx)
         msg.twist.linear.y = float(vy)

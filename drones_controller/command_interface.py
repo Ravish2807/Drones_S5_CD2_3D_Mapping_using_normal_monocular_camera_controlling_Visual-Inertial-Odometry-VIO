@@ -8,6 +8,7 @@ from .ardupilot_interface import ArduPilotInterface
 class ControlCommand:
     v_cmd: np.ndarray           # Velocity command [vx, vy, vz]
     yaw_rate: float = 0.0       # Desired yaw rate
+    frame_id: str = "map"       # Coordinate frame ("map" for ENU autonomous, "base_link" for body teleop)
     e_p: np.ndarray = None      # Position error for SO(3) debug
     e_v: np.ndarray = None      # Velocity error for SO(3) debug
     F_d: np.ndarray = None      # Desired force for SO(3) debug
@@ -23,7 +24,7 @@ class CommandInterface:
 
     def send(self, command: ControlCommand):
         if command is None or command.v_cmd is None:
-            self.ardupilot.publish_cmd_vel(0.0, 0.0, 0.0, 0.0)
+            self.ardupilot.publish_cmd_vel(0.0, 0.0, 0.0, 0.0, frame_id="map")
             return
 
         v = command.v_cmd
@@ -31,5 +32,6 @@ class CommandInterface:
         vy = float(v[1])
         vz = float(v[2])
         yaw_rate = float(command.yaw_rate)
+        frame_id = getattr(command, 'frame_id', 'map')
 
-        self.ardupilot.publish_cmd_vel(vx, vy, vz, yaw_rate)
+        self.ardupilot.publish_cmd_vel(vx, vy, vz, yaw_rate, frame_id=frame_id)

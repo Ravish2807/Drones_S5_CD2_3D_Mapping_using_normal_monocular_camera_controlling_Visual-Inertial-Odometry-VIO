@@ -10,12 +10,12 @@ so3_controller:
     cmd_vel_topic: "/ap/v1/cmd_vel"
     status_topic: "/ap/v1/status"
 
-    # Target configuration
+    # Target configuration (Takeoff hover setpoint)
     target:
-      x: 20.0
-      y: 5.0
-      z: 20.0
-      yaw: 2.0
+      x: 0.0
+      y: 0.0
+      z: 5.0
+      yaw: 0.0
 
     # Translational position controller gains (Kp, Kv)
     position:
@@ -24,9 +24,10 @@ so3_controller:
 
     # Limits and tolerances
     limits:
-      max_velocity: 0.5
+      max_velocity: 2.5
       position_tolerance: 0.10
       velocity_tolerance: 0.05
+      min_takeoff_altitude: 0.50
 
     # Safety settings
     safety:
