@@ -1,6 +1,7 @@
 # 🛸 Drones Controller (SO(3) Geometric & Closed-Loop Autonomous Flight)
 
 ROS 2 package providing high-precision **closed-loop 3D trajectory tracking** and **geometric $SO(3)$ attitude control** for autonomous multicopters interfaced with **ArduPilot SITL** and **Gazebo** over ROS 2 / micro-ROS (DDS).
+
 <p align="center">
   <img alt="ROS 2 Humble" src="https://img.shields.io/badge/ROS_2-Humble-22314e?style=for-the-badge" />
   <img alt="SO(3) Geometric Control" src="https://img.shields.io/badge/Control-SO%283%29-6657d9?style=for-the-badge" />
@@ -9,7 +10,7 @@ ROS 2 package providing high-precision **closed-loop 3D trajectory tracking** an
 </p>
 
 <p align="center">
-  <img src="assets/readme/vio-flight-overview.svg" alt="Animated conceptual illustration of camera and IMU sensing, spatial estimation, and SO(3) geometric flight control." width="100%" />
+  <img src="assets/readme/vio-flight-overview.svg" alt="Conceptual animated illustration of camera and IMU sensing, spatial trajectory estimation, and SO(3) geometric flight control." width="100%" />
 </p>
 
 ---

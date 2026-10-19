@@ -1,97 +1,62 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="420" viewBox="0 0 1200 420" role="img" aria-labelledby="title desc">
-<title id="title">Drone sensing, spatial estimation, and geometric control</title>
-<desc id="desc">An animated concept illustration showing a monocular camera and IMU contributing to a spatial trajectory estimate that feeds an SO(3) geometric control loop. It is not a live telemetry visualization.</desc>
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="430" viewBox="0 0 1200 430" role="img" aria-labelledby="title desc">
+<title id="title">Drone visual inertial sensing and geometric control</title>
+<desc id="desc">An animated concept illustration showing camera and IMU sensing feeding a 3D estimated trajectory, then an SO(3) controller. It is not a live telemetry view.</desc>
 <defs>
-  <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#071321"/><stop offset=".56" stop-color="#0c1d31"/><stop offset="1" stop-color="#171e3a"/></linearGradient>
-  <linearGradient id="track" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#4be0e9"/><stop offset=".55" stop-color="#7796ff"/><stop offset="1" stop-color="#c1a5ff"/></linearGradient>
-  <pattern id="grid" width="24" height="24" patternUnits="userSpaceOnUse"><circle cx="1" cy="1" r="1" fill="#8bb5d1" opacity=".14"/></pattern>
-  <filter id="glow"><feGaussianBlur stdDeviation="5"/></filter>
-  <style>
-  text{font-family:ui-monospace,SFMono-Regular,Consolas,monospace}
-  .over{font-size:11px;letter-spacing:2.5px;fill:#71dce9;font-weight:700}
-  .title{font-family:system-ui,-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif;font-size:29px;font-weight:750;fill:#f0f6ff}
-  .sub{font-family:system-ui,-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif;font-size:14px;fill:#a6bbd0}
-  .label{font-size:12px;font-weight:700;letter-spacing:.5px;fill:#e5f1fd}
-  .minor{font-size:9px;letter-spacing:.7px;fill:#8daac3}
-  .wire{fill:none;stroke:#497d9e;stroke-width:1.5}
-  .dashed{stroke-dasharray:5 9;animation:dash 2.6s linear infinite}
-  .pulse{transform-box:fill-box;transform-origin:center;animation:pulse 2s ease-in-out infinite}
-  .delay{animation-delay:.7s}.delay2{animation-delay:1.25s}
-  .float{animation:float 3.5s ease-in-out infinite}
-  .draw{stroke-dasharray:700;stroke-dashoffset:700;animation:draw 5s ease-in-out infinite}
-  .scan{transform-origin:0 0;animation:scan 3.5s ease-in-out infinite}
-  @keyframes dash{to{stroke-dashoffset:-56}}
-  @keyframes pulse{0%,100%{opacity:.42;transform:scale(.8)}50%{opacity:1;transform:scale(1.4)}}
-  @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
-  @keyframes draw{0%{stroke-dashoffset:700;opacity:.15}45%,78%{stroke-dashoffset:0;opacity:1}100%{stroke-dashoffset:-700;opacity:.25}}
-  @keyframes scan{0%,100%{transform:rotate(-17deg);opacity:.2}50%{transform:rotate(20deg);opacity:.75}}
-  @media (prefers-reduced-motion:reduce){.dashed,.pulse,.float,.draw,.scan{animation:none!important}}
-  </style>
+ <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#071321"/><stop offset=".55" stop-color="#0b1b2c"/><stop offset="1" stop-color="#101b32"/></linearGradient>
+ <linearGradient id="route" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#42d9e8"/><stop offset=".5" stop-color="#7d9cff"/><stop offset="1" stop-color="#b2a0ff"/></linearGradient>
+ <pattern id="dots" width="24" height="24" patternUnits="userSpaceOnUse"><circle cx="1" cy="1" r="1" fill="#7190aa" opacity=".16"/></pattern>
+ <filter id="blur"><feGaussianBlur stdDeviation="7"/></filter>
+ <style>
+ .eyebrow{font:600 12px ui-monospace,monospace;letter-spacing:2.4px;fill:#7eddea}
+ .headline{font:700 28px system-ui,sans-serif;fill:#f4f8ff;letter-spacing:.2px}
+ .sub{font:400 14px system-ui,sans-serif;fill:#adbed2}
+ .label{font:650 12px system-ui,sans-serif;fill:#e3eefb;letter-spacing:.7px}
+ .small{font:500 10px ui-monospace,monospace;fill:#8ba6bd;letter-spacing:.5px}
+ .grid{stroke:#4c708d;stroke-width:1;opacity:.23;fill:none}
+ .wire{stroke:#3f829d;stroke-width:1.5;fill:none;opacity:.75}
+ .pulse{transform-box:fill-box;transform-origin:center;animation:pulse 2.2s ease-in-out infinite}
+ .p2{animation-delay:.55s}.p3{animation-delay:1.1s}.p4{animation-delay:1.65s}
+ .flow{stroke-dasharray:5 9;animation:flow 2.6s linear infinite}
+ .draw{stroke-dasharray:950;stroke-dashoffset:950;animation:draw 4s ease-in-out infinite}
+ .float{animation:float 3.8s ease-in-out infinite}
+ .scan{transform-origin:268px 177px;animation:scan 3.2s ease-in-out infinite}
+ .status{animation:blink 1.8s steps(2,end) infinite}
+ @keyframes pulse{0%,100%{opacity:.42;transform:scale(.78)}50%{opacity:1;transform:scale(1.35)}}
+ @keyframes flow{to{stroke-dashoffset:-56}}
+ @keyframes draw{0%{stroke-dashoffset:950;opacity:.2}45%,75%{stroke-dashoffset:0;opacity:1}100%{stroke-dashoffset:-950;opacity:.25}}
+ @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+ @keyframes scan{0%,100%{transform:rotate(-18deg);opacity:.25}50%{transform:rotate(22deg);opacity:.85}}
+ @keyframes blink{0%,45%{opacity:1}50%,100%{opacity:.32}}
+ @media (prefers-reduced-motion:reduce){.pulse,.flow,.draw,.float,.scan,.status{animation:none!important}}
+ </style>
 </defs>
-<rect width="1200" height="420" rx="24" fill="url(#bg)"/>
-<rect width="1200" height="420" rx="24" fill="url(#grid)"/>
-<rect x="1" y="1" width="1198" height="418" rx="23" fill="none" stroke="#29465f"/>
-<g transform="translate(40 34)">
-  <rect width="27" height="4" rx="2" fill="#4bd7e5"/>
-  <text x="40" y="8" class="over">VISUAL–INERTIAL FLIGHT STACK</text>
-  <text x="0" y="48" class="title">Sense. Estimate. Control.</text>
-  <text x="0" y="73" class="sub">Camera + IMU · spatial state · geometric SO(3) flight control</text>
+<rect width="1200" height="430" rx="24" fill="url(#bg)"/><rect width="1200" height="430" rx="24" fill="url(#dots)"/><rect x="1" y="1" width="1198" height="428" rx="23" fill="none" stroke="#29445c"/>
+<path d="M0 310 C190 250 260 410 475 335 S850 240 1200 315 L1200 430 L0 430Z" fill="#142942" opacity=".38"/>
+<g transform="translate(42 34)"><rect width="28" height="4" rx="2" fill="#46d3e3"/><text x="40" y="8" class="eyebrow">VISUAL–INERTIAL FLIGHT STACK</text><text x="0" y="48" class="headline">Sense. Estimate. Control.</text><text x="0" y="73" class="sub">Camera + IMU · spatial state · geometric SO(3) flight control</text></g>
+<g transform="translate(42 140)">
+ <rect width="226" height="82" rx="13" fill="#10263a" stroke="#2c5871"/><rect width="3" height="82" rx="1.5" fill="#49d4e3"/>
+ <g transform="translate(18 22)" stroke="#70e3ef" stroke-width="2" fill="none"><rect width="34" height="25" rx="4"/><circle cx="17" cy="12.5" r="7"/><path d="M9 -4h16M11 29h12M5 5L0 1M29 5l5 -4"/></g>
+ <text x="68" y="31" class="label">MONOCULAR CAMERA</text><text x="68" y="51" class="small">FEATURE TRACKS</text><text x="68" y="66" class="small">FRAME OBSERVATIONS</text>
+ <g transform="translate(0 100)"><rect width="226" height="82" rx="13" fill="#10263a" stroke="#2c5871"/><rect width="3" height="82" rx="1.5" fill="#9c8bff"/>
+ <g transform="translate(17 24)" stroke="#b6a8ff" stroke-width="2" fill="none"><rect width="36" height="32" rx="4"/><path d="M7 9h5m-5 7h5m-5 7h5M20 7l9 9-9 9z"/></g>
+ <text x="68" y="31" class="label">IMU</text><text x="68" y="51" class="small">ACCELERATION</text><text x="68" y="66" class="small">ANGULAR RATE</text></g>
 </g>
-<!-- Sensor cards -->
-<g transform="translate(40 142)">
-  <rect width="226" height="82" rx="13" fill="#10283c" stroke="#2f5c74"/>
-  <rect width="3" height="82" rx="1.5" fill="#4bd7e5"/>
-  <g transform="translate(17 24)" stroke="#81e9f1" stroke-width="2" fill="none">
-    <rect width="35" height="25" rx="4"/><circle cx="17.5" cy="12.5" r="7"/><path d="M9 -4h17M10 29h15"/>
-  </g>
-  <text x="67" y="31" class="label">MONOCULAR CAMERA</text><text x="67" y="51" class="minor">FEATURE TRACKS</text><text x="67" y="66" class="minor">FRAME OBSERVATIONS</text>
-  <g transform="translate(0 98)">
-    <rect width="226" height="82" rx="13" fill="#10283c" stroke="#2f5c74"/><rect width="3" height="82" rx="1.5" fill="#a497ff"/>
-    <g transform="translate(17 24)" stroke="#b8adff" stroke-width="2" fill="none"><rect width="35" height="32" rx="4"/><path d="M7 8h5m-5 8h5m-5 8h5M20 6l9 10-9 10z"/></g>
-    <text x="67" y="31" class="label">IMU</text><text x="67" y="51" class="minor">ACCELERATION</text><text x="67" y="66" class="minor">ANGULAR RATE</text>
-  </g>
-</g>
-<!-- Signal convergence -->
-<path d="M266 184 C316 184 326 219 376 219 S423 198 478 198" class="wire dashed"/>
-<path d="M266 282 C315 282 326 242 376 242 S424 198 478 198" class="wire dashed" stroke="#a497ff"/>
-<path d="M266 184 L330 161 L330 208Z" fill="#4bd7e5" opacity=".06"/>
-<g class="scan"><path d="M0 0L74 -24L74 24Z" fill="#4bd7e5" opacity=".15" transform="translate(266 184)"/><path d="M0 0L74 -24M0 0L74 24" stroke="#4bd7e5" fill="none" opacity=".6" transform="translate(266 184)"/></g>
-<circle cx="376" cy="219" r="4" fill="#4bd7e5" class="pulse"/><circle cx="376" cy="242" r="4" fill="#a497ff" class="pulse delay"/>
-<circle cx="478" cy="198" r="6" fill="#4bd7e5"/><circle cx="478" cy="198" r="16" fill="#4bd7e5" opacity=".12" filter="url(#glow)"/>
-<rect x="335" y="324" width="156" height="31" rx="15.5" fill="#122c42" stroke="#2e546f"/><circle cx="352" cy="339.5" r="3" fill="#4bd7e5" class="pulse"/><text x="363" y="343" class="minor">STATE ESTIMATION</text>
-<!-- Spatial map -->
-<g transform="translate(514 117)">
-  <text x="0" y="0" class="over">SPATIAL ESTIMATE</text><text x="0" y="22" class="minor">TRAJECTORY + LANDMARKS</text>
-  <g transform="translate(0 44)">
-    <path d="M0 161 L206 198 L438 145 L232 108Z" fill="#102b41" opacity=".65" stroke="#2c526b"/>
-    <g stroke="#41617d" stroke-width="1" opacity=".38" fill="none">
-      <path d="M0 161L232 108M25 165L257 112M51 170L283 117M77 174L309 122M103 179L335 127M129 184L361 132M155 189L387 137M181 194L413 142"/>
-      <path d="M0 161L206 198M46 153L252 190M92 144L298 181M138 134L344 171M184 125L390 162M232 108L438 145"/>
-    </g>
-    <path d="M23 142 C61 130 82 95 126 104 S178 147 218 122 S267 49 315 67 S365 109 411 45" fill="none" stroke="url(#track)" stroke-width="3" stroke-linecap="round"/>
-    <path d="M23 142 C61 130 82 95 126 104 S178 147 218 122 S267 49 315 67 S365 109 411 45" fill="none" stroke="#7ee9f0" stroke-width="1.4" class="draw"/>
-    <g fill="#69e3ee"><circle cx="23" cy="142" r="3.5"/><circle cx="61" cy="130" r="3.2" class="pulse delay"/><circle cx="126" cy="104" r="4" class="pulse"/><circle cx="178" cy="147" r="3.4" class="pulse delay2"/><circle cx="218" cy="122" r="3.8"/><circle cx="267" cy="49" r="3.4" class="pulse delay"/><circle cx="315" cy="67" r="4" class="pulse delay2"/><circle cx="365" cy="109" r="3.5"/><circle cx="411" cy="45" r="4" class="pulse"/></g>
-    <g fill="#b8aaff"><circle cx="48" cy="91" r="2.3" class="pulse delay2"/><circle cx="99" cy="62" r="2.5" class="pulse"/><circle cx="161" cy="81" r="2.1"/><circle cx="199" cy="53" r="2.4" class="pulse delay"/><circle cx="239" cy="81" r="2.2"/><circle cx="288" cy="28" r="2.5" class="pulse delay2"/><circle cx="336" cy="40" r="2.4"/><circle cx="378" cy="69" r="2.7" class="pulse"/><circle cx="397" cy="22" r="2.1"/></g>
-    <g class="float" transform="translate(315 67)" stroke="#f1f7ff" stroke-width="2" stroke-linecap="round" fill="none">
-      <path d="M-17 0H17M0 -10V10M-14 -7L14 7M-14 7L14 -7"/><rect x="-7" y="-4" width="14" height="8" rx="3" fill="#d9e8f8" stroke="#d9e8f8"/><circle cx="-17" r="4" fill="#4bd7e5" stroke="#4bd7e5"/><circle cx="17" r="4" fill="#4bd7e5" stroke="#4bd7e5"/><circle cy="-10" r="3" fill="#a497ff" stroke="#a497ff"/><circle cy="10" r="3" fill="#a497ff" stroke="#a497ff"/>
-    </g>
-    <g transform="translate(5 216)"><circle cx="0" cy="0" r="3" fill="#4bd7e5"/><text x="10" y="4" class="minor">ESTIMATED PATH</text><circle cx="130" cy="0" r="3" fill="#b8aaff"/><text x="140" y="4" class="minor">FEATURES</text></g>
-  </g>
-</g>
-<!-- Control panel -->
-<g transform="translate(1007 126)">
-  <rect width="151" height="217" rx="15" fill="#10283c" stroke="#3b5b79"/>
-  <rect x="14" y="14" width="123" height="22" rx="11" fill="#1a3e51"/>
-  <circle cx="26" cy="25" r="3" fill="#53e0c6" class="pulse"/><text x="37" y="29" class="minor" fill="#adf5df">CONTROL LOOP</text>
-  <g transform="translate(23 59)">
-    <path d="M0 18H104M0 44H104M0 70H104" stroke="#2d4d65" stroke-width="1"/>
-    <rect x="0" y="7" width="73" height="8" rx="4" fill="#43d2e0" opacity=".85"/><rect x="0" y="33" width="91" height="8" rx="4" fill="#998aff" opacity=".9"/><rect x="0" y="59" width="55" height="8" rx="4" fill="#43d2e0" opacity=".72"/>
-    <circle cx="73" cy="11" r="4" fill="#c6fbff" class="pulse"/><circle cx="91" cy="37" r="4" fill="#d3caff" class="pulse delay"/><circle cx="55" cy="63" r="4" fill="#c6fbff" class="pulse delay2"/>
-  </g>
-  <text x="19" y="160" class="label">SO(3)</text><text x="19" y="179" class="minor">GEOMETRIC ATTITUDE</text><text x="19" y="195" class="minor">CLOSED-LOOP TRACKING</text>
-</g>
-<g transform="translate(40 385)">
-  <path d="M0 0H1118" stroke="#29465f"/>
-  <text x="0" y="18" class="minor">CONCEPT GRAPHIC · NOT LIVE TELEMETRY</text><text x="1118" y="18" text-anchor="end" class="minor">CAMERA + IMU → SPATIAL ESTIMATION → CONTROL</text>
-</g>
+<g class="scan"><path d="M268 177L355 147L355 209Z" fill="#42d9e8" opacity=".07"/><path d="M268 177L355 147M268 177L355 209" stroke="#42d9e8" opacity=".42" stroke-width="1.2"/></g>
+<g><path d="M268 181C318 181 328 221 382 221S437 197 486 197" class="wire flow" stroke="#42d9e8"/><path d="M268 281C320 281 335 238 382 238S437 197 486 197" class="wire flow" stroke="#9c8bff"/>
+ <circle cx="382" cy="221" r="3.5" fill="#42d9e8" class="pulse"/><circle cx="382" cy="238" r="3.5" fill="#a699ff" class="pulse p2"/><circle cx="486" cy="197" r="6" fill="#55d9e9"/><circle cx="486" cy="197" r="16" fill="#55d9e9" opacity=".12" filter="url(#blur)"/>
+ <rect x="370" y="305" width="160" height="32" rx="16" fill="#122a40" stroke="#2b536b"/><circle cx="388" cy="321" r="3.5" fill="#51d6e5" class="status"/><text x="400" y="325" class="small">STATE ESTIMATION</text></g>
+<g transform="translate(535 115)"><text class="eyebrow">SPATIAL ESTIMATE</text><text y="22" class="small">TRAJECTORY + LANDMARKS</text>
+ <g transform="translate(0 48)"><path d="M0 155L208 195L435 143L227 103Z" fill="#102a40" opacity=".6" stroke="#294d66"/>
+ <path d="M0 155L227 103M26 160L253 108M52 165L279 113M78 170L305 118M104 175L331 123M130 180L357 128M156 185L383 133M182 190L409 138" class="grid"/>
+ <path d="M0 155L208 195M46 144L254 184M92 133L300 173M138 122L346 162M184 111L392 151M230 103L435 143" class="grid"/>
+ <path d="M28 142C72 126 84 94 130 103S180 148 218 123S264 47 315 68S366 111 407 48" stroke="url(#route)" stroke-width="3" fill="none" stroke-linecap="round"/>
+ <path d="M28 142C72 126 84 94 130 103S180 148 218 123S264 47 315 68S366 111 407 48" stroke="#6ee7f1" stroke-width="1.5" fill="none" stroke-linecap="round" class="draw"/>
+ <g fill="#69dfeb"><circle cx="28" cy="142" r="3.5"/><circle cx="72" cy="126" r="3.5" class="pulse p2"/><circle cx="130" cy="103" r="4" class="pulse"/><circle cx="180" cy="148" r="3.5" class="pulse p3"/><circle cx="218" cy="123" r="4"/><circle cx="264" cy="47" r="3.5" class="pulse p4"/><circle cx="315" cy="68" r="4" class="pulse p2"/><circle cx="366" cy="111" r="3.5"/><circle cx="407" cy="48" r="4" class="pulse"/></g>
+ <g fill="#b4a7ff" opacity=".88"><circle cx="56" cy="89" r="2.3" class="pulse p4"/><circle cx="105" cy="62" r="2.5" class="pulse p2"/><circle cx="160" cy="82" r="2.1"/><circle cx="200" cy="51" r="2.6" class="pulse p3"/><circle cx="238" cy="79" r="2.3"/><circle cx="288" cy="28" r="2.5" class="pulse"/><circle cx="335" cy="40" r="2.3"/><circle cx="375" cy="68" r="2.7" class="pulse p4"/><circle cx="394" cy="22" r="2.2"/></g>
+ <g class="float" transform="translate(315 68)" stroke="#f2f7ff" stroke-width="2" stroke-linecap="round" fill="none"><path d="M-17 0H17M0 -10V10M-14 -7L14 7M-14 7L14 -7"/><rect x="-7" y="-4" width="14" height="8" rx="3" fill="#dce9f7"/><circle cx="-17" r="4" fill="#48d7e6" stroke="#48d7e6"/><circle cx="17" r="4" fill="#48d7e6" stroke="#48d7e6"/><circle cy="-10" r="3" fill="#9b8bff" stroke="#9b8bff"/><circle cy="10" r="3" fill="#9b8bff" stroke="#9b8bff"/></g>
+ <g transform="translate(4 210)"><circle r="3" fill="#4bd6e5"/><text x="10" y="4" class="small">ESTIMATED PATH</text><circle cx="126" r="3" fill="#aa9cff"/><text x="136" y="4" class="small">FEATURES</text></g></g></g>
+<g transform="translate(1010 120)"><rect width="150" height="214" rx="15" fill="#10263a" stroke="#3a5876"/><rect x="14" y="14" width="122" height="21" rx="10.5" fill="#1b3d52"/><circle cx="26" cy="24.5" r="3" fill="#4ee0c4" class="status"/><text x="36" y="28" class="small">CONTROL LOOP</text>
+ <g transform="translate(24 58)"><path d="M0 18H102M0 44H102M0 70H102" stroke="#2e4c64"/><rect y="7" width="70" height="8" rx="4" fill="#40c8dc" opacity=".85"/><rect y="33" width="92" height="8" rx="4" fill="#8e83f5" opacity=".9"/><rect y="59" width="55" height="8" rx="4" fill="#40c8dc" opacity=".7"/><circle cx="70" cy="11" r="4" fill="#9cf0f4" class="pulse"/><circle cx="92" cy="37" r="4" fill="#c2baff" class="pulse p2"/><circle cx="55" cy="63" r="4" fill="#9cf0f4" class="pulse p3"/></g>
+ <text x="20" y="157" class="label">SO(3)</text><text x="20" y="175" class="small">GEOMETRIC ATTITUDE</text><text x="20" y="190" class="small">CLOSED-LOOP TRACKING</text></g>
+<g transform="translate(42 391)"><path d="M0 0H1116" stroke="#29445c"/><text y="21" class="small">CONCEPT GRAPHIC · NOT A LIVE TELEMETRY VIEW</text><text x="1116" y="21" text-anchor="end" class="small">CAMERA + IMU → SPATIAL ESTIMATION → CONTROL</text></g>
 </svg>
