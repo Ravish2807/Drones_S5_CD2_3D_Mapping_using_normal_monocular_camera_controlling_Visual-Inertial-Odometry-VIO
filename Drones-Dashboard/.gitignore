@@ -1,0 +1,18 @@
+# OS / Editor Files
+.DS_Store
+Thumbs.db
+*.swp
+*.bak
+.vscode/
+.idea/
+
+# Node / Python
+node_modules/
+__pycache__/
+*.pyc
+
+# Logs & caches
+*.log
+.hermes/
+coverage/
+dist/
