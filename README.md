@@ -27,7 +27,7 @@
 
 ## 3. Title
 
-# 3D Mapping of an Environment Using a Normal Monocular Camera and Controlling the Drone by Visual–Inertial Odometry (VIO)
+### 3D Mapping of an Environment Using a Normal Monocular Camera and Controlling the Drone by Visual–Inertial Odometry (VIO)
 
 *A first-principles project exploring monocular visual–inertial state estimation, 3D reconstruction, and geometric multirotor control.*
 
@@ -45,7 +45,11 @@
 [![Python](https://img.shields.io/badge/Python-3.x-3776AB?logo=python&logoColor=white)](https://www.python.org/)
 [![ArduPilot SITL](https://img.shields.io/badge/ArduPilot-SITL-FF6F00)](https://ardupilot.org/dev/docs/sitl-simulator-software-in-the-loop.html)
 [![Gazebo](https://img.shields.io/badge/Gazebo-Simulation-264653)](https://gazebosim.org/)
+[![MATLAB](https://img.shields.io/badge/MATLAB-Toolbox-FF8C00)](https://www.mathworks.com/products/ros.html)
+[![Quaternion](https://img.shields.io/badge/Orientation-Quaternion-1E40AF)](#6-methodology)
 [![Control](https://img.shields.io/badge/Geometric%20Control-SO(3)-1D4ED8)](#6-methodology)
+
+**Navigate:** [Abstract](#4-abstract) · [Introduction](#5-introduction) · [Methodology](#6-methodology) · [Results](#7-results) · [Conclusion](#8-conclusion) · [References](#9-references)
 
 ---
 
@@ -199,6 +203,27 @@ A point cloud is not automatically an obstacle map. For usable obstacle detectio
 
 The `main` branch also contains MATLAB workflows in `toy_model/`, `toy_model2/`, and `toy_model3/`. These explore staged trajectory/control calculations and mathematical models, including an error-state EKF/SO(3) closed loop and separate DMDc/LQR/DARE/MPC exercises. They are study and simulation artifacts; their presence does not establish that each algorithm is part of the ROS 2 runtime controller.
 
+### 6.6 State and control parameters
+
+| Category | Parameters or current configuration |
+|---|---|
+| Estimated state | Position, linear velocity, attitude, accelerometer bias, gyroscope bias (experimental VIO branch) |
+| Controller inputs | Position/velocity state, rotation matrix, angular velocity, desired position/velocity/acceleration, desired yaw |
+| Controller gains | **kp**, **kv**, **kR**, and **kOmega** in the controller YAML configuration |
+| Vehicle parameters | Mass, gravity, diagonal inertia matrix, maximum velocity, state timeout, control rate |
+| Interface | ROS 2 pose and twist subscriptions; bounded velocity-command publishing, disabled by default |
+
+### 6.7 Main-branch project layout
+
+| Path | Purpose |
+|---|---|
+| [drones_controller/](drones_controller/) | ROS 2 Python geometric controller, state adapters, trajectory generator, and configuration |
+| [toy_model/](toy_model/) | Staged MATLAB/live-script experiments |
+| [toy_model2/](toy_model2/) and [toy_model3/](toy_model3/) | Executable mathematical models and MATLAB live scripts for estimation/control and DMDc/LQR/DARE/MPC exercises |
+| [docs/](docs/) | Mathematical models and project documentation |
+| [Results/](Results/) | Existing screenshots and project result captures |
+| [Base Paper.pdf](Base%20Paper.pdf) | Project-provided base paper PDF |
+
 ---
 
 ## 7. Results
@@ -213,6 +238,8 @@ The following images are already committed under `Results/`. They are presented 
 | ![Existing result image 2](Results/image2.png) | [Results/image2.png](Results/image2.png) |
 | ![Existing result image 3](Results/image3.png) | [Results/image3.png](Results/image3.png) |
 | ![Existing result image 4](Results/image4.png) | [Results/image4.png](Results/image4.png) |
+
+Additional existing captures include [Results/image5.png](Results/image5.png), [Results/image6.png](Results/image6.png), [Results/image22.jpeg](Results/image22.jpeg), and other [untitled PNG/JPEG captures](Results/). These are retained as artifacts, not as quantitative evidence on their own.
 
 An earlier supplied clip is also linked here: [Previously supplied project clip](https://github.com/user-attachments/assets/0ed8133c-c115-4816-8c9a-0bfaf4fb959b). A team video folder is available at [Project video folder](https://drive.google.com/drive/folders/1iowpdHYk4qTKaGRoWc7l1Y_70IvifeuA?usp=sharing).
 
