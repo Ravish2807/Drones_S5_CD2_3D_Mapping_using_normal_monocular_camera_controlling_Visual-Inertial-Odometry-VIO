@@ -15,11 +15,11 @@
 
 | Name | Roll Number | Email |
 |---|---|---|
-| Ravishanmugam K | \`CB.SC.U4AIE24347\` | ravish2007801@gmail.com |
-| Ishwarya Murugesan | \`CB.SC.U4AIE24220\` | ishwar ya15m@gmail.com |
-| Aparna Bharani | \`CB.SC.U4AIE24304\` | aparnabharani2006@gmail.com |
-| Cibikumar B | \`CB.SC.U4AIE24212\` | cibikumar30@gmail.com |
-| Akhilan S | \`CB.SC.U4AIE24362\` | akhilan1010@gmail.com |
+| Ravishanmugam K | `CB.SC.U4AIE24347` | ravish2007801@gmail.com |
+| Ishwarya Murugesan | `CB.SC.U4AIE24220` | ishwarya15m@gmail.com |
+| Aparna Bharani | `CB.SC.U4AIE24304` | aparnabharani2006@gmail.com |
+| Cibikumar B | `CB.SC.U4AIE24212` | cibikumar30@gmail.com |
+| Akhilan S | `CB.SC.U4AIE24362` | akhilan1010@gmail.com |
 
 > Team names, roll numbers, and email addresses above are retained from the existing project README.
 
@@ -51,7 +51,7 @@
 
 ## 4. Abstract
 
-This project investigates a drone workflow combining monocular-camera visual information, inertial measurements, 3D environment reconstruction, and geometric control. The repository has evolved across separate branches: the \`main\` branch contains a ROS 2 Python controller with an \(SO(3)\)-based attitude-control core, state adapters, trajectory generation, MATLAB experiment material, and simulation/project documentation. The separate \`VIO-Controller\` branch contains an experimental MSCKF-style visual–inertial estimator, synthetic trajectory evaluation, ROS 2 interface code, and a 3D reconstruction pipeline. A separate dashboard branch contains a browser-based visualisation prototype.
+This project investigates a drone workflow combining monocular-camera visual information, inertial measurements, 3D environment reconstruction, and geometric control. The repository has evolved across separate branches: the `main` branch contains a ROS 2 Python controller with an \(SO(3)\)-based attitude-control core, state adapters, trajectory generation, MATLAB experiment material, and simulation/project documentation. The separate `VIO-Controller` branch contains an experimental MSCKF-style visual–inertial estimator, synthetic trajectory evaluation, ROS 2 interface code, and a 3D reconstruction pipeline. A separate dashboard branch contains a browser-based visualisation prototype.
 
 These components represent related parts of the intended system, but they should not be mistaken for a single, already validated flight stack. In particular, the existence of synthetic trajectories or a reconstruction module does not by itself establish accurate obstacle detection, real-time performance, or successful physical-drone flight. Results below are labelled by branch and evidence type so that the current implementation, experimental artifacts, and future integration work remain distinguishable.
 
@@ -69,11 +69,11 @@ The controller work follows geometric methods that represent attitude with rotat
 
 | Branch | Main contents observed | How to interpret it |
 |---|---|---|
-| [\`main\`](https://github.com/Ravish2807/Drones_S5_CD2_3D_Mapping_using_normal_monocular_camera_controlling_Visual-Inertial-Odometry-VIO/tree/main) | \`drones_controller/\`, MATLAB toy models, project documentation, and result images | Primary controller and project documentation branch |
-| [\`VIO-Controller\`](https://github.com/Ravish2807/Drones_S5_CD2_3D_Mapping_using_normal_monocular_camera_controlling_Visual-Inertial-Odometry-VIO/tree/VIO-Controller) | \`core/\`, \`datasets/\`, \`evaluation/\`, \`interfaces/\`, \`reconstruction/\`, \`results/\`, and ROS 2 nodes | Separate experimental VIO and 3D reconstruction implementation |
-| [\`drones-controller\`](https://github.com/Ravish2807/Drones_S5_CD2_3D_Mapping_using_normal_monocular_camera_controlling_Visual-Inertial-Odometry-VIO/tree/drones-controller) | A smaller ROS 2 controller package and launch/configuration files | Controller development branch |
-| [\`drones-dashboard\`](https://github.com/Ravish2807/Drones_S5_CD2_3D_Mapping_using_normal_monocular_camera_controlling_Visual-Inertial-Odometry-VIO/tree/drones-dashboard) | Browser UI, bridge code, VIO-related plots/data, and architecture diagrams | Visualisation and integration prototype |
-| [\`gym-pyplot-drones\`](https://github.com/Ravish2807/Drones_S5_CD2_3D_Mapping_using_normal_monocular_camera_controlling_Visual-Inertial-Odometry-VIO/tree/gym-pyplot-drones) | Simulation, trajectories, controller experiments, evaluation, and plotting | Separate control/simulation experiments |
+| [`main`](https://github.com/Ravish2807/Drones_S5_CD2_3D_Mapping_using_normal_monocular_camera_controlling_Visual-Inertial-Odometry-VIO/tree/main) | `drones_controller/`, MATLAB toy models, project documentation, and result images | Primary controller and project documentation branch |
+| [`VIO-Controller`](https://github.com/Ravish2807/Drones_S5_CD2_3D_Mapping_using_normal_monocular_camera_controlling_Visual-Inertial-Odometry-VIO/tree/VIO-Controller) | `core/`, `datasets/`, `evaluation/`, `interfaces/`, `reconstruction/`, `results/`, and ROS 2 nodes | Separate experimental VIO and 3D reconstruction implementation |
+| [`drones-controller`](https://github.com/Ravish2807/Drones_S5_CD2_3D_Mapping_using_normal_monocular_camera_controlling_Visual-Inertial-Odometry-VIO/tree/drones-controller) | A smaller ROS 2 controller package and launch/configuration files | Controller development branch |
+| [`drones-dashboard`](https://github.com/Ravish2807/Drones_S5_CD2_3D_Mapping_using_normal_monocular_camera_controlling_Visual-Inertial-Odometry-VIO/tree/drones-dashboard) | Browser UI, bridge code, VIO-related plots/data, and architecture diagrams | Visualisation and integration prototype |
+| [`gym-pyplot-drones`](https://github.com/Ravish2807/Drones_S5_CD2_3D_Mapping_using_normal_monocular_camera_controlling_Visual-Inertial-Odometry-VIO/tree/gym-pyplot-drones) | Simulation, trajectories, controller experiments, evaluation, and plotting | Separate control/simulation experiments |
 
 Branch contents are not automatically integrated with one another. Paths and claims in this README therefore identify the branch that contains the corresponding artifact.
 
@@ -85,7 +85,7 @@ Branch contents are not automatically integrated with one another. Paths and cla
 
 The target processing chain is camera and IMU input, visual tracking, inertial propagation, visual–inertial state correction, camera-pose output, and then reconstruction/visualisation. Controller execution is a related subsystem; it should consume a verified state estimate and validated commands rather than being treated as part of the estimator itself.
 
-\`\`\`mermaid
+```mermaid
 flowchart LR
   CAM["Monocular camera frames"] --> TRACK["Feature detection and tracking"]
   IMU["IMU measurements"] --> PROP["Inertial state and covariance propagation"]
@@ -97,7 +97,7 @@ flowchart LR
   POSE --> RECON["Keyframes / dense reconstruction experiments"]
   MAP --> RECON
   POSE -. verified state .-> CTRL["SO(3) controller"]
-\`\`\`
+```
 
 In the experimental VIO branch, a central frame relation is:
 
@@ -111,7 +111,7 @@ Here \(W\), \(B\), and \(C\) denote world, body, and camera frames. These equati
 
 ### 6.2 Visual–inertial odometry (experimental branch)
 
-The [\`VIO-Controller/core/\`](https://github.com/Ravish2807/Drones_S5_CD2_3D_Mapping_using_normal_monocular_camera_controlling_Visual-Inertial-Odometry-VIO/tree/VIO-Controller/core) directory contains the estimator-related implementation. Its module documentation describes feature tracking, IMU propagation, cloned camera poses, feature triangulation, and MSCKF-style residual projection.
+The [`VIO-Controller/core/`](https://github.com/Ravish2807/Drones_S5_CD2_3D_Mapping_using_normal_monocular_camera_controlling_Visual-Inertial-Odometry-VIO/tree/VIO-Controller/core) directory contains the estimator-related implementation. Its module documentation describes feature tracking, IMU propagation, cloned camera poses, feature triangulation, and MSCKF-style residual projection.
 
 A simplified error-state formulation is:
 
@@ -147,9 +147,9 @@ K=PH_o^{T}S^{-1},\qquad
 
 These equations summarise the MSCKF approach; they are not a claim that every correction path has passed end-to-end validation. The estimator should be evaluated using controlled synthetic cases and then a public sensor dataset such as EuRoC before physical deployment.
 
-### 6.3 SO(3) geometric controller (\`main\` branch)
+### 6.3 SO(3) geometric controller (`main` branch)
 
-The primary controller implementation is in [\`drones_controller/drones_controller/so3_controller.py\`](https://github.com/Ravish2807/Drones_S5_CD2_3D_Mapping_using_normal_monocular_camera_controlling_Visual-Inertial-Odometry-VIO/blob/main/drones_controller/drones_controller/so3_controller.py). Position and velocity tracking errors are:
+The primary controller implementation is in [`drones_controller/drones_controller/so3_controller.py`](https://github.com/Ravish2807/Drones_S5_CD2_3D_Mapping_using_normal_monocular_camera_controlling_Visual-Inertial-Odometry-VIO/blob/main/drones_controller/drones_controller/so3_controller.py). Position and velocity tracking errors are:
 
 \[
 \mathbf{e}_{p}=\mathbf{p}_{d}-\mathbf{p},\qquad
@@ -187,25 +187,25 @@ The code calculates the desired moment using the configured gains, inertia matri
 \end{aligned}
 \]
 
-The controller source explicitly notes that its force sign/frame adaptation must be validated experimentally. Also, the ROS node translates position/velocity intent into a bounded velocity command on \`/ap/v1/cmd_vel\`; it does **not** publish force or moment as though the velocity topic were an actuator interface. Command publishing is disabled by default in \`drones_controller/config/controller.yaml\` (\`enable_command: false\`). Confirm the flight-stack frame and topic semantics in simulation before enabling commands.
+The controller source explicitly notes that its force sign/frame adaptation must be validated experimentally. Also, the ROS node translates position/velocity intent into a bounded velocity command on `/ap/v1/cmd_vel`; it does **not** publish force or moment as though the velocity topic were an actuator interface. Command publishing is disabled by default in `drones_controller/config/controller.yaml` (`enable_command: false`). Confirm the flight-stack frame and topic semantics in simulation before enabling commands.
 
 ### 6.4 Mapping and 3D reconstruction (experimental branch)
 
-The separate [\`VIO-Controller/reconstruction/\`](https://github.com/Ravish2807/Drones_S5_CD2_3D_Mapping_using_normal_monocular_camera_controlling_Visual-Inertial-Odometry-VIO/tree/VIO-Controller/reconstruction) directory documents an experimental pipeline that uses estimated camera poses to select keyframes, estimate depth, fuse points, and build a surface mesh. That is distinct from the controller currently on \`main\` and from the sparse feature landmarks used for VIO.
+The separate [`VIO-Controller/reconstruction/`](https://github.com/Ravish2807/Drones_S5_CD2_3D_Mapping_using_normal_monocular_camera_controlling_Visual-Inertial-Odometry-VIO/tree/VIO-Controller/reconstruction) directory documents an experimental pipeline that uses estimated camera poses to select keyframes, estimate depth, fuse points, and build a surface mesh. That is distinct from the controller currently on `main` and from the sparse feature landmarks used for VIO.
 
 A point cloud is not automatically an obstacle map. For usable obstacle detection and navigation, future validation must address metric scale, reconstruction completeness, coordinate frames, depth uncertainty, moving objects, collision margins, and the latency from image capture to map update.
 
 ### 6.5 MATLAB experiment material
 
-The \`main\` branch also contains MATLAB workflows in \`toy_model/\`, \`toy_model2/\`, and \`toy_model3/\`. These explore staged trajectory/control calculations and mathematical models, including an error-state EKF/SO(3) closed loop and separate DMDc/LQR/DARE/MPC exercises. They are study and simulation artifacts; their presence does not establish that each algorithm is part of the ROS 2 runtime controller.
+The `main` branch also contains MATLAB workflows in `toy_model/`, `toy_model2/`, and `toy_model3/`. These explore staged trajectory/control calculations and mathematical models, including an error-state EKF/SO(3) closed loop and separate DMDc/LQR/DARE/MPC exercises. They are study and simulation artifacts; their presence does not establish that each algorithm is part of the ROS 2 runtime controller.
 
 ---
 
 ## 7. Results
 
-### 7.1 Existing project visuals on \`main\`
+### 7.1 Existing project visuals on `main`
 
-The following images are already committed under \`Results/\`. They are presented as project artifacts rather than as quantitative proof of estimator accuracy.
+The following images are already committed under `Results/`. They are presented as project artifacts rather than as quantitative proof of estimator accuracy.
 
 | Preview | Repository asset |
 |---|---|
@@ -216,7 +216,7 @@ The following images are already committed under \`Results/\`. They are presente
 
 An earlier supplied clip is also linked here: [Previously supplied project clip](https://github.com/user-attachments/assets/0ed8133c-c115-4816-8c9a-0bfaf4fb959b). A team video folder is available at [Project video folder](https://drive.google.com/drive/folders/1iowpdHYk4qTKaGRoWc7l1Y_70IvifeuA?usp=sharing).
 
-### 7.2 Synthetic VIO benchmarks in the separate \`VIO-Controller\` branch
+### 7.2 Synthetic VIO benchmarks in the separate `VIO-Controller` branch
 
 The branch's evaluation documentation reports the following camera-trajectory metrics for its synthetic presets. The reported position error is camera ATE RMSE after the documented Umeyama \(SE(3)\) alignment.
 
@@ -240,16 +240,16 @@ Source: [VIO-Controller evaluation README](https://github.com/Ravish2807/Drones_
 | Area | Evidence available in the repository | Status / limitation |
 |---|---|---|
 | SO(3) controller | ROS 2 Python package, controller configuration, diagnostics | Implementation exists; frame/sign and velocity-command behavior need simulation validation |
-| VIO core | MSCKF-oriented code and synthetic artifacts on \`VIO-Controller\` | Experimental; synthetic benchmarks expose significant failure cases |
-| 3D reconstruction | Keyframe/depth/fusion/meshing modules on \`VIO-Controller\` | Experimental pipeline; no verified obstacle-detection accuracy claim |
-| ROS 2 integration | Controller package on \`main\`, VIO interface/node artifacts on separate branch | Integration status must be checked branch-by-branch |
+| VIO core | MSCKF-oriented code and synthetic artifacts on `VIO-Controller` | Experimental; synthetic benchmarks expose significant failure cases |
+| 3D reconstruction | Keyframe/depth/fusion/meshing modules on `VIO-Controller` | Experimental pipeline; no verified obstacle-detection accuracy claim |
+| ROS 2 integration | Controller package on `main`, VIO interface/node artifacts on separate branch | Integration status must be checked branch-by-branch |
 | Physical-drone validation | No measured flight benchmark established by the README artifacts reviewed here | Not claimed |
 
 ---
 
 ## 8. Conclusion
 
-The repository brings together several development tracks toward monocular-camera-based visual–inertial localization, 3D reconstruction, and drone control. The \`main\` branch is strongest as the home for the SO(3) controller, simulation-facing ROS 2 package, and MATLAB experiments. The separate VIO branch provides a substantial research implementation for MSCKF-style estimation and reconstruction, but its synthetic metrics show that it is not yet uniformly reliable. The dashboard and controller-development branches provide additional prototypes rather than proof of a single integrated system.
+The repository brings together several development tracks toward monocular-camera-based visual–inertial localization, 3D reconstruction, and drone control. The `main` branch is strongest as the home for the SO(3) controller, simulation-facing ROS 2 package, and MATLAB experiments. The separate VIO branch provides a substantial research implementation for MSCKF-style estimation and reconstruction, but its synthetic metrics show that it is not yet uniformly reliable. The dashboard and controller-development branches provide additional prototypes rather than proof of a single integrated system.
 
 The next technical priority is to validate the estimator against controlled ground truth, explain poor synthetic cases, test the dataset pipeline, and verify coordinate frames and command semantics in simulation. Only after those steps should VIO, mapping, and flight control be presented as an end-to-end autonomous obstacle-aware flight system.
 
