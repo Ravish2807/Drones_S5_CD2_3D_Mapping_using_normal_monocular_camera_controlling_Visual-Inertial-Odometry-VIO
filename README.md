@@ -109,11 +109,11 @@ flowchart LR
 
 In the experimental VIO branch, a central frame relation is:
 
-$
+$$
 T_{WC} = T_{WB}T_{BC}, \qquad
 R_{WC}=R_{WB}R_{BC}, \qquad
 p_{WC}=p_{WB}+R_{WB}p_{BC}.
-$
+$$
 
 Here $W$, $B$, and $C$ denote world, body, and camera frames. These equations depend on the repository's transform convention; every producer, residual, and evaluator must use that same convention.
 
@@ -123,7 +123,7 @@ The [`VIO-Controller/core/`](https://github.com/Ravish2807/Drones_S5_CD2_3D_Mapp
 
 A simplified error-state formulation is:
 
-$
+$$
 \mathbf{x} =
 \begin{bmatrix}
 \mathbf{p}_{WB} & \mathbf{v}_{WB} & \delta\boldsymbol{\theta} &
@@ -131,27 +131,27 @@ $
 \end{bmatrix}^{T},
 \qquad
 P^{-} = \Phi P\Phi^{T}+Q.
-$
+$$
 
 For a tracked feature observed from multiple camera poses, the linearised residual can be written:
 
-$
+$$
 \mathbf{r} \simeq H_x\delta\mathbf{x}+H_f\delta\mathbf{p}_f+\mathbf{n}.
-$
+$$
 
 Projecting with a left-nullspace basis $N$ such that $N^{T}H_f=0$ removes the linearised feature-position error:
 
-$
+$$
 \mathbf{r}_{o}=N^{T}\mathbf{r}, \qquad H_o=N^{T}H_x.
-$
+$$
 
 An update then uses an innovation covariance and Kalman correction, subject to the implementation's gating and covariance conventions:
 
-$
+$$
 S=H_oPH_o^{T}+R,\qquad
 K=PH_o^{T}S^{-1},\qquad
 \delta\mathbf{x}=K\mathbf{r}_o.
-$
+$$
 
 These equations summarise the MSCKF approach; they are not a claim that every correction path has passed end-to-end validation. The estimator should be evaluated using controlled synthetic cases and then a public sensor dataset such as EuRoC before physical deployment.
 
@@ -159,41 +159,41 @@ These equations summarise the MSCKF approach; they are not a claim that every co
 
 The primary controller implementation is in [`drones_controller/drones_controller/so3_controller.py`](https://github.com/Ravish2807/Drones_S5_CD2_3D_Mapping_using_normal_monocular_camera_controlling_Visual-Inertial-Odometry-VIO/blob/main/drones_controller/drones_controller/so3_controller.py). Position and velocity tracking errors are:
 
-$
+$$
 \mathbf{e}_{p}=\mathbf{p}_{d}-\mathbf{p},\qquad
 \mathbf{e}_{v}=\mathbf{v}_{d}-\mathbf{v}.
-$
+$$
 
 The implementation constructs an ENU-adapted desired force:
 
-$
+$$
 \mathbf{F}_{d}
 =m\left(K_{p}\mathbf{e}_{p}+K_{v}\mathbf{e}_{v}
 +\mathbf{a}_{d}+g\mathbf{e}_{3}\right),
 \qquad
 \mathbf{b}_{3d}=\frac{\mathbf{F}_{d}}{\|\mathbf{F}_{d}\|}.
-$
+$$
 
 A desired heading is used with $\mathbf{b}_{3d}$ to construct the desired rotation matrix $R_d$. The implemented geometric attitude error is:
 
-$
+$$
 \mathbf{e}_{R}=\frac{1}{2}
 \left(R_{d}^{T}R-R^{T}R_{d}\right)^{\vee},
 \qquad
 \mathbf{e}_{\Omega}=\boldsymbol{\Omega}
 -R^{T}R_d\boldsymbol{\Omega}_{d}.
-$
+$$
 
 The code calculates the desired moment using the configured gains, inertia matrix, gyroscopic term, and desired angular-rate feed-forward:
 
-$
+$$
 \begin{aligned}
 \mathbf{M}_{d}={}&-K_R\mathbf{e}_R-K_\Omega\mathbf{e}_{\Omega}
 +\boldsymbol{\Omega}\times(J\boldsymbol{\Omega})\\
 &-J\left(\widehat{\boldsymbol{\Omega}}R^{T}R_d
 \boldsymbol{\Omega}_{d}-R^{T}R_d\dot{\boldsymbol{\Omega}}_{d}\right).
 \end{aligned}
-$
+$$
 
 The controller source explicitly notes that its force sign/frame adaptation must be validated experimentally. Also, the ROS node translates position/velocity intent into a bounded velocity command on `/ap/v1/cmd_vel`; it does **not** publish force or moment as though the velocity topic were an actuator interface. Command publishing is disabled by default in `drones_controller/config/controller.yaml` (`enable_command: false`). Confirm the flight-stack frame and topic semantics in simulation before enabling commands.
 
