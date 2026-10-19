@@ -1,0 +1,49 @@
+model1_so3_controller:
+  ros__parameters:
+
+    # Control loop frequency (Hz)
+    rate: 50.0
+
+    # Topic configuration
+    pose_topic: "/ap/v1/pose/filtered"
+    twist_topic: "/ap/v1/twist/filtered"
+    cmd_vel_topic: "/ap/v1/cmd_vel"
+    status_topic: "/ap/v1/status"
+    target_topic: "/drones_controller/target_pose"
+
+    # Default Target setpoint (hover 5m)
+    target:
+      x: 0.0
+      y: 0.0
+      z: 5.0
+      yaw: 0.0
+
+    # Translational position controller gains (Kp, Kv)
+    position:
+      kp: [0.5, 0.5, 0.5]
+      kv: [0.2, 0.2, 0.2]
+
+    # Limits and tolerances
+    limits:
+      max_velocity: 2.5
+      position_tolerance: 0.10
+      velocity_tolerance: 0.05
+      min_takeoff_altitude: 0.50
+
+    # Safety settings
+    safety:
+      state_timeout: 0.2
+      enable_command: true
+
+    # Physical parameters
+    mass: 1.5
+    gravity: 9.81
+    inertia: [0.02, 0.02, 0.04]
+
+    # SO(3) Attitude & Angular Rate Gains
+    kR: [4.0, 4.0, 2.0]
+    kOmega: [0.8, 0.8, 0.5]
+
+    # Block 4: Error-State EKF Settings
+    ekf:
+      enable: true

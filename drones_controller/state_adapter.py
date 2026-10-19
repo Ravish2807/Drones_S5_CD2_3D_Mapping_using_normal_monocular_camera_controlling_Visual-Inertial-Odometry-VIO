@@ -118,3 +118,29 @@ def validate_rotation_matrix(R: np.ndarray, tol: float = 1e-3) -> bool:
     orthogonality_error = np.linalg.norm(R.T @ R - np.eye(3))
     determinant_error = abs(np.linalg.det(R) - 1.0)
     return orthogonality_error < tol and determinant_error < tol
+
+
+def so3_exp(v: np.ndarray) -> np.ndarray:
+    """
+    Exponential map: so(3) vector v -> SO(3) matrix R.
+    Uses Rodrigues formula.
+    """
+    v = np.asarray(v, dtype=float)
+    theta = np.linalg.norm(v)
+    if theta < 1e-8:
+        return np.eye(3) + hat(v)
+    v_hat = hat(v)
+    return np.eye(3) + (np.sin(theta) / theta) * v_hat + ((1.0 - np.cos(theta)) / (theta**2)) * (v_hat @ v_hat)
+
+
+def so3_log(R: np.ndarray) -> np.ndarray:
+    """
+    Logarithmic map: SO(3) matrix R -> so(3) vector v (rotation vector).
+    """
+    R = np.asarray(R, dtype=float)
+    tr = np.clip((np.trace(R) - 1.0) / 2.0, -1.0, 1.0)
+    theta = np.arccos(tr)
+    if theta < 1e-8:
+        return 0.5 * vee(R - R.T)
+    return (theta / (2.0 * np.sin(theta))) * vee(R - R.T)
+

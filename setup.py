@@ -36,6 +36,8 @@ setup(
     entry_points={
         'console_scripts': [
             'controller_node = drones_controller.controller_node:main',
+            'model1_so3_controller = drones_controller.model1_so3_controller:main',
+            'model2_dmdc_controller = drones_controller.model2_dmdc_controller:main',
             'teleop = drones_controller.teleop:main',
             'cmd_vel_bridge = drones_controller.cmd_vel_bridge:main',
             'arm_and_takeoff = drones_controller.arm_and_takeoff:main',
