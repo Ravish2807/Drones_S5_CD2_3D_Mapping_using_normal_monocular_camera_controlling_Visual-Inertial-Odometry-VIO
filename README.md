@@ -32,7 +32,7 @@
 *A first-principles project exploring monocular visual–inertial state estimation, 3D reconstruction, and geometric multirotor control.*
 
 <p align="center">
-  <img src="docs/animations/vio-3d-pipeline.svg" alt="Animated illustration of monocular camera and IMU inputs flowing into visual-inertial odometry and a 3D trajectory and landmark map" width="100%">
+  <img src="docs/animations/vio-3d-pipeline.gif" alt="Animated illustration of monocular camera and IMU inputs flowing into visual-inertial odometry and a 3D trajectory and landmark map" width="100%">
 </p>
 
 <p align="center">
@@ -296,7 +296,7 @@ The next technical priority is to validate the estimator against controlled grou
 10. **Open3D.** [Official point-cloud, geometry, and reconstruction documentation](https://www.open3d.org/docs/latest/).
 11. **MAVLink.** [Protocol and message documentation](https://mavlink.io/en/).
 12. **evo.** [Trajectory evaluation toolkit](https://github.com/MichaelGrupp/evo).
-13. **Animation rendering reference only:** [OmniRoute README](https://github.com/iamakhilan/OmniRoute). The reference was consulted only for the use of README-embedded SVG artwork; this project's diagram, labels, layout, and content were authored for the drone VIO/mapping workflow.
+13. **Animation rendering reference only:** [OmniRoute README](https://github.com/iamakhilan/OmniRoute). The reference was consulted only for animated README artwork as a presentation technique; this project's diagram, labels, layout, and content were authored for the drone VIO/mapping workflow. The README embeds a GIF for GitHub-compatible motion; the editable SVG source is also retained in the repository.
 
 <p align="center">
   <sub>Amrita Vishwa Vidyapeetham · Group CD2 · Drone Control, VIO, and 3D Mapping</sub>
