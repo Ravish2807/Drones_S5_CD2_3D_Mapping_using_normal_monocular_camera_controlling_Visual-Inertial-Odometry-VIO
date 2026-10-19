@@ -32,15 +32,15 @@
 *A first-principles project exploring monocular visual–inertial state estimation, 3D reconstruction, and geometric multirotor control.*
 
 <p align="center">
-  <img src="docs/animations/vio-3d-pipeline.svg" alt="Original workflow illustration of monocular camera and IMU inputs flowing into visual-inertial odometry and a 3D trajectory and landmark map" width="100%">
+  <img src="docs/animations/vio-3d-pipeline.svg" alt="Diagram that shows monocular camera and IMU inputs flowing through visual-inertial odometry to a 3D trajectory and landmark map." width="100%">
 </p>
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/Ravish2807/Drones_S5_CD2_3D_Mapping_using_normal_monocular_camera_controlling_Visual-Inertial-Odometry-VIO/VIO-Controller/results/plots/orbit_3d_trajectory_rotating.gif" alt="Animated synthetic 3D camera trajectory for the orbit preset from the experimental VIO branch" width="78%">
+  <img src="https://raw.githubusercontent.com/Ravish2807/Drones_S5_CD2_3D_Mapping_using_normal_monocular_camera_controlling_Visual-Inertial-Odometry-VIO/VIO-Controller/results/plots/orbit_3d_trajectory_rotating.gif" alt="Animated synthetic 3D camera trajectory for the orbit preset from the experimental VIO branch." width="78%">
 </p>
 
 <p align="center">
-  <sub>The pipeline SVG is the original illustration authored for this README; its source is retained at <a href="docs/animations/vio-3d-pipeline.svg">docs/animations/vio-3d-pipeline.svg</a>. The rotating trajectory is a precomputed synthetic artifact from the separate <a href="https://github.com/Ravish2807/Drones_S5_CD2_3D_Mapping_using_normal_monocular_camera_controlling_Visual-Inertial-Odometry-VIO/tree/VIO-Controller">VIO-Controller branch</a>—not a live sensor feed or physical-flight result.</sub>
+  <sub>The workflow illustration is original to this README; its SVG source is retained at <a href="docs/animations/vio-3d-pipeline.svg">docs/animations/vio-3d-pipeline.svg</a>. GitHub does not play inline SVG animation, so the second image uses an existing precomputed synthetic trajectory GIF from the separate <a href="https://github.com/Ravish2807/Drones_S5_CD2_3D_Mapping_using_normal_monocular_camera_controlling_Visual-Inertial-Odometry-VIO/tree/VIO-Controller">VIO-Controller branch</a>. It is not live telemetry or physical-flight evidence.</sub>
 </p>
 
 ### Project at a glance
@@ -59,7 +59,7 @@
 
 ## 4. Abstract
 
-This project investigates a drone workflow combining monocular-camera visual information, inertial measurements, 3D environment reconstruction, and geometric control. The repository has evolved across separate branches: the `main` branch contains a ROS 2 Python controller with an \(SO(3)\)-based attitude-control core, state adapters, trajectory generation, MATLAB experiment material, and simulation/project documentation. The separate `VIO-Controller` branch contains an experimental MSCKF-style visual–inertial estimator, synthetic trajectory evaluation, ROS 2 interface code, and a 3D reconstruction pipeline. A separate dashboard branch contains a browser-based visualisation prototype.
+This project investigates a drone workflow combining monocular-camera visual information, inertial measurements, 3D environment reconstruction, and geometric control. The repository has evolved across separate branches: the `main` branch contains a ROS 2 Python controller with an $SO(3)$-based attitude-control core, state adapters, trajectory generation, MATLAB experiment material, and simulation/project documentation. The separate `VIO-Controller` branch contains an experimental MSCKF-style visual–inertial estimator, synthetic trajectory evaluation, ROS 2 interface code, and a 3D reconstruction pipeline. A separate dashboard branch contains a browser-based visualisation prototype.
 
 These components represent related parts of the intended system, but they should not be mistaken for a single, already validated flight stack. In particular, the existence of synthetic trajectories or a reconstruction module does not by itself establish accurate obstacle detection, real-time performance, or successful physical-drone flight. Results below are labelled by branch and evidence type so that the current implementation, experimental artifacts, and future integration work remain distinguishable.
 
@@ -71,7 +71,7 @@ These components represent related parts of the intended system, but they should
 
 GPS-denied environments such as indoor spaces, corridors, and warehouses motivate onboard localization using sensors carried by the aircraft. A monocular camera supplies image features and visual motion cues; an IMU supplies angular-rate and specific-force measurements at a higher rate. Visual–inertial odometry (VIO) combines these complementary measurements to estimate motion. A 3D map or reconstructed surface is a related but separate output: pose estimation alone does not guarantee that obstacles have been segmented, classified, or made safe for navigation.
 
-The controller work follows geometric methods that represent attitude with rotation matrices and errors on \(SO(3)\), while quaternion conversions are used at ROS message boundaries. This avoids using Euler angles as the controller's internal attitude representation; it does not remove the need to validate frame conventions, signs, timing, estimator accuracy, or the command interface.
+The controller work follows geometric methods that represent attitude with rotation matrices and errors on $SO(3)$, while quaternion conversions are used at ROS message boundaries. This avoids using Euler angles as the controller's internal attitude representation; it does not remove the need to validate frame conventions, signs, timing, estimator accuracy, or the command interface.
 
 ### Repository branches reviewed
 
@@ -109,13 +109,13 @@ flowchart LR
 
 In the experimental VIO branch, a central frame relation is:
 
-\[
+$
 T_{WC} = T_{WB}T_{BC}, \qquad
 R_{WC}=R_{WB}R_{BC}, \qquad
 p_{WC}=p_{WB}+R_{WB}p_{BC}.
-\]
+$
 
-Here \(W\), \(B\), and \(C\) denote world, body, and camera frames. These equations depend on the repository's transform convention; every producer, residual, and evaluator must use that same convention.
+Here $W$, $B$, and $C$ denote world, body, and camera frames. These equations depend on the repository's transform convention; every producer, residual, and evaluator must use that same convention.
 
 ### 6.2 Visual–inertial odometry (experimental branch)
 
@@ -123,7 +123,7 @@ The [`VIO-Controller/core/`](https://github.com/Ravish2807/Drones_S5_CD2_3D_Mapp
 
 A simplified error-state formulation is:
 
-\[
+$
 \mathbf{x} =
 \begin{bmatrix}
 \mathbf{p}_{WB} & \mathbf{v}_{WB} & \delta\boldsymbol{\theta} &
@@ -131,27 +131,27 @@ A simplified error-state formulation is:
 \end{bmatrix}^{T},
 \qquad
 P^{-} = \Phi P\Phi^{T}+Q.
-\]
+$
 
 For a tracked feature observed from multiple camera poses, the linearised residual can be written:
 
-\[
+$
 \mathbf{r} \simeq H_x\delta\mathbf{x}+H_f\delta\mathbf{p}_f+\mathbf{n}.
-\]
+$
 
-Projecting with a left-nullspace basis \(N\) such that \(N^{T}H_f=0\) removes the linearised feature-position error:
+Projecting with a left-nullspace basis $N$ such that $N^{T}H_f=0$ removes the linearised feature-position error:
 
-\[
+$
 \mathbf{r}_{o}=N^{T}\mathbf{r}, \qquad H_o=N^{T}H_x.
-\]
+$
 
 An update then uses an innovation covariance and Kalman correction, subject to the implementation's gating and covariance conventions:
 
-\[
+$
 S=H_oPH_o^{T}+R,\qquad
 K=PH_o^{T}S^{-1},\qquad
 \delta\mathbf{x}=K\mathbf{r}_o.
-\]
+$
 
 These equations summarise the MSCKF approach; they are not a claim that every correction path has passed end-to-end validation. The estimator should be evaluated using controlled synthetic cases and then a public sensor dataset such as EuRoC before physical deployment.
 
@@ -159,41 +159,41 @@ These equations summarise the MSCKF approach; they are not a claim that every co
 
 The primary controller implementation is in [`drones_controller/drones_controller/so3_controller.py`](https://github.com/Ravish2807/Drones_S5_CD2_3D_Mapping_using_normal_monocular_camera_controlling_Visual-Inertial-Odometry-VIO/blob/main/drones_controller/drones_controller/so3_controller.py). Position and velocity tracking errors are:
 
-\[
+$
 \mathbf{e}_{p}=\mathbf{p}_{d}-\mathbf{p},\qquad
 \mathbf{e}_{v}=\mathbf{v}_{d}-\mathbf{v}.
-\]
+$
 
 The implementation constructs an ENU-adapted desired force:
 
-\[
+$
 \mathbf{F}_{d}
 =m\left(K_{p}\mathbf{e}_{p}+K_{v}\mathbf{e}_{v}
 +\mathbf{a}_{d}+g\mathbf{e}_{3}\right),
 \qquad
 \mathbf{b}_{3d}=\frac{\mathbf{F}_{d}}{\|\mathbf{F}_{d}\|}.
-\]
+$
 
-A desired heading is used with \(\mathbf{b}_{3d}\) to construct the desired rotation matrix \(R_d\). The implemented geometric attitude error is:
+A desired heading is used with $\mathbf{b}_{3d}$ to construct the desired rotation matrix $R_d$. The implemented geometric attitude error is:
 
-\[
+$
 \mathbf{e}_{R}=\frac{1}{2}
 \left(R_{d}^{T}R-R^{T}R_{d}\right)^{\vee},
 \qquad
 \mathbf{e}_{\Omega}=\boldsymbol{\Omega}
 -R^{T}R_d\boldsymbol{\Omega}_{d}.
-\]
+$
 
 The code calculates the desired moment using the configured gains, inertia matrix, gyroscopic term, and desired angular-rate feed-forward:
 
-\[
+$
 \begin{aligned}
 \mathbf{M}_{d}={}&-K_R\mathbf{e}_R-K_\Omega\mathbf{e}_{\Omega}
 +\boldsymbol{\Omega}\times(J\boldsymbol{\Omega})\\
 &-J\left(\widehat{\boldsymbol{\Omega}}R^{T}R_d
 \boldsymbol{\Omega}_{d}-R^{T}R_d\dot{\boldsymbol{\Omega}}_{d}\right).
 \end{aligned}
-\]
+$
 
 The controller source explicitly notes that its force sign/frame adaptation must be validated experimentally. Also, the ROS node translates position/velocity intent into a bounded velocity command on `/ap/v1/cmd_vel`; it does **not** publish force or moment as though the velocity topic were an actuator interface. Command publishing is disabled by default in `drones_controller/config/controller.yaml` (`enable_command: false`). Confirm the flight-stack frame and topic semantics in simulation before enabling commands.
 
@@ -249,7 +249,7 @@ An earlier supplied clip is also linked here: [Previously supplied project clip]
 
 ### 7.2 Synthetic VIO benchmarks in the separate `VIO-Controller` branch
 
-The branch's evaluation documentation reports the following camera-trajectory metrics for its synthetic presets. The reported position error is camera ATE RMSE after the documented Umeyama \(SE(3)\) alignment.
+The branch's evaluation documentation reports the following camera-trajectory metrics for its synthetic presets. The reported position error is camera ATE RMSE after the documented Umeyama $SE(3)$ alignment.
 
 | Synthetic preset | Camera ATE RMSE | Reported RPE drift | Orientation error RMSE |
 |---|---:|---:|---:|
