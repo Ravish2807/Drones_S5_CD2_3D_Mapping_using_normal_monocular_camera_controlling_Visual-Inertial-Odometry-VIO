@@ -32,11 +32,15 @@
 *A first-principles project exploring monocular visual–inertial state estimation, 3D reconstruction, and geometric multirotor control.*
 
 <p align="center">
-  <img src="docs/animations/vio-3d-pipeline.gif" alt="Animated illustration of monocular camera and IMU inputs flowing into visual-inertial odometry and a 3D trajectory and landmark map" width="100%">
+  <img src="docs/animations/vio-3d-pipeline.svg" alt="Original workflow illustration of monocular camera and IMU inputs flowing into visual-inertial odometry and a 3D trajectory and landmark map" width="100%">
 </p>
 
 <p align="center">
-  <sub>Project concept illustration. It is an explanatory animation, not a live sensor feed or an experimental result.</sub>
+  <img src="https://raw.githubusercontent.com/Ravish2807/Drones_S5_CD2_3D_Mapping_using_normal_monocular_camera_controlling_Visual-Inertial-Odometry-VIO/VIO-Controller/results/plots/orbit_3d_trajectory_rotating.gif" alt="Animated synthetic 3D camera trajectory for the orbit preset from the experimental VIO branch" width="78%">
+</p>
+
+<p align="center">
+  <sub>The pipeline SVG is the original illustration authored for this README; its source is retained at <a href="docs/animations/vio-3d-pipeline.svg">docs/animations/vio-3d-pipeline.svg</a>. The rotating trajectory is a precomputed synthetic artifact from the separate <a href="https://github.com/Ravish2807/Drones_S5_CD2_3D_Mapping_using_normal_monocular_camera_controlling_Visual-Inertial-Odometry-VIO/tree/VIO-Controller">VIO-Controller branch</a>—not a live sensor feed or physical-flight result.</sub>
 </p>
 
 ### Project at a glance
@@ -296,7 +300,8 @@ The next technical priority is to validate the estimator against controlled grou
 10. **Open3D.** [Official point-cloud, geometry, and reconstruction documentation](https://www.open3d.org/docs/latest/).
 11. **MAVLink.** [Protocol and message documentation](https://mavlink.io/en/).
 12. **evo.** [Trajectory evaluation toolkit](https://github.com/MichaelGrupp/evo).
-13. **Animation rendering reference only:** [OmniRoute README](https://github.com/iamakhilan/OmniRoute). The reference was consulted only for animated README artwork as a presentation technique; this project's diagram, labels, layout, and content were authored for the drone VIO/mapping workflow. The README embeds a GIF for GitHub-compatible motion; the editable SVG source is also retained in the repository.
+13. **GitHub image-rendering behavior.** [Working with non-code files](https://docs.github.com/en/repositories/working-with-files/using-files/working-with-non-code-files) — GitHub supports GIF images but documents that SVGs do not currently support inline animation.
+14. **Animation rendering reference only:** [OmniRoute README](https://github.com/iamakhilan/OmniRoute). The reference was consulted only for animated README artwork as a presentation technique; this project's diagram, labels, layout, and content were authored for the drone VIO/mapping workflow. The original SVG source is retained in this branch, and the README uses a GIF trajectory artifact for motion because GitHub documents that SVGs do not support inline animation.
 
 <p align="center">
   <sub>Amrita Vishwa Vidyapeetham · Group CD2 · Drone Control, VIO, and 3D Mapping</sub>
