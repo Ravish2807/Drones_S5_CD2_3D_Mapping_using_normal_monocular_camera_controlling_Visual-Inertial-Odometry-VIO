@@ -187,16 +187,34 @@ The `Toy Model/` directory contains a staged set of MATLAB Live Scripts:
 
 Open the scripts in MATLAB to inspect the assumptions and execute the stages supported by your installed toolboxes.
 
-## 🖼️ Results & visual evidence
 
-Selected project evidence is shown below.
+## 🖼️ Results & Visual Evidence
 
-| Result 2 | Result 3 |
-| --- | --- |
-| ![Result image 2](Results/image2.png) | ![Result image 3](Results/image3.png) |
-| [Open full-size image](Results/image2.png) | [Open full-size image](Results/image3.png) |
+Selected simulation and controller results are shown below.
 
-Project video: [View the shared project video folder](https://drive.google.com/drive/folders/1iowpdHYk4qTKaGRoWc7l1Y_70IvifeuA?usp=sharing)
+<table>
+  <tr>
+    <th align="center" width="50%">Result 2</th>
+    <th align="center" width="50%">Result 3</th>
+  </tr>
+  <tr>
+    <td align="center" width="50%">
+      <img src="https://github.com/user-attachments/assets/d122ae33-f167-4c13-a4c2-f45f272cd94b" alt="SO(3) controller result image 2" width="480" />
+    </td>
+    <td align="center" width="50%">
+      <img src="https://github.com/user-attachments/assets/3f261eaa-6f23-4e33-86c8-9594887bc254" alt="SO(3) controller result image 3" width="480" />
+    </td>
+  </tr>
+</table>
+
+### 🎥 SO(3) Target-Point Flight Demonstration
+
+<video src="https://github.com/user-attachments/assets/9868e487-e9f7-4664-9d9b-47bc433d0293" controls muted loop playsinline width="100%">
+  Your browser does not support embedded video. [Watch the SO(3) target-point flight demonstration](https://github.com/user-attachments/assets/9868e487-e9f7-4664-9d9b-47bc433d0293).
+</video>
+
+**Video:** [SO3_TARGET(pt)_FLYING.webm](https://github.com/user-attachments/assets/9868e487-e9f7-4664-9d9b-47bc433d0293)
+
 
 ## 📐 Key state and control quantities
 
