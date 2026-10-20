@@ -19,6 +19,27 @@ def generate_launch_description():
         }]
     )
 
+    dense_mapping_node = Node(
+        package='vio_estimator',
+        executable='dense_mapping_node',
+        name='dense_mapping_node',
+        output='screen',
+        parameters=[{
+            'config_path': os.path.join(pkg_share, 'config', 'project_vio.yaml'),
+            'voxel_size': 0.010,
+            'step': 2,
+            'min_trans_m': 0.025,
+            'min_rot_deg': 2.5,
+            'rel_edge_grad': 0.08,
+            'fx': 400.0,
+            'fy': 400.0,
+            'min_depth': 0.20,
+            'max_depth': 4.50,
+            'enable_bilateral': True,
+            'enable_vibrance': True
+        }]
+    )
+
     rviz_node = Node(
         package='rviz2',
         executable='rviz2',
@@ -29,5 +50,6 @@ def generate_launch_description():
 
     return LaunchDescription([
         vio_node,
+        dense_mapping_node,
         rviz_node
     ])

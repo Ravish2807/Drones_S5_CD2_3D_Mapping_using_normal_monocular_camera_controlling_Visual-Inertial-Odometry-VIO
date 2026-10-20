@@ -110,3 +110,36 @@ class VIOInterface:
         header = "timestamp,px,py,pz,vx,vy,vz,qw,qx,qy,qz,bax,bay,baz,bgx,bgy,bgz"
         np.savetxt(filepath, np.array(records), delimiter=",", header=header, comments="")
         print(f"Exported {len(records)} states to {filepath}")
+
+    def get_camera_extrinsics(self):
+        """Returns CameraExtrinsics (T_BC) configured in estimator."""
+        from trajectory.camera_pose import CameraExtrinsics
+        return CameraExtrinsics(R_BC=self.estimator.R_BC, p_BC=self.estimator.p_BC)
+
+    def get_camera_trajectory(self):
+        """
+        Step 2.4: Computes and returns the complete CameraTrajectory (T_WC = T_WB * T_BC)
+        for every estimated state.
+        """
+        from trajectory.camera_pose import BodyPose, CameraTrajectory, transform_body_to_camera_pose
+        extrinsics = self.get_camera_extrinsics()
+        cam_poses = []
+        for i, s in enumerate(self.state_history):
+            body_pose = BodyPose.from_vio_state(s)
+            cam_pose = transform_body_to_camera_pose(body_pose, extrinsics, frame_idx=i)
+            cam_poses.append(cam_pose)
+        return CameraTrajectory(cam_poses, name="estimated_camera_trajectory")
+
+    def export_camera_trajectory_csv(self, filepath: str):
+        """Exports camera trajectory in standard CSV format (timestamp,tx,ty,tz,qx,qy,qz,qw)."""
+        from trajectory.trajectory_exporter import TrajectoryExporter
+        traj = self.get_camera_trajectory()
+        TrajectoryExporter.export_csv(traj, filepath)
+        print(f"Exported {len(traj)} camera poses to CSV: {filepath}")
+
+    def export_camera_trajectory_tum(self, filepath: str):
+        """Exports camera trajectory in standard TUM format ('timestamp tx ty tz qx qy qz qw')."""
+        from trajectory.trajectory_exporter import TrajectoryExporter
+        traj = self.get_camera_trajectory()
+        TrajectoryExporter.export_tum(traj, filepath)
+        print(f"Exported {len(traj)} camera poses to TUM: {filepath}")

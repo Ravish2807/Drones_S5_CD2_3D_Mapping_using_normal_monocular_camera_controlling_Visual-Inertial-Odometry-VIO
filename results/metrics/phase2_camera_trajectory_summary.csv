@@ -1,0 +1,6 @@
+Sequence,Camera ATE (m),RPE (m),Orientation (deg),Velocity (m/s),Max Δt (ms),Synchronized
+Hover,0.0001,0.0001,0.0116,0.0004,0.0,PASS
+Straight,2.7091,0.8255,46.785,0.8659,0.0,PASS
+Orbit,0.9688,0.3465,3.2209,0.3966,0.0,PASS
+Multi_axis,0.3834,0.1954,4.4065,0.2365,0.0,PASS
+Stress,52.1553,13.1805,160.8875,15.1754,0.0,PASS

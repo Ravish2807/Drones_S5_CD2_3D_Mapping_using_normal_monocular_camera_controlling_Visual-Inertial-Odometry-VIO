@@ -91,16 +91,19 @@ class VIONode(Node):
         self.vio_interface.push_imu(t_sec, ax, ay, az, gx, gy, gz)
 
     def camera_callback(self, msg: Image):
-        t_sec = msg.header.stamp.sec + msg.header.stamp.nanosec * 1e-9
+        header = msg.header
+        if header.stamp.sec == 0 and header.stamp.nanosec == 0:
+            header.stamp = self.get_clock().now().to_msg()
+        t_sec = header.stamp.sec + header.stamp.nanosec * 1e-9
         cv_img = self.bridge.imgmsg_to_cv2(msg, desired_encoding='mono8')
 
         state = self.vio_interface.push_camera_frame(t_sec, cv_img)
 
         # Publish feature tracking visualization overlay
-        self.publish_camera_overlay(msg.header, cv_img, state)
+        self.publish_camera_overlay(header, cv_img, state)
 
         if state is not None:
-            self.publish_odometry_and_map(msg.header.stamp, state)
+            self.publish_odometry_and_map(header.stamp, state)
 
     def publish_camera_overlay(self, header: Header, cv_img: np.ndarray, state):
         """Draws tracked 2D visual features on the camera feed."""

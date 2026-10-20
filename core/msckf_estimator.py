@@ -172,12 +172,14 @@ class MSCKFEstimator:
     def process_imu(self, timestamp: float, linear_accel: np.ndarray, angular_vel: np.ndarray):
         """Processes incoming IMU sample (propagation step)."""
         if not self.is_initialized:
+            if getattr(self, 'init_start_time', None) is None:
+                self.init_start_time = timestamp
             self.init_imu_buffer.append({
                 "timestamp": timestamp,
                 "linear_accel": linear_accel,
                 "angular_vel": angular_vel
             })
-            if timestamp >= self.init_time:
+            if (timestamp - self.init_start_time) >= self.init_time or len(self.init_imu_buffer) >= 60:
                 self.initialize_from_imu()
             self.last_imu_time = timestamp
             return

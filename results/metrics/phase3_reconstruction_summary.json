@@ -1,11 +1,11 @@
 {
   "preset": "orbit",
   "total_frames": 500,
-  "keyframes_selected": 58,
-  "keyframe_compression_ratio": 0.116,
-  "dense_points_reconstructed": 688793,
-  "mesh_triangles": 221399,
-  "mesh_vertices": 110644,
+  "keyframes_selected": 51,
+  "keyframe_compression_ratio": 0.102,
+  "dense_points_reconstructed": 62794,
+  "mesh_triangles": 186962,
+  "mesh_vertices": 93676,
   "dense_pointcloud_path": "results/pointclouds/dense_reconstruction.ply",
   "mesh_path": "results/pointclouds/dense_reconstruction_mesh.ply",
   "interactive_html_path": "results/plots/interactive_3d_reconstruction.html"

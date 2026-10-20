@@ -8,7 +8,7 @@ Panels:
         - /TF1
         - /Body Path1
         - /Camera Trajectory (Phase 2)1
-        - /3D Landmarks Map1
+        - /Dense 3D Room Map (Real-Time)1
         - /Image1
       Splitter Ratio: 0.5
     Tree Height: 557
@@ -17,40 +17,65 @@ Visualization Manager:
   Displays:
     - Class: rviz_default_plugins/Grid
       Name: Grid
+      Plane Cell Count: 30
+      Cell Size: 0.5
+      Color: 65; 70; 80
       Value: true
     - Class: rviz_default_plugins/TF
       Name: TF
       Value: true
       Show Axes: true
+      Marker Scale: 0.2
     - Class: rviz_default_plugins/Path
       Name: Body Path
       Topic:
         Value: /drone/vio/path
       Color: 0; 220; 255
-      Line Width: 0.04
-      Value: true
+      Line Width: 0.02
+      Value: false
     - Class: rviz_default_plugins/Path
       Name: Camera Trajectory (Phase 2)
       Topic:
-        Value: /drone/vio/camera_path
+        Value: /drone/dense_map/camera_path
       Color: 255; 180; 0
-      Line Width: 0.06
+      Line Width: 0.03
+      Value: true
+    - Class: rviz_default_plugins/MarkerArray
+      Name: 3D Obstacle Hazards
+      Topic:
+        Value: /drone/obstacles
       Value: true
     - Class: rviz_default_plugins/PointCloud2
       Name: 3D Landmarks Map
       Topic:
         Value: /drone/vio/pointcloud
-      Size (m): 0.10
-      Style: Boxes
-      Color Transformer: AxisColor
+      Size (Pixels): 3
+      Style: Points
+      Color Transformer: FlatColor
+      Color: 255; 0; 255
+      Value: false
+    - Class: rviz_default_plugins/PointCloud2
+      Name: Dense 3D Room Map (Real-Time)
+      Topic:
+        Value: /drone/dense_map
+      Size (Pixels): 4
+      Style: Points
+      Color Transformer: RGB8
+      Alpha: 1.0
       Value: true
     - Class: rviz_default_plugins/Image
-      Name: Image
+      Name: Live Depth Map
       Topic:
-        Value: /camera/vio_overlay
+        Value: /camera/depth/image_raw
+      Value: true
+    - Class: rviz_default_plugins/Image
+      Name: Camera Feed
+      Topic:
+        Value: /camera/image_raw
       Value: true
   Global Options:
     Fixed Frame: world
+    Background Color: 24; 26; 32
     Frame Rate: 30
   Tools:
     - Class: rviz_default_plugins/Interact
@@ -59,7 +84,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz_default_plugins/Orbit
-      Distance: 10
-      Focal Point: 0; 0; 0
-      Pitch: 0.5
-      Yaw: 0.78
+      Distance: 3.2
+      Focal Point: 0; 0; 0.5
+      Pitch: 0.4
+      Yaw: 0.8

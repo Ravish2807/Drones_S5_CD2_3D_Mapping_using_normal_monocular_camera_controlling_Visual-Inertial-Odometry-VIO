@@ -24,6 +24,9 @@ setup(
     entry_points={
         'console_scripts': [
             'vio_node = ros2_nodes.vio_node:main',
+            'dense_depth_node = ros2_nodes.dense_depth_node:main',
+            'dense_mapping_node = ros2_nodes.dense_mapping_node:main',
+            'ply_map_publisher = ros2_nodes.ply_map_publisher_node:main',
         ],
     },
 )
