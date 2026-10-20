@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<style>
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  body {
+    width: 1920px;
+    height: 1080px;
+    background: #F1F5F9;
+    color: #0F172A;
+    padding: 24px 32px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    overflow: hidden;
+  }
+  
+  /* Top Header */
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #FFFFFF;
+    backdrop-filter: blur(12px);
+    border: 1px solid #CBD5E1; box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+    border-radius: 14px;
+    padding: 14px 24px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
+  }
+  .title-area {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .header-icon {
+    width: 48px;
+    height: 48px;
+    background: linear-gradient(135deg, #3B82F6, #8B5CF6);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 26px;
+    box-shadow: 0 0 16px rgba(59, 130, 246, 0.5);
+  }
+  .title-text h1 {
+    font-size: 23px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    background: linear-gradient(90deg, #0F172A, #1E40AF);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .title-text p {
+    font-size: 12px;
+    color: #475569;
+    margin-top: 2px;
+    font-weight: 500;
+  }
+  .tech-pills {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+  .pill {
+    padding: 5px 11px;
+    border-radius: 8px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.2px;
+  }
+  .pill-ros { background: rgba(59, 130, 246, 0.15); color: #2563EB; border: 1px solid rgba(59, 130, 246, 0.4); }
+  .pill-gz { background: rgba(14, 165, 233, 0.15); color: #0284C7; border: 1px solid rgba(14, 165, 233, 0.4); }
+  .pill-ap { background: rgba(245, 158, 11, 0.15); color: #D97706; border: 1px solid rgba(245, 158, 11, 0.4); }
+  .pill-pad { background: rgba(16, 185, 129, 0.15); color: #34D399; border: 1px solid rgba(16, 185, 129, 0.4); }
+  .pill-dash { background: rgba(139, 92, 246, 0.15); color: #7C3AED; border: 1px solid rgba(139, 92, 246, 0.4); }
+
+  /* Main Columns Grid */
+  .columns-container {
+    display: flex;
+    justify-content: space-between;
+    height: 860px;
+    gap: 16px;
+    position: relative;
+  }
+
+  .col {
+    display: flex;
+    flex-direction: column;
+    background: #FFFFFF;
+    border-radius: 14px;
+    border: 1px solid #CBD5E1; box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+    padding: 14px;
+    position: relative;
+  }
+  .col-1 { width: 335px; border-top: 3px solid #0EA5E9; }
+  .col-2 { width: 310px; border-top: 3px solid #F59E0B; }
+  .col-3 { width: 490px; border-top: 3px solid #8B5CF6; }
+  .col-4 { width: 310px; border-top: 3px solid #F43F5E; }
+  .col-5 { width: 335px; border-top: 3px solid #3B82F6; }
+
+  .col-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #E2E8F0;
+  }
+  .col-header .icon {
+    font-size: 18px;
+  }
+  .col-header h2 {
+    font-size: 13px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .col-1 h2 { color: #0284C7; }
+  .col-2 h2 { color: #D97706; }
+  .col-3 h2 { color: #7C3AED; }
+  .col-4 h2 { color: #E11D48; }
+  .col-5 h2 { color: #2563EB; }
+
+  /* Cards */
+  .card-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 11px;
+    flex: 1;
+    overflow: hidden;
+  }
+  .card {
+    background: #F8FAFC;
+    border: 1px solid #E2E8F0;
+    border-radius: 10px;
+    padding: 11px 13px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    position: relative;
+  }
+  .card:hover {
+    border-color: rgba(148, 163, 184, 0.8);
+    background: #FFFFFF;
+  }
+  .card-title {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 12px;
+    font-weight: 800;
+    color: #0F172A;
+    margin-bottom: 5px;
+  }
+  .card-badge {
+    font-size: 9px;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 4px;
+    background: rgba(59, 130, 246, 0.2);
+    color: #93C5FD;
+  }
+  .card-body {
+    font-size: 10.5px;
+    line-height: 15px;
+    color: #334155;
+  }
+  .card-body b {
+    color: #0F172A;
+  }
+  .card-body code {
+    background: #E2E8F0;
+    color: #0284C7;
+    padding: 1px 4px;
+    border-radius: 3px;
+    font-size: 9.5px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+
+  /* Specific Card Variants */
+  .card-amber {
+    background: rgba(245, 158, 11, 0.08);
+    border: 1px solid rgba(245, 158, 11, 0.4);
+  }
+  .card-amber .card-title { color: #FDE68A; }
+  .card-amber .card-badge { background: rgba(245, 158, 11, 0.25); color: #FCD34D; }
+
+  .card-model0 {
+    background: rgba(99, 102, 241, 0.08);
+    border: 1px solid rgba(99, 102, 241, 0.4);
+  }
+  .card-model0 .card-title { color: #3730A3; }
+  .card-model0 .card-badge { background: rgba(99, 102, 241, 0.3); color: #E0E7FF; }
+
+  .card-model1 {
+    background: rgba(168, 85, 247, 0.09);
+    border: 1.5px solid rgba(168, 85, 247, 0.45);
+  }
+  .card-model1 .card-title { color: #581C87; }
+  .card-model1 .card-badge { background: rgba(168, 85, 247, 0.3); color: #F3E8FF; }
+
+  .card-model2 {
+    background: rgba(16, 185, 129, 0.09);
+    border: 1.5px solid rgba(16, 185, 129, 0.45);
+  }
+  .card-model2 .card-title { color: #064E3B; }
+  .card-model2 .card-badge { background: rgba(16, 185, 129, 0.3); color: #D1FAE5; }
+
+  /* Model Switcher Bar */
+  .model-switch-bar {
+    background: #EEF2FF;
+    border: 1px solid rgba(139, 92, 246, 0.4);
+    border-radius: 8px;
+    padding: 6px 10px;
+    text-align: center;
+    font-size: 10px;
+    font-weight: 700;
+    color: #4338CA;
+    margin-bottom: 2px;
+  }
+  .model-switch-bar code {
+    color: #F472B6;
+    font-family: ui-monospace, SFMono-Regular, monospace;
+  }
+
+  /* Footer Bar */
+  .footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #FFFFFF;
+    border: 1px solid #CBD5E1; box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+    border-radius: 12px;
+    padding: 10px 24px;
+    font-size: 11px;
+    color: #475569;
+  }
+  .footer-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .footer-item b {
+    color: #0F172A;
+  }
+  .footer-item .val-green {
+    color: #34D399;
+    font-weight: 800;
+  }
+  .footer-item .val-cyan {
+    color: #0284C7;
+    font-weight: 800;
+  }
+  .footer-item .val-purple {
+    color: #C084FC;
+    font-weight: 800;
+  }
+
+  /* Connecting arrow indicator between columns */
+  .flow-arrow {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 18px;
+    color: rgba(148, 163, 184, 0.4);
+    z-index: 10;
+  }
+</style>
+</head>
+<body>
+
+  <!-- Header -->
+  <div class="header">
+    <div class="title-area">
+      <div class="header-icon">🛸</div>
+      <div class="title-text">
+        <h1>AUTONOMOUS DRONE FLIGHT CONTROL & SIMULATION PIPELINE</h1>
+        <p>End-to-End System Architecture: Gazebo Harmonic SITL ➔ ArduPilot AP_DDS ➔ 3 Interchangeable Controllers ➔ Actuation & Web Teleoperation</p>
+      </div>
+    </div>
+    <div class="tech-pills">
+      <div class="pill pill-ros">ROS 2 Humble</div>
+      <div class="pill pill-gz">Gazebo Harmonic 8</div>
+      <div class="pill pill-ap">ArduPilot AP_DDS</div>
+      <div class="pill pill-pad">8BitDo Bluetooth</div>
+      <div class="pill pill-dash">FastAPI Dashboard</div>
+    </div>
+  </div>
+
+  <!-- 5 Columns Container -->
+  <div class="columns-container">
+
+    <!-- COLUMN 1 -->
+    <div class="col col-1">
+      <div class="col-header">
+        <span class="icon">📡</span>
+        <h2>1. Simulation & Sensors (Inputs)</h2>
+      </div>
+      <div class="card-stack">
+        <div class="card">
+          <div class="card-title">
+            <span>🌐 Gazebo Harmonic SITL</span>
+            <span class="card-badge">gz-sim 8</span>
+          </div>
+          <div class="card-body">
+            • World: <b>runway.sdf</b> (Runway physics, GPS/IMU)<br/>
+            • Model: <b>Iris Quadcopter</b> + 3-Axis Gimbal<br/>
+            • Motor constant: <code>kf = 8.55e-6</code> N/(rad/s)²<br/>
+            • Real-time multi-body rigid aerodynamics
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">
+            <span>📊 Feedback Odometry</span>
+            <span class="card-badge">ROS 2 50Hz</span>
+          </div>
+          <div class="card-body">
+            • <code>/ap/pose</code> (50 Hz, ENU map frame):<br/>
+            &nbsp;&nbsp;Pos [x, y, z] & Orientation Quat [qx, qy, qz, qw]<br/>
+            • <code>/ap/twist</code> (50 Hz, FLU body frame):<br/>
+            &nbsp;&nbsp;Linear vel [vx, vy, vz] & Angular rates [p, q, r]<br/>
+            • <code>/ap/v1/status</code> (10 Hz): Armed & EKF3 health
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">
+            <span>🎮 8BitDo Ultimate 2C</span>
+            <span class="card-badge">Bluetooth Linux</span>
+          </div>
+          <div class="card-body">
+            • <b>Left Stick:</b> Throttle (Vz) & Yaw Rate (ψ̇)<br/>
+            • <b>Right Stick:</b> Pitch (Vx) & Roll (Vy) [Axes 2 & 5]<br/>
+            • <b>Buttons:</b> Y=GUIDED, A=ARM, X=TAKEOFF 5M<br/>
+            • <b>Speed:</b> LB=Precision (0.5m/s), RB=Turbo (2m/s)<br/>
+            • <b>Button B:</b> Instant Brake & Position Hold Lock
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">
+            <span>🎯 Autonomous Waypoint</span>
+            <span class="card-badge">10 Hz</span>
+          </div>
+          <div class="card-body">
+            • Topic: <code>/drones_controller/target_pose</code><br/>
+            • Target state: [xd, yd, zd, ψd] in ENU map frame<br/>
+            • Default hover station setpoint: [1.0, 0.0, 1.0] m<br/>
+            • Dynamically updated via Web Dashboard or API
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">
+            <span>📹 Vision & Gimbal</span>
+            <span class="card-badge">30 FPS</span>
+          </div>
+          <div class="card-body">
+            • <code>ros_gz_bridge</code> links Gazebo camera to ROS 2<br/>
+            • <code>/camera/image_raw</code> (640×480 RGB frames)<br/>
+            • 3-Axis Gimbal: Pan/Tilt controls (default -45°)
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- COLUMN 2 -->
+    <div class="col col-2">
+      <div class="col-header">
+        <span class="icon">🛡️</span>
+        <h2>2. Comms & Arbitration</h2>
+      </div>
+      <div class="card-stack">
+        <div class="card card-amber">
+          <div class="card-title">
+            <span>⚡ AP_DDS Micro-ROS</span>
+            <span class="card-badge">UDP :2019</span>
+          </div>
+          <div class="card-body">
+            • Embedded XRCE client in ArduPilot SITL<br/>
+            • Direct UDP socket communication to daemon<br/>
+            • <b>Zero MAVLink serialization lag</b><br/>
+            • Native ROS 2 type support (FastRTPS DDS)
+          </div>
+        </div>
+
+        <div class="card card-amber">
+          <div class="card-title">
+            <span>🛑 Ground Takeoff Gate</span>
+            <span class="card-badge">Z ≥ 0.50m</span>
+          </div>
+          <div class="card-body">
+            • <b>Grounded (Z &lt; 0.50m):</b><br/>
+            &nbsp;&nbsp;Strictly pauses lateral velocity commands.<br/>
+            &nbsp;&nbsp;Allows clean MAVLink 5.0m climb without<br/>
+            &nbsp;&nbsp;motor windup, ground bounce, or tipping.<br/>
+            • <b>Airborne (Z ≥ 0.50m):</b><br/>
+            &nbsp;&nbsp;Automatically engages closed-loop control.
+          </div>
+        </div>
+
+        <div class="card card-amber">
+          <div class="card-title">
+            <span>🔀 Teleop / Auto Arbiter</span>
+            <span class="card-badge">Priority Switch</span>
+          </div>
+          <div class="card-body">
+            • <b>Stick Deflection Active:</b><br/>
+            &nbsp;&nbsp;Passes operator body-frame velocity (base_link)<br/>
+            &nbsp;&nbsp;directly to command interface.<br/>
+            • <b>Sticks Centered (Neutral):</b><br/>
+            &nbsp;&nbsp;Instantly captures current (x, y, z) coordinate<br/>
+            &nbsp;&nbsp;and locks tight station-keeping hover.
+          </div>
+        </div>
+
+        <div class="card card-amber">
+          <div class="card-title">
+            <span>🚨 Safety Watchdogs</span>
+            <span class="card-badge">Failsafe</span>
+          </div>
+          <div class="card-body">
+            • Sensor timeout threshold: <b>0.20s</b> watchdog<br/>
+            • Automatic NaN / Inf input sanitization<br/>
+            • Max velocity clamp: <b>1.0 m/s</b><br/>
+            • Max tilt angle constraint: <b>20°</b> (0.35 rad)
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- COLUMN 3 -->
+    <div class="col col-3">
+      <div class="col-header">
+        <span class="icon">🧠</span>
+        <h2>3. Core Flight Controller Engine (3 Models)</h2>
+      </div>
+      
+      <div class="model-switch-bar">
+        Master Launcher: <code>ros2 launch drones_controller controller.launch.py model:=0|1|2 mode:=mpc|lqr</code>
+      </div>
+
+      <div class="card-stack">
+        <!-- Model 0 -->
+        <div class="card card-model0">
+          <div class="card-title">
+            <span>🔹 MODEL 0: Baseline Cascaded SO(3) Controller</span>
+            <span class="card-badge">controller_node (50 Hz)</span>
+          </div>
+          <div class="card-body">
+            • <b>Outer Loop:</b> Position error <code>ep = pd - p</code>, Velocity error <code>ev = vd - v</code><br/>
+            &nbsp;&nbsp;Virtual commanded acceleration: <b>ad = p̈d + Kp ep + Kv ev</b><br/>
+            • <b>Attitude Generator:</b> Desired force <b>Fd = m(ad - g)</b> ➔ Thrust axis <b>b3d = Fd / ||Fd||</b><br/>
+            &nbsp;&nbsp;Computes orthonormal desired rotation matrix <b>Rd = [b1d, b2d, b3d] ∈ SO(3)</b><br/>
+            • <b>Inner Loop:</b> Attitude error <b>eR = ½(Rdᵀ R - Rᵀ Rd)ᵛ</b>, Rate error <b>eω</b><br/>
+            &nbsp;&nbsp;Control torque output: <b>τ = -KR eR - KΩ eω</b>
+          </div>
+        </div>
+
+        <!-- Model 1 -->
+        <div class="card card-model1">
+          <div class="card-title">
+            <span>🟣 MODEL 1: Nonlinear Model-Based & Geometric SO(3)</span>
+            <span class="card-badge">model1_so3_controller (50 Hz)</span>
+          </div>
+          <div class="card-body">
+            • <b>12-State Error-State EKF (Block 4):</b><br/>
+            &nbsp;&nbsp;Propagates error state <b>δx = [δp, δv, δθ, δω]ᵀ ∈ ℝ¹²</b> on Lie group manifold<br/>
+            &nbsp;&nbsp;State injection via Rodrigues Exponential: <b>R ← R · Exp(δθ)</b> (error: 6.3×10⁻¹⁷)<br/>
+            &nbsp;&nbsp;Joseph-form covariance stabilization: <b>P ← (I - KH)P(I - KH)ᵀ + KRnKᵀ</b><br/>
+            • <b>Outer-Loop Guidance (Blocks 5 & 6):</b><br/>
+            &nbsp;&nbsp;Desired force <b>Fd = m(ad - g)</b> ➔ Body thrust projection: <b>T = Fd · (R e3)</b><br/>
+            • <b>Geometric SO(3) Attitude Tracking (Block 7):</b><br/>
+            &nbsp;&nbsp;Singularity-free large-angle flight (&gt;90° tilt capability):<br/>
+            &nbsp;&nbsp;<b>τ = -KR eR - KΩ eω + ω × Jω</b>
+          </div>
+        </div>
+
+        <!-- Model 2 -->
+        <div class="card card-model2">
+          <div class="card-title">
+            <span>🟢 MODEL 2: Data-Driven DMDc & Optimal Control (LQR / MPC)</span>
+            <span class="card-badge">model2_dmdc_controller (25 Hz)</span>
+          </div>
+          <div class="card-body">
+            • <b>DMDc System Identification (Blocks 1 & 2):</b><br/>
+            &nbsp;&nbsp;Online regression <b>[A B] = X⁺ [X; U]†</b> over rolling snapshot flight buffers<br/>
+            &nbsp;&nbsp;Blended with analytical hover linearization prior <b>(Aphys, Bphys)</b> for t=0 stability<br/>
+            • <b>LQR Branch (Blocks 3–6):</b><br/>
+            &nbsp;&nbsp;Solves DARE Riccati recursion: <b>P = AᵀPA - AᵀPB(R + BᵀPB)⁻¹BᵀPA + Q</b><br/>
+            &nbsp;&nbsp;Feedback gain <b>K = (R + BᵀPB)⁻¹BᵀPA ∈ ℝ⁴ˣ¹²</b> ➔ <b>u = -K xk</b><br/>
+            • <b>Constrained QP MPC Branch (Blocks 7–9):</b><br/>
+            &nbsp;&nbsp;Stacked QP over horizon <b>N = 25</b> (1.0s, dt=0.04s) with terminal cost <b>Pf = PDARE</b><br/>
+            &nbsp;&nbsp;Actuator box constraints: <b>5N ≤ T ≤ 25N, |τ| ≤ 0.5 N·m</b> (solve: 0.42 ms)<br/>
+            • <b>Actuation:</b> <b>uk = utrim + u0*</b> (Receding horizon dispatch)
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- COLUMN 4 -->
+    <div class="col col-4">
+      <div class="col-header">
+        <span class="icon">⚙️</span>
+        <h2>4. Actuation & Allocation</h2>
+      </div>
+      <div class="card-stack">
+        <div class="card">
+          <div class="card-title">
+            <span>🚀 Actuation Command</span>
+            <span class="card-badge">TwistStamped 50Hz</span>
+          </div>
+          <div class="card-body">
+            • Topic: <code>/ap/v1/cmd_vel</code><br/>
+            • Frame: <b>map</b> (autonomous hover/tracking)<br/>
+            &nbsp;&nbsp;or <b>base_link</b> (manual stick teleop)<br/>
+            • Vector: [vx, vy, vz, yaw_rate]<br/>
+            • Direct ROS 2 input to SITL controller
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">
+            <span>🔄 Control Allocation</span>
+            <span class="card-badge">Mixer Matrix Γ</span>
+          </div>
+          <div class="card-body">
+            • Converts wrench [T; τ] to rotor thrusts:<br/>
+            &nbsp;&nbsp;<b>fi = kf Ωi²</b> via allocation matrix Γ<br/>
+            • Motor speeds: <b>Ωi = √(Γ⁻¹ ui / kf)</b><br/>
+            • Saturated to physical limits [Ωmin, Ωmax]<br/>
+            • Quad-X brushless ESC command distribution
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">
+            <span>🔌 ArduPilot Services</span>
+            <span class="card-badge">Event Clients</span>
+          </div>
+          <div class="card-body">
+            • <code>/ap/arm_motors:</code> Arm/Disarm ESCs<br/>
+            • <code>/ap/mode_switch:</code> GUIDED / LAND / RTL<br/>
+            • <code>/ap/takeoff:</code> MAVLink 5.0m climb<br/>
+            • <code>/ap/prearm_check:</code> Pre-flight sensor check
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">
+            <span>🔁 Closed-Loop SITL Loop</span>
+            <span class="card-badge">Physics Loopback</span>
+          </div>
+          <div class="card-body">
+            • Motor RPM commands drive Gazebo propellers<br/>
+            • Physics engine updates multi-body kinematics<br/>
+            • Sensor plugins publish next state <b>x(k+1)</b><br/>
+            • Completes 50 Hz closed-loop flight feedback
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- COLUMN 5 -->
+    <div class="col col-5">
+      <div class="col-header">
+        <span class="icon">📊</span>
+        <h2>5. Telemetry & Deployment</h2>
+      </div>
+      <div class="card-stack">
+        <div class="card">
+          <div class="card-title">
+            <span>📈 Evaluation Topics</span>
+            <span class="card-badge">Real-Time Streams</span>
+          </div>
+          <div class="card-body">
+            • <code>/drones_controller/controller_type:</code><br/>
+            &nbsp;&nbsp;MODEL_1_SO3_GEOMETRIC / MODEL_2_DMDc<br/>
+            • <code>/drones_controller/position_error:</code><br/>
+            &nbsp;&nbsp;Live XYZ Euclidean error: ep = pd - p (m)<br/>
+            • <code>/drones_controller/desired_attitude:</code><br/>
+            &nbsp;&nbsp;Target attitude quaternion [qx, qy, qz, qw]
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">
+            <span>🖥️ Web Dashboard</span>
+            <span class="card-badge">Port 8000</span>
+          </div>
+          <div class="card-body">
+            • <b>bridge_server.py:</b> FastAPI/aiohttp + WebSocket<br/>
+            • <b>Three.js 3D Gyro:</b> Drone attitude visualization<br/>
+            • <b>Live Video:</b> 30 FPS MJPEG camera viewport<br/>
+            • <b>Gimbal Controls:</b> Pan/Tilt ground view presets<br/>
+            • <b>Gamepad HUD:</b> Live axis deflection monitors<br/>
+            • <b>One-Click Buttons:</b> GUIDED, ARM, TAKEOFF
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">
+            <span>📦 Deployment Stack</span>
+            <span class="card-badge">Production Target</span>
+          </div>
+          <div class="card-body">
+            • <b>Host Environment:</b><br/>
+            &nbsp;&nbsp;Ubuntu 22.04 LTS (x86_64 / ARM64)<br/>
+            • <b>Target Companion Computer:</b><br/>
+            &nbsp;&nbsp;NVIDIA Jetson Orin Nano / Raspberry Pi 4/5<br/>
+            • <b>Flight Controller Unit (FCU):</b><br/>
+            &nbsp;&nbsp;Pixhawk 6X / Cube Orange+ (ArduCopter 4.5+)<br/>
+            • <b>Inter-Process Comms:</b> FastRTPS Shared Memory
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">
+            <span>🧪 Synthetic Test Suite</span>
+            <span class="card-badge">15/15 Passed</span>
+          </div>
+          <div class="card-body">
+            • <code>test_model1_so3.py</code> (EKF, Lie Exp/Log)<br/>
+            • <code>test_model2_dmdc_optimal.py</code> (DMDc, DARE, QP)<br/>
+            • Machine-precision Lie operations: <b>6.3×10⁻¹⁷</b><br/>
+            • DARE Riccati convergence: <b>5.2×10⁻⁸</b><br/>
+            • Sub-millisecond QP MPC solve time: <b>0.42 ms</b>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Footer Banner -->
+  <div class="footer">
+    <div class="footer-item">
+      <span>SYSTEM METRICS:</span>
+      <span class="val-green">✓ 15/15 Unit Tests Passing</span>
+    </div>
+    <div class="footer-item">
+      <span>Lie Group SO(3) Error:</span>
+      <span class="val-cyan">&lt; 10⁻¹⁶</span>
+    </div>
+    <div class="footer-item">
+      <span>DARE Riccati Tolerance:</span>
+      <span class="val-cyan">5.2×10⁻⁸</span>
+    </div>
+    <div class="footer-item">
+      <span>MPC QP Solve Time:</span>
+      <span class="val-purple">0.42 ms</span>
+    </div>
+    <div class="footer-item">
+      <span>Control Loop Frequency:</span>
+      <span class="val-purple">50.0 Hz Real-Time</span>
+    </div>
+    <div class="footer-item">
+      <span>Takeoff Gate:</span>
+      <span class="val-green">Active (Z ≥ 0.50m)</span>
+    </div>
+  </div>
+
+</body>
+</html>
