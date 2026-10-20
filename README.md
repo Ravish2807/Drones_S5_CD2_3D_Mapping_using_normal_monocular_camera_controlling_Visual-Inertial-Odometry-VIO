@@ -41,34 +41,7 @@ When drones fly **indoors, underground, or in warehouses**, **GPS is completely 
 
 By mathematically fusing both sensors via a **Multi-State Constraint Kalman Filter (MSCKF)**, the system calculates millimetric 3D flight paths, recovers true camera optical poses ($T_{WC}$), and generates 3D spatial maps without drift.
 
-```mermaid
-flowchart LR
-    subgraph Sensors ["Input Sensors"]
-        CAM["📷 Monocular Camera (30 Hz)"]
-        IMU["⚡ 6-Axis IMU (200 Hz)"]
-    end
-
-    subgraph Core ["MSCKF-VIO Engine"]
-        TRACK["KLT Optical Flow & FAST Corners"]
-        FILTER["15-State Error-State Kalman Filter<br/>+ Sliding Window Stochastic Cloning"]
-        ZUPT["Zero-Velocity Drift Lock (ZUPT)"]
-    end
-
-    subgraph Outputs ["Real-Time Outputs"]
-        POSE["🛰️ Camera Pose T_WC (TUM / CSV)"]
-        PTS["☁️ 3D Landmark Point Cloud"]
-        RVIZ["🖥️ RViz2 & Open3D Visualizers"]
-    end
-
-    CAM --> TRACK
-    IMU --> FILTER
-    TRACK --> FILTER
-    FILTER --> ZUPT
-    FILTER --> POSE
-    FILTER --> PTS
-    POSE --> RVIZ
-    PTS --> RVIZ
-```
+![Animated MSCKF-VIO and 3D mapping pipeline](docs/msckf_vio_pipeline.svg)
 
 ---
 
