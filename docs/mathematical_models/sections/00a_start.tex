@@ -18,7 +18,7 @@ Flying a drone autonomously means answering four questions, again and again, man
 \textbf{Question} & \textbf{What answers it} & \textbf{Where}\\
 \midrule
 \emph{How does a drone move at all?} & Physics: Newton's laws for a spinning, tilting body & Model 1, blocks 1--3\\
-\emph{Where am I right now?} & Combining camera and IMU with the physics (the EKF; this is our ``VIO'') & Model 1, block 4\\
+\emph{Where am I right now?} & Combining camera and IMU with a model (an EKF; this is our ``VIO'') & M1 block 4, M2 block 11\\
 \emph{Where should I go, and how do I get there?} & A controller: geometric (Model 1) or optimal (Model 2) & M1 blocks 5--7, M2 blocks 3--9\\
 \emph{How do I make the motors do it?} & Splitting thrust and torque into four motor speeds & M1 block 8, M2 block 10\\
 \bottomrule

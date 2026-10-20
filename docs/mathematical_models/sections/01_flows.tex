@@ -12,7 +12,8 @@ The project uses two complementary mathematical pipelines. Both end in the same 
         node \code{drones\_controller}.
   \item \textbf{Model~2 -- data-driven} (\cref{fig:flow2}). A linear model is \emph{learned} from logged flight
         data (DMDc). An optimal controller is then designed on it: LQR (infinite horizon, no limits) or MPC
-        (finite horizon, explicit limits such as \code{max\_velocity}).
+        (finite horizon, explicit limits such as \code{max\_velocity}). An extended Kalman filter on the same learned
+        model (block~11) estimates the state from camera pixels and the gyroscope and feeds it back to the controllers.
 \end{itemize}
 
 \textbf{How to read the diagrams.} Each block has a coloured title bar (number, name, functional layer), the
@@ -35,6 +36,7 @@ Arrow labels name the signal that travels between blocks. Block numbers equal th
   \centering
   \includegraphics[width=\linewidth,height=0.93\textheight,keepaspectratio]{flow_model2.pdf}
   \caption{Model~2 equation flow: data-driven linear model (DMDc) followed by two optimal-control branches,
-  LQR (left) and MPC (right), that meet when the command is applied to the drone.}
+  LQR (left) and MPC (right), that meet when the command is applied to the drone. Block~11, an extended Kalman filter
+  running on the learned model, turns camera pixels and gyro readings into the state estimate that both controllers use.}
   \label{fig:flow2}
 \end{figure}

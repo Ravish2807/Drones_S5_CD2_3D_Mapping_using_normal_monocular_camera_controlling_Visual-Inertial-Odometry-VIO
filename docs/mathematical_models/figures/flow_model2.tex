@@ -42,7 +42,7 @@
       +\vx_N^{\top}P_f\,\vx_N\\[1pt]
     \text{s.t.}\ \ \vx_{k+1}=A\vx_k+B\vu_k,\quad \vu_k\in\mathcal{U},\quad \vx_k\in\mathcal{X}
   \end{gathered}$}
-  {$A,B,Q,R$, horizon $N$, limits $\mathcal{U},\mathcal{X}$, $P_f$}
+  {$A,B,Q,R$, $N$, limits $\mathcal{U},\mathcal{X}$, $P_f$; start $\vx_0=\hx_k$ (block 11)}
   {finite-horizon optimal control problem}
 
 \defblock[equal height group=r3]{b4}{\blkw}{cGuid}{4}{Linear Quadratic Regulator}{optimal control}{%
@@ -59,7 +59,7 @@
     \text{s.t.}\ \ G\mathbf U\le\bm{h},\ \ A_{eq}\mathbf U=\bm{b}_{eq}\\[2pt]
     H=2\big(S_u^{\top}\bar{Q}S_u+\bar{R}\big),\qquad \bm{f}=2S_u^{\top}\bar{Q}S_x\vx_0
   \end{gathered}$}
-  {MPC problem, current state $\vx_0$}
+  {MPC problem, current estimate $\vx_0=\hx_k$}
   {$H\in\R^{4N\times4N}$, $\bm f$, $G$, $\bm h$ $\rightarrow$ QP solver}
 
 \defblock[equal height group=r4]{b5}{\blkw}{cGuid}{5}{Riccati Recursion}{iterative}{%
@@ -79,12 +79,31 @@
   {$P\in\R^{12\times12}$, $P\succ0$ $\Rightarrow$ final $K$}
 
 \defblock{b10}{17.6cm}{cPlant}{10}{Apply to Drone}{actuation}{%
-  $\vu_k=\vu_{\mathrm{trim}}+\begin{cases}\vu_0^{*} & \text{(MPC)}\\ -K\vx_k & \text{(LQR)}\end{cases}
+  $\vu_k=\vu_{\mathrm{trim}}+\begin{cases}\vu_0^{*}(\hx_k) & \text{(MPC)}\\ -K\hx_k & \text{(LQR)}\end{cases}
    =\begin{bmatrix}T_k\\ \vtau_k\end{bmatrix}
    \ \longrightarrow\ \vf=\Gamma^{-1}\vu_k
    \ \longrightarrow\ \Omega_i=\sqrt{f_i/k_f}$}
-  {measured state $\vx_k$, controller output}
+  {estimate $\hx_k$ (block 11), controller output}
   {motor speeds $\vOm\in\R^4$ $\rightarrow$ the drone moves to $\vx_{k+1}$}
+
+\defblock{b11}{17.6cm}{cEst}{11}{State Estimation: Extended Kalman Filter}{estimation (VIO)}{%
+  \begin{tabular}{@{}c@{\hspace{22pt}}c@{}}
+  {\scriptsize\textbf{Prediction with the learned model} ($F=A$)} &
+  {\scriptsize\textbf{Correction with camera pixels and gyroscope}}\\[2pt]
+  $\begin{gathered}
+    \hx_{k+1}=A\,\hx_k+B\,\vu_k\\
+    \Sigma_{k+1}=A\,\Sigma_k A^{\top}+Q_e\\
+    Q_e=\mathrm{cov}\big(\vx_{k+1}-A\vx_k-B\vu_k\big)
+  \end{gathered}$ &
+  $\begin{gathered}
+    \bm q_j=R_{bc}^{\top}R(\bm\theta)^{\top}(\bm\ell_j-\vp),\quad
+    \vz_j=\begin{bmatrix}f\,q_1/q_3+c_x\\ f\,q_2/q_3+c_y\end{bmatrix},\quad \vz_\omega=\vw\\
+    H=\partial h/\partial\vx,\qquad L=\Sigma H^{\top}\big(H\Sigma H^{\top}+R_n\big)^{-1}\\
+    \hx\leftarrow\hx+L\big(\vz-h(\hx)\big),\quad \Sigma\leftarrow(I-LH)\,\Sigma\,(I-LH)^{\top}+L R_n L^{\top}
+  \end{gathered}$
+  \end{tabular}}
+  {applied $\vu_k$; pixels $\vz_j$ of known floor markers and gyro $\vz_\omega$ (25\,Hz); learned $A,B$}
+  {estimate $\hx_k\in\R^{12}$ and its covariance $\Sigma_k\in\R^{12\times12}$ $\rightarrow$ blocks 9 and 10}
 
 %------------------------------------------------------------------ notation panel
 \newsavebox{\notation}
@@ -118,14 +137,30 @@ A & learned state matrix & \R^{12\times12} & -- &&
 S_x,\ S_u & prediction matrices & \R^{12N\times12},\ \R^{12N\times4N} & --\\
 B & learned input matrix & \R^{12\times4} & mixed &&
 \bar Q,\ \bar R & block-diagonal weights & \R^{12N\times12N},\ \R^{4N\times4N} & --\\
-\multicolumn{4}{l}{\textbf{\color{cPlant}Actuation (block 10)}} &&
+\multicolumn{4}{l}{\textbf{\color{cEst}State estimation (block 11)}} &&
 H,\ \bm f & QP Hessian, linear term & \R^{4N\times4N},\ \R^{4N} & --\\
-\vu_{\mathrm{trim}} & hover input $[mg_0;0;0;0]$ & \R^4 & N, N\,m &&
+\hx_k & EKF estimate of $\vx_k$ & \R^{12} & as $\vx_k$ &&
 G,\ \bm h & inequality constraints & \R^{n_c\times4N},\ \R^{n_c} & mixed\\
-\Gamma,\ \vf & mixer matrix, rotor thrusts & \R^{4\times4},\ \R^4 & --/m, N &&
+\Sigma_k & estimate covariance (how unsure) & \R^{12\times12} & m$^2$, rad$^2$, \dots &&
 A_{eq},\ \bm b_{eq} & equality constraints & \R^{n_e\times4N},\ \R^{n_e} & mixed\\
-k_f,\ \vOm & thrust constant, rotor speeds & \R,\ \R^4 & N\,s$^2$, rad/s &&
+Q_e & process noise, from DMDc residuals & \R^{12\times12} & as $\Sigma_k$ &&
 \vu_0^{*} & first optimal input (applied) & \R^{4} & N, N\,m\\
+\bm\ell_j & known floor marker $j$ (world) & \R^3 & m &&
+\multicolumn{4}{l}{\textbf{\color{cPlant}Actuation (block 10)}}\\
+\bm q_j & marker $j$ in camera axes & \R^3 & m &&
+\vu_{\mathrm{trim}} & hover input $[mg_0;0;0;0]$ & \R^4 & N, N\,m\\
+\vz_j,\ \vz_\omega & pixel of marker $j$, gyro reading & \R^2,\ \R^3 & px, rad/s &&
+\Gamma,\ \vf & mixer matrix, rotor thrusts & \R^{4\times4},\ \R^4 & --/m, N\\
+f,\ c_x,\ c_y & focal length, image centre & \R & px (400, 320, 240) &&
+k_f,\ \vOm & thrust constant, rotor speeds & \R,\ \R^4 & N\,s$^2$, rad/s\\
+R_{bc} & camera axes in the body frame & \SO & -- &&
+&&&\\
+h(\cdot),\ H & measurement model, its Jacobian & \R^{12}\!\to\!\R^{m},\ \R^{m\times12} & px &&
+&&&\\
+R_n & measurement-noise covariance & \R^{m\times m} & px$^2$, (rad/s)$^2$ &&
+&&&\\
+L & Kalman (estimator) gain & \R^{12\times m} & mixed &&
+&&&\\
 \end{tabular}}
 
 %------------------------------------------------------------------ layout
@@ -141,6 +176,7 @@ k_f,\ \vOm & thrust constant, rotor speeds & \R,\ \R^4 & N\,s$^2$, rad/s &&
   \node[blk, anchor=north west] (b9) at ($(b8.south west) + (0, -\gap)$)  {\useblock{b9}};
   \node[blk, anchor=north west] (b6) at ($(b5.south west) + (0, -\gap)$)  {\useblock{b6}};
   \node[blk, anchor=north] (b10) at ($(b6.south west)!0.5!(b6.south west -| b9.east) + (0, -1.5)$) {\useblock{b10}};
+  \node[blk, anchor=north] (b11) at ($(b10.south) + (0, -1.9)$) {\useblock{b11}};
 
   % branch titles
   \node[font=\scriptsize\bfseries, text=cGuid, anchor=south west] at ($(b3.north west)+(0,0.08)$) {LQR BRANCH \,(infinite horizon)};
@@ -166,20 +202,28 @@ k_f,\ \vOm & thrust constant, rotor speeds & \R,\ \R^4 & N\,s$^2$, rad/s &&
   \draw[mdl, color=cGuid] (b6.east) -- ++(0.6,0) |- node[lbl, pos=0.3, rotate=90] {$P_f = P$ (terminal cost of the MPC)} (b7.west);
 
   % to the drone
-  \draw[sig] (b6.south) -- node[lbl, right=3pt] {$\vu_k=-K\vx_k$} (b6.south |- b10.north);
+  \draw[sig] (b6.south) -- node[lbl, right=3pt] {$\vu_k=-K\hx_k$} (b6.south |- b10.north);
   \draw[sig] (b9.south) -- node[lbl, right=3pt] {$\vu_0^{*}$} (b9.south |- b10.north);
 
-  % feedback loops
-  \draw[sig, dashed] (b10.east) -- ++(0.7,0) |- node[lbl, pos=0.25, rotate=90] {measured $\vx_{k+1}$ (every $\Delta t$)} (b9.east);
-  \draw[sig, dashed, color=cPlant] (b10.west) -- ++(-0.9,0) |- node[lbl, pos=0.25, rotate=90] {new logged data $\Rightarrow$ re-identify $A,B$} (b1.west);
+  % the drone moves, the sensors measure, the EKF estimates
+  \draw[sig, line width=1.2pt] (b10.south) -- node[lbl, align=center]
+     {drone moves $\Rightarrow$ camera pixels $\vz_j$, gyro $\vz_\omega$, applied $\vu_k$} (b11.north);
+
+  % feedback loops: the estimate goes back to the controllers
+  \coordinate (fbx) at ($(b11.east)+(0.75,0)$);
+  \draw[sig, dashed] (b11.east) -- (fbx) |- node[lbl, pos=0.36, rotate=90] {estimate $\hx_k$ = MPC start $\vx_0$ (every $\Delta t$)} (b9.east);
+  \fill[cText] (fbx |- b10.east) circle (1.6pt);
+  \draw[sig, dashed] (fbx |- b10.east) -- (b10.east);
+  \node[lbl, anchor=west, font=\scriptsize\sffamily] at ($(fbx |- b10.east) + (0.12,0)$) {$\hx_k$ for LQR};
+  \draw[sig, dashed, color=cPlant] (b11.west) -- ++(-0.9,0) |- node[lbl, pos=0.2, rotate=90] {logged $\hx_k,\vu_k$ $\Rightarrow$ re-identify $A,B$} (b1.west);
 
   % design-time / run-time note under the legend
-  \node[aux, anchor=north west, text width=17.1cm, align=left] (note) at ($(b10.south west)+(0,-1.0)$) {%
+  \node[aux, anchor=north west, text width=17.1cm, align=left] (note) at ($(b11.south west)+(0,-1.0)$) {%
     \textbf{When does each block run?}\quad
-    \textbf{Offline, once:}\ 1 (record) $\rightarrow$ 2 (DMDc) $\rightarrow$ 3--6 ($P$, $K$).\quad
-    \textbf{Online, every $\Delta t=40$\,ms:}\ LQR: 10 only;\ MPC: 8 $\rightarrow$ 9 $\rightarrow$ 10.\\[2pt]
+    \textbf{Offline, once:}\ 1 (record) $\rightarrow$ 2 (DMDc, and $Q_e$ for block 11) $\rightarrow$ 3--6 ($P$, $K$).\\
+    \textbf{Online, every $\Delta t=40$\,ms:}\ 11 (estimate) $\rightarrow$ LQR: 10;\ \ or\ \ 11 $\rightarrow$ MPC: 8 $\rightarrow$ 9 $\rightarrow$ 10.\\[2pt]
     {\color{cText!75}Toy-model settings: $N=25$ (1\,s horizon),\ $|v_i|\le1$\,m/s (\texttt{max\_velocity} in controller.yaml),\
-     $|\phi|,|\theta|\le20^\circ$,\ $5\,\mathrm{N}\le T\le25\,\mathrm{N}$.}};
+     $|\phi|,|\theta|\le20^\circ$,\ $5\,\mathrm{N}\le T\le25\,\mathrm{N}$;\ camera 640$\times$480\,px, 121 floor markers, 1\,px noise.}};
 
   % notation and dimensions panel
   \node[draw=cText!50, fill=cText!3, rounded corners=3pt, inner sep=7pt, anchor=north west,
@@ -190,12 +234,12 @@ k_f,\ \vOm & thrust constant, rotor speeds & \R,\ \R^4 & N\,s$^2$, rad/s &&
   \node[anchor=south west, font=\large\bfseries, text=cText] (ttl) at ($(b1.north west) + (0, 1.25)$)
     {Model 2 \,|\, Data-Driven Linear Model (DMDc) and Optimal Control (LQR / MPC)};
   \node[anchor=north west, font=\small, text=cText!80] at (ttl.south west)
-    {Learn $A,B$ from flight data, design the controller on the learned model, fly the nonlinear drone};
+    {Learn $A,B$ from flight data, design the controller on the learned model, estimate the state with an EKF, fly the nonlinear drone};
   \matrix[anchor=north west, column sep=4pt, font=\scriptsize\sffamily, text=cText]
-    at ($(b10.south west) + (0, -0.35)$) {
+    at ($(b11.south west) + (0, -0.35)$) {
     \draw[sig] (0,0) -- (0.9,0); & \node{signal / result passed on}; &[12pt]
     \draw[mdl, color=cGuid] (0,0) -- (0.9,0); & \node{matrix re-used by another block}; &[12pt]
-    \draw[sig, dashed] (0,0) -- (0.9,0); & \node{feedback from the drone}; \\
+    \draw[sig, dashed] (0,0) -- (0.9,0); & \node{feedback: the EKF estimate returns to the controllers}; \\
   };
 \end{tikzpicture}
 \end{document}

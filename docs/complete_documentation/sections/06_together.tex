@@ -37,15 +37,17 @@ Where the model comes from & Newton and Euler; needs $m$, $J$, rotor data & Reco
 Kind of model & Nonlinear, attitude as a rotation matrix & Linear, near hover, attitude as 3 small angles\\
 Works for & Any attitude except upside down & Small tilts (in our data, below 6.5$^\circ$)\\
 Controller & Geometric: position loop $\rightarrow$ attitude loop & LQR (a fixed gain table) or MPC (a small optimisation every step)\\
+State estimate & Error-state EKF: physics prediction, camera pose + gyro & EKF on the learned model: camera pixels + gyro (block 11)\\
 Limits (speed, thrust, tilt) & Only by clipping afterwards & Written into the MPC problem itself\\
 Cost per step on the drone & A few $3\times3$ matrix products & LQR: one $4\times12$ product; MPC: a QP of about 2.6\,ms\\
-Where in our project & \code{so3\_controller.py}, \code{controller\_node.py} & Toy model \code{M2\_1}--\code{M2\_3}\\
+Where in our project & \code{so3\_controller.py}, \code{controller\_node.py} & Toy model \code{M2\_1}--\code{M2\_4}\\
 \bottomrule
 \end{tabularx}
 \end{center}
 
-The two are not rivals. Model~1's estimator provides the state that Model~2's controllers need, and Model~2's DMDc is a
-check on Model~1's physics: the learned $A$ and $B$ agree with the Jacobians of block 2 to about 1--3\%, and the data
+The two are not rivals. Each has its own estimator built on its own model. Model~1's EKF predicts with physics, and
+Model~2's EKF (block 11) predicts with the learned $A,B$ and corrects with raw camera pixels. Either can provide the
+state that Model~2's controllers need. Model~2's DMDc is also a check on Model~1's physics: the learned $A$ and $B$ agree with the Jacobians of block 2 to about 1--3\%, and the data
 reproduces the 1.5\,kg mass to within 0.4\%.
 
 \subsection{Why the camera matters for control}

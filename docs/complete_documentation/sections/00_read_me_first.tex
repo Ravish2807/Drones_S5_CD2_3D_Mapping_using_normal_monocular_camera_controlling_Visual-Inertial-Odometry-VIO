@@ -22,7 +22,7 @@ controller.
 \textbf{Question} & \textbf{What answers it in this document} & \textbf{Where}\\
 \midrule
 1.\ \emph{How does a drone move at all?} & Physics: Newton's law for moving and Euler's law for turning & \Cref{sec:m1b1}--\ref{sec:m1b3}\\
-2.\ \emph{Where am I right now?} & The error-state Kalman filter that mixes camera and IMU: our VIO & \Cref{sec:m1b4}\\
+2.\ \emph{Where am I right now?} & A Kalman filter that mixes camera and IMU with a model: our VIO (physics in Model 1, the learned model in Model 2) & \Cref{sec:m1b4}, \ref{sec:m2b11}\\
 3.\ \emph{Where should I go, and how hard should I push?} & A controller: geometric SO(3) control (Model 1) or optimal LQR / MPC (Model 2) & \Cref{sec:m1b5}--\ref{sec:m1b7}, \ref{sec:model2}\\
 4.\ \emph{How do I make four motors do that?} & Control allocation: splitting thrust and turning force between the four rotors & \Cref{sec:m1b8}\\
 \bottomrule
@@ -110,7 +110,9 @@ numbers printed in this document are the numbers those scripts print. \Cref{sec:
 \begin{figure}[p]
   \centering
   \includegraphics[width=0.86\linewidth]{flow_model2.png}
-  \caption{Model 2: a linear model learned from flight data (DMDc), then optimal control by LQR (left branch) or MPC (right branch).}
+  \caption{Model 2: a linear model learned from flight data (DMDc), then optimal control by LQR (left branch) or MPC
+  (right branch), and an extended Kalman filter (block 11) that estimates the state from camera pixels and the gyro and
+  feeds it back to the controllers.}
   \label{fig:flow2}
 \end{figure}
 \clearpage

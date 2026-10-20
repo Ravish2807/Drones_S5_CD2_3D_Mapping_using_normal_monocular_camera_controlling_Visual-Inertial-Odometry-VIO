@@ -21,6 +21,10 @@ if m == 0                                          % equality constraints only
     return
 end
 
+% Near the optimum some slacks reach ~0, so the KKT matrix becomes badly scaled.
+% That is expected for interior-point methods and harmless here; hide the warning.
+ws = warning('off', 'MATLAB:nearlySingularMatrix');
+cleanup = onCleanup(@() warning(ws));
 x = zeros(n, 1); y = zeros(q, 1);
 s = max(h - G*x, 1); z = ones(m, 1);
 tol = 1e-9; info.converged = false;

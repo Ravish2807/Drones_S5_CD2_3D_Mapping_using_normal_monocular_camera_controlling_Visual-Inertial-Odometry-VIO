@@ -12,13 +12,16 @@ Model~1 needs the physics: the mass $m$, the inertia $J$, the rotor constants. M
   \item \textbf{MPC} (blocks 7--9): plans the next second optimally \emph{and} respects limits such as
         ``never faster than 1\,m/s'', at the cost of solving a small optimisation problem every step.
 \end{itemize}
-Block 10 flies the real, nonlinear drone with the result. All Model~2 matrices are in \emph{discrete time} with
+Block 10 flies the real, nonlinear drone with the result. Block 11 is an \textbf{extended Kalman filter} that works
+out the drone's state from camera pixels and the gyroscope, using the learned model. That state is what the
+controllers of blocks 9 and 10 need, so block 11 closes the loop. All Model~2 matrices are in \emph{discrete time} with
 $\Delta t=0.04$\,s (25\,Hz, the \code{control\_rate}): $\vx_{k+1}=A\vx_k+B\vu_k$.
 Toy model files:
 \begin{itemize}
   \item \code{M2\_1\_Flight\_Data\_DMDc.mlx} (blocks 1--2),
   \item \code{M2\_2\_LQR\_Bellman\_Riccati\_DARE.mlx} (blocks 3--6),
-  \item \code{M2\_3\_MPC\_QP\_Apply\_to\_Drone.mlx} (blocks 7--10).
+  \item \code{M2\_3\_MPC\_QP\_Apply\_to\_Drone.mlx} (blocks 7--10),
+  \item \code{M2\_4\_EKF\_State\_Estimation.mlx} (block 11).
 \end{itemize}
 
 % ---------------------------------------------------------------------
@@ -431,7 +434,7 @@ and then thinks again with the new position.
 \begin{equation}
 \begin{aligned}
   \min_{\vu_0,\dots,\vu_{N-1}}\ \ &\sum_{k=0}^{N-1}\big(\vx_k^\top Q\vx_k+\vu_k^\top R\vu_k\big)+\vx_N^\top P_f\,\vx_N\\
-  \text{subject to}\ \ &\vx_{k+1}=A\vx_k+B\vu_k,\quad \vx_0=\text{the measured state},\\
+  \text{subject to}\ \ &\vx_{k+1}=A\vx_k+B\vu_k,\quad \vx_0=\hx_k\ \text{(the estimate of block 11)},\\
   &\vu_{\min}\le\vu_k\le\vu_{\max},\qquad |C\vx_k|\le\vx_{\max}
 \end{aligned}\tag{M2.12}
 \end{equation}
@@ -583,8 +586,10 @@ end
 
 \subsubsection*{Reasoning}
 The controllers of Model~2 work with \emph{differences from hover}. The motors need real values, so the hover thrust
-$mg_0$ is added back. The rest is the same motor mixer as Model~1 (\cref{sec:m1b8}). The loop closes by measuring the new
-state of the \emph{real, nonlinear} drone and running block 9 again.
+$mg_0$ is added back. The rest is the same motor mixer as Model~1 (\cref{sec:m1b8}). The loop closes through block 11:
+the EKF works out the new state of the \emph{real, nonlinear} drone from its sensors, and block 9 runs again from that
+estimate. (In the M2\_3 flight the controllers are still handed the true state plus a little noise, so that blocks 1--10
+can be checked on their own; M2\_4 removes that shortcut.)
 
 \begin{toy}[one control sample, then a whole flight]
 The drone is at $[1.5,\,-1.0,\,0.8]$\,m, at rest; the target is $[0,0,2]$. MPC gives
@@ -621,6 +626,159 @@ the practical first step would be an MPC whose output is the velocity $\vv_{\tex
 into the problem, instead of the clip in \code{publish\_velocity\_command()}.
 \end{real}
 
+% ---------------------------------------------------------------------
+\needspace{14\baselineskip}
+\subsection{Block 11 --- Working out the state: an Extended Kalman Filter}
+\label{sec:m2b11}
+% ---------------------------------------------------------------------
+
+\begin{idea}[Why this block exists, and where it sits]
+Blocks 9 and 10 need all 12 numbers of $\vx_k$ every 40\,ms. No sensor gives them. The camera gives \emph{pixels}, the
+gyroscope gives \emph{body rates}, and nothing measures the velocity at all. Up to block 10 the toy model cheated and
+handed the controllers the true state.
+
+Block 11 is the missing piece. After the drone moves (block 10), the camera and gyro measure it, and the EKF turns
+those readings into the estimate $\hx_k$. That estimate goes back to MPC (block 9, as its start $\vx_0$) or to the LQR
+law $-K\hx_k$. In \cref{fig:flow2} it sits at the bottom and closes the loop.
+
+It keeps the spirit of Model~2: it \emph{predicts with the learned model} $A,B$ (no mass or inertia needed) and learns
+its own noise level from the data. It is called \emph{extended} because the camera equation is not a straight line, so
+it has to be linearized with a Jacobian at every step.
+\end{idea}
+
+Three letters are already taken in Model~2 ($P$ value matrix, $Q$ weight, $K$ LQR gain). So for the filter we write
+$\Sigma$ for the covariance, $Q_e$ for its process noise and $L$ for its gain. Otherwise it is exactly the filter of
+Model~1, block 4 (\cref{sec:m1b4}).
+
+\begin{eqbox}{Equations (M2.19)--(M2.24): an EKF on the learned model}
+\textbf{Predict} with the learned model (it is already linear, so $F=A$):
+\begin{align}
+  \hx_{k+1}&=A\,\hx_k+B\,\vu_k,\qquad \Sigma_{k+1}=A\,\Sigma_kA^\top+Q_e \tag{M2.19}\\
+  Q_e&=\mathrm{cov}\big(\vx_{k+1}-A\vx_k-B\vu_k\big)\quad\text{measured on a flight not used for learning} \tag{M2.20}
+\end{align}
+\textbf{Measure}: floor marker $j$ through the pinhole camera, and the gyroscope:
+\begin{align}
+  \bm q_j&=R_{bc}^\top R(\vth)^\top(\bm\ell_j-\vp),\qquad
+  \vz_j=\begin{bmatrix}f\,q_1/q_3+c_x\\ f\,q_2/q_3+c_y\end{bmatrix},\qquad \vz_\omega=\vw \tag{M2.21}\\
+  H_j&=\frac{f}{q_3}\begin{bmatrix}1&0&-q_1/q_3\\0&1&-q_2/q_3\end{bmatrix}
+  \Big[-R_{bc}^\top R^\top\quad 0\quad R_{bc}^\top\skw{R^\top(\bm\ell_j-\vp)}J_r(\vth)\quad 0\Big] \tag{M2.22}
+\end{align}
+\textbf{Correct}:
+\begin{align}
+  L&=\Sigma H^\top\big(H\Sigma H^\top+R_n\big)^{-1} \tag{M2.23}\\
+  \hx&\leftarrow\hx+L\big(\vz-h(\hx)\big),\qquad \Sigma\leftarrow(I-LH)\Sigma(I-LH)^\top+LR_nL^\top \tag{M2.24}
+\end{align}
+\end{eqbox}
+
+\begin{center}\small
+\begin{tabularx}{\linewidth}{@{}>{$}l<{$} X >{$}l<{$} l@{}}
+\toprule
+\textrm{\textbf{Symbol}} & \textbf{Meaning} & \textrm{\textbf{Size}} & \textbf{Unit}\\
+\midrule
+\hx_k,\ \Sigma_k & the estimate and how unsure it is & \R^{12},\ \R^{12\times12} & as $\vx_k$, its square\\
+Q_e & how wrong the learned model is per step & \R^{12\times12} & as $\Sigma$\\
+\bm\ell_j & known position of floor marker $j$ (like a printed AprilTag) & \R^3 & m\\
+R_{bc} & camera axes in the body: forward, right, down $=\diag(1,-1,-1)$ & \SO & --\\
+\bm q_j & marker $j$ seen in camera axes; $q_3$ is its depth & \R^3 & m\\
+f,\ c_x,\ c_y & focal length and image centre & \R & px (400, 320, 240)\\
+\vz_j,\ \vz_\omega & pixel of marker $j$, gyroscope reading & \R^2,\ \R^3 & px, rad/s\\
+H,\ R_n & slope (Jacobian) of the measurements, their noise & \R^{m\times12},\ \R^{m\times m} & px per unit, px$^2$\\
+J_r(\vth) & right Jacobian of SO(3), $\approx I$ near hover & \R^{3\times3} & --\\
+L & estimator (Kalman) gain & \R^{12\times m} & mixed\\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\subsubsection*{Where each line comes from}
+
+\textbf{(M2.19) Predict.} The learned model is a straight line already. If our error $\bm e_k=\vx_k-\hx_k$ averages zero,
+then $\bm e_{k+1}=A\bm e_k+\bm w_k$, where $\bm w_k$ is the model's own error. Its average gives the first equation and
+its covariance gives the second, just like (M1.11) with $F=A$.
+
+\textbf{(M2.20) The noise, from the data.} $\bm w_k=\vx_{k+1}-A\vx_k-B\vu_k$ is exactly what the learned model cannot
+explain, so its covariance is $Q_e$. It must be measured on a \emph{new} flight. On the training flights, least squares
+already made these residuals as small as possible, and the filter would become over-confident. The test flight has
+gusts twice as strong, and variance goes with the square, so $Q_e$ gets a factor of 4.
+
+\textbf{(M2.21) The pinhole camera.} The marker as seen from the drone is the arrow $\bm\ell_j-\vp$. $R^\top$ turns it into
+the drone's axes, and $R_{bc}^\top$ into the camera's (forward, right, down). By similar triangles, something $q_1$ to the
+side at depth $q_3$ appears $f\,q_1/q_3$ pixels from the image centre. Dividing by the depth, and rotating by $R(\vth)$,
+make this a curve rather than a line. That is the only reason the filter has to be \emph{extended}.
+
+\textbf{(M2.22) The slope, by the chain rule.} pixel $\leftarrow\bm q\leftarrow$ state. The quotient rule gives the first
+matrix. Moving the drone moves the marker the other way ($-R_{bc}^\top R^\top$). Turning the drone by a small angle
+$\bm d$ changes $R^\top\bm a$ by $\skw{R^\top\bm a}J_r\bm d$. Velocity and rate do not move pixels (zero columns). The
+toy model checks this slope against a numerical one: they agree to $10^{-7}$\,px.
+
+\textbf{(M2.23)--(M2.24) Correct.} The same derivation as (M1.12)--(M1.14). The state of Model~2 is a plain list of 12
+numbers (the attitude is already the 3 angles $\vth=\Log R$), so correcting is ordinary addition. With up to 70
+measurements at once we use the second (``Joseph'') form for $\Sigma$, which keeps it symmetric and positive.
+
+\begin{toy}[altitude from one pixel]
+A camera looks down from height $h$ at a marker $d=1$\,m to the side, so the marker appears $u=fd/h$ pixels off-centre.
+Our guess: $\hat h=2$\,m, $\Sigma=0.04$\,m$^2$ ($\sigma=20$\,cm). The camera says $u=210$\,px (noise $R_n=4$\,px$^2$).
+\[
+u_{\text{pred}}=\frac{400\cdot1}{2}=200,\qquad H=-\frac{fd}{\hat h^2}=-100\,\frac{\text{px}}{\text{m}},\qquad
+L=\frac{\Sigma H}{H^2\Sigma+R_n}=\frac{-4}{404}=-0.0099,
+\]
+\[
+\hat h\leftarrow2-0.0099\cdot10=1.901\text{ m},\qquad \Sigma\leftarrow(1-LH)\Sigma=0.0004\text{ m}^2\ (\sigma=2\text{ cm}).
+\]
+Turning the pixel round exactly gives $400/210=1.905$\,m. The 4\,mm difference is the cost of treating the curve as a
+line.
+\end{toy}
+
+\begin{toycode}{M2\_4\_EKF\_State\_Estimation}{The closed loop}
+[zc, ~, ids] = DroneLib.cam_measure(xd, P.p_hover, C);          % camera sees the TRUE drone
+z = [zc + C.sigma_px*randn(size(zc)); xd(10:12) + C.sigma_gyro*randn(3,1)];
+[zh, Hc] = DroneLib.cam_measure(xh, P.p_hover, C, ids);         % ... the EKF predicts from its estimate
+Hm = [Hc; zeros(3,9), eye(3)];
+[xh, Pk] = DroneLib.ekf2_update(xh, Pk, z, [zh; xh(10:12)], Hm, Rn);   % M2.23-M2.24
+du = DroneLib.mpc_solve(mpc, xh);                                % the controller flies on the ESTIMATE
+...
+[xh, Pk] = DroneLib.ekf2_predict(xh, Pk, u_app - u_trim, A, B, Q_ekf); % M2.19
+\end{toycode}
+
+\begin{toy}[the whole flight on the estimate]
+Same start as block 10, with gusts, 1\,px pixel noise and 0.01\,rad/s gyro noise. The filter starts 20\,cm wrong, and up
+to 34 markers are in view at 2\,m:
+\begin{center}\small
+\begin{tabular}{lrrrr}
+\toprule
+controller fed by & position error & velocity error & largest speed & distance after 10\,s\\
+\midrule
+MPC + EKF & 3.4\,mm & 2.8\,cm/s & 1.039\,m/s & 2.9\,cm\\
+LQR + EKF & 3.5\,mm & 3.8\,cm/s & 1.239\,m/s & 5.9\,cm\\
+MPC on the true state & -- & -- & 1.000\,m/s & 2.9\,cm\\
+\bottomrule
+\end{tabular}
+\end{center}
+The velocity is never measured, yet it is known to about 3\,cm/s. The errors stay inside the $\pm3\sigma$ band that
+$\Sigma_k$ predicts, so the filter knows how unsure it is.
+\end{toy}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.48\linewidth]{M2_4_EKF_State_Estimation_1.png}\hfill
+  \includegraphics[width=0.5\linewidth]{M2_4_EKF_State_Estimation_2.png}
+  \caption{Left: the never-measured velocity is estimated inside its $\pm3\sigma$ band, and flying on the estimate is
+  close to flying on the true state. Right: what the downward camera sees from 2\,m.}
+\end{figure}
+
+\begin{warn}[Limits are kept on the estimate, not on the truth]
+On the estimate, MPC flies at up to 1.04\,m/s although its limit is 1\,m/s. It keeps the limit for the state it
+\emph{believes}, and gusts plus a few cm/s of estimation error make the truth slightly different. The usual cure is a
+small margin: plan with 0.95\,m/s.
+\end{warn}
+
+\begin{real}[block 11]
+This is the ``VIO'' of our title inside Model~2: the monocular camera and the IMU, fused with a model, tell the drone
+where it is. In the toy model the camera sees markers at known places (printed AprilTags on the floor). A full VIO
+system follows \emph{natural} image features with unknown positions and adds them to the state (that is SLAM, and how
+the 3D map is built). The predict / measure / correct structure and the camera Jacobian (M2.22) stay the same. Today
+ArduPilot's EKF3 produces \code{/ap/v1/pose/filtered}. Block 11 is how Model~2 would run on our own camera instead.
+\end{real}
+
 \subsection*{Recap of Model 2}
 \begin{center}\small
 \begin{tabularx}{\linewidth}{@{}c >{\raggedright\arraybackslash}p{2.6cm} >{\raggedright\arraybackslash}p{2.7cm} >{\raggedright\arraybackslash}p{2.5cm} X@{}}
@@ -635,8 +793,9 @@ into the problem, instead of the clip in \code{publish\_velocity\_command()}.
 6 & DARE & $A,B,Q,R$ & $P$, $K$ & Jump straight to that limit; $\vx_0^\top P\vx_0$ is the total score.\\
 7 & MPC & model, limits, $P_f$ & a problem & Plan the next second without breaking any rule.\\
 8 & QP & problem, $\vx_0$ & $H,\bm f,G,\bm h$, $\mathbf U^*$ & A bowl inside a fence; one bottom, found in milliseconds.\\
-9 & Receding horizon & $\vx_k$ & $\vu_0^*$ & Use the first move only, then plan again.\\
-10 & Apply to drone & $\vu_0^*$ or $-K\vx_k$ & $\Omega_1..\Omega_4$ & Add hover thrust back, share among the rotors, fly.\\
+9 & Receding horizon & $\hx_k$ & $\vu_0^*$ & Use the first move only, then plan again.\\
+10 & Apply to drone & $\vu_0^*$ or $-K\hx_k$ & $\Omega_1..\Omega_4$ & Add hover thrust back, share among the rotors, fly.\\
+11 & EKF & $\vu_k$, pixels, gyro & $\hx_k$, $\Sigma_k$ & Predict with the learned model, correct with what the camera sees.\\
 \bottomrule
 \end{tabularx}
 \end{center}

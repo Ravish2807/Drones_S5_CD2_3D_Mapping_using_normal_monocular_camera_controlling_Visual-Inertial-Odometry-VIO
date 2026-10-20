@@ -310,7 +310,7 @@ Part C : drone, large offset (2 m) - constraints active
           = 1
   [CHK] LQR demand   1x1     -            unconstrained LQR would ask for this multiple of the allowed input
           = 1.38864
-  [CHK] converged    1x1     -            10 IPM iterations, 7.2 ms
+  [CHK] converged    1x1     -            10 IPM iterations, 5.9 ms
           = 1
 
 Saved qp_example -> C:\SEM 5\Drones\PROJECT\Drones_S5_CD2_3D_Mapping_using_normal_monocular_camera_controlling_Visual-Inertial-Odometry-VIO\toy_model2\model2_dmdc_lqr_mpc\results\model2_data.mat
@@ -339,7 +339,7 @@ Saved qp_example -> C:\SEM 5\Drones\PROJECT\Drones_S5_CD2_3D_Mapping_using_norma
   [CHK] relaxed      1x1     -            samples where state limits had to be dropped
           = 0
   [CHK] solve time   1x1     ms           mean QP time (budget: 40 ms)
-          = 2.38985
+          = 2.82473
 
 Saved lin_sim -> C:\SEM 5\Drones\PROJECT\Drones_S5_CD2_3D_Mapping_using_normal_monocular_camera_controlling_Visual-Inertial-Odometry-VIO\toy_model2\model2_dmdc_lqr_mpc\results\model2_data.mat
 
@@ -375,5 +375,104 @@ Part A : a single control sample
           = [ 612.8059  911.3372]'
 
 Saved flight -> C:\SEM 5\Drones\PROJECT\Drones_S5_CD2_3D_Mapping_using_normal_monocular_camera_controlling_Visual-Inertial-Odometry-VIO\toy_model2\model2_dmdc_lqr_mpc\results\model2_data.mat
+
+==============================================================================
+  MODEL 2 | STEP 11 | STATE ESTIMATION - EXTENDED KALMAN FILTER
+==============================================================================
+    predict : x_hat = A x_hat + B u              Sigma = A Sigma A' + Q_e
+    measure : pixel = f q1/q3 + c,  q = R_bc' R(theta)' (l - p)   (nonlinear -> Jacobian H)
+    correct : L = Sigma H'(H Sigma H' + Rn)^-1   x_hat = x_hat + L (z - h(x_hat))
+              Sigma = (I - L H) Sigma (I - L H)' + L Rn L'
+------------------------------------------------------------------------------
+
+Part A : scalar EKF update with a nonlinear (pinhole) measurement
+  [IN ] h_hat, Sigma 1x2     m, m^2       prior altitude and variance
+          = [ 2.0000  0.0400]'
+  [IN ] f, d         1x2     px, m        focal length, marker offset
+          = [ 400.0000  1.0000]'
+  [IN ] u, Rn        1x2     px, px^2     measured pixel offset and its noise variance
+          = [ 210.0000  4.0000]'
+  [OUT] u_pred       1x1     px           expected pixel f d / h_hat
+          = 200
+  [OUT] H            1x1     px/m         slope of the pinhole curve at h_hat
+          = -100
+  [OUT] L            1x1     m/px         estimator (Kalman) gain
+          = -0.00990099
+  [OUT] h_new        1x1     m            corrected altitude
+          = 1.90099
+  [OUT] Sigma_new    1x1     m^2          variance: 0.04 -> 0.0004 (sigma 20 cm -> 2 cm)
+          = 0.00039604
+  [CHK] f d / u      1x1     m            exact altitude from the pixel; EKF differs by the linearization error
+          = 1.90476
+
+Part B1 : camera model at hover (2 m above the floor)
+  [IN ] markers      1x1     -            known floor markers (11 x 11 grid, 0.5 m apart)
+          = 121
+  [OUT] visible      1x1     -            markers inside the 640 x 480 image
+          = 34
+  [OUT] z(1:4)       4x1     px           first two markers (u, v)
+          = [ 16.1788  363.4334  39.6013  265.5831]'
+  [OUT] H            68x12   px/unit      68 x 12 Jacobian (zero columns: velocity and rate)
+          (array: min -296.4, max  633.9, Frobenius norm 4455)
+  [CHK] max|H-Hnum|  1x1     px/unit      analytic vs numerical Jacobian
+          = 1.1753e-07
+
+Part B2 : process noise from the DMDc residuals of flight 5 (never used for learning)
+  [IN ] residuals    12x625  mixed        x_{k+1} - A x_k - B u_k on the held-out flight
+          (array: min -0.01066, max  0.009962, Frobenius norm 0.1618)
+  [OUT] sqrt diag Q_e 1x12    mixed        per-step model uncertainty (after x4 gust margin)
+          = [ 0.0027  0.0030  0.0028  0.0063  0.0062  0.0058  0.0015  0.0014  0.0014  0.0029  0.0029  0.0030]'
+
+Part C : nonlinear flight, controllers fed by the EKF estimate instead of the true state
+
+  MPC + EKF
+  [CHK] RMSE p       1x1     m            position estimate
+          = 0.00341889
+  [CHK] RMSE v       1x1     m/s          velocity estimate (never measured)
+          = 0.0292508
+  [CHK] RMSE theta   1x1     deg          attitude estimate
+          = 0.0862376
+  [CHK] max|v| true  1x1     m/s          largest true velocity component
+          = 1.05952
+  [CHK] err(10 s)    1x1     m            true distance to the setpoint
+          = 0.015398
+  [CHK] in 3 sigma   1x1     %            samples with all 12 errors inside +-3 sigma
+          = 98.6667
+  [CHK] mean NIS/m   1x1     -            normalized innovation, ~1 for a consistent filter
+          = 0.94703
+
+  LQR + EKF
+  [CHK] RMSE p       1x1     m            position estimate
+          = 0.0033242
+  [CHK] RMSE v       1x1     m/s          velocity estimate (never measured)
+          = 0.034035
+  [CHK] RMSE theta   1x1     deg          attitude estimate
+          = 0.0838618
+  [CHK] max|v| true  1x1     m/s          largest true velocity component
+          = 1.22092
+  [CHK] err(10 s)    1x1     m            true distance to the setpoint
+          = 0.0353901
+  [CHK] in 3 sigma   1x1     %            samples with all 12 errors inside +-3 sigma
+          = 96.8889
+  [CHK] mean NIS/m   1x1     -            normalized innovation, ~1 for a consistent filter
+          = 0.937674
+
+  MPC, true state (Step 10)
+  [CHK] RMSE p       1x1     m            position estimate
+          = 0.00355777
+  [CHK] RMSE v       1x1     m/s          velocity estimate (never measured)
+          = 0.0244851
+  [CHK] RMSE theta   1x1     deg          attitude estimate
+          = 0.088876
+  [CHK] max|v| true  1x1     m/s          largest true velocity component
+          = 1.0096
+  [CHK] err(10 s)    1x1     m            true distance to the setpoint
+          = 0.00500928
+  [CHK] in 3 sigma   1x1     %            samples with all 12 errors inside +-3 sigma
+          = 99.1111
+  [CHK] mean NIS/m   1x1     -            normalized innovation, ~1 for a consistent filter
+          = 0.933493
+
+Saved ekf2 -> C:\SEM 5\Drones\PROJECT\Drones_S5_CD2_3D_Mapping_using_normal_monocular_camera_controlling_Visual-Inertial-Odometry-VIO\toy_model2\model2_dmdc_lqr_mpc\results\model2_data.mat
 
 Model 2 complete. Figures in C:\SEM 5\Drones\PROJECT\Drones_S5_CD2_3D_Mapping_using_normal_monocular_camera_controlling_Visual-Inertial-Odometry-VIO\toy_model2\model2_dmdc_lqr_mpc\figures

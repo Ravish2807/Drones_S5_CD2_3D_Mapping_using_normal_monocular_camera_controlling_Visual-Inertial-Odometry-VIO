@@ -12,7 +12,7 @@ No toolbox is needed (tested on MATLAB R2024a). The repository ships its own QP 
 | Folder | Flow | Run |
 |---|---|---|
 | [`model1_nonlinear_ekf_so3/`](model1_nonlinear_ekf_so3/) | Image 1: nonlinear dynamics → linearization → error-state EKF → SO(3) control → motors | `run_all_model1` |
-| [`model2_dmdc_lqr_mpc/`](model2_dmdc_lqr_mpc/) | Image 2: flight data → DMDc → Bellman / LQR / Riccati / DARE and MPC / QP → drone | `run_all_model2` |
+| [`model2_dmdc_lqr_mpc/`](model2_dmdc_lqr_mpc/) | Image 2: flight data → DMDc → Bellman / LQR / Riccati / DARE and MPC / QP → drone → EKF state estimation (block 11) back to the controllers | `run_all_model2` |
 
 Steps can also be run one at a time, in order, because each step loads what the previous one saved. `results_log.txt` in each folder holds the complete printed output of the last full run.
 

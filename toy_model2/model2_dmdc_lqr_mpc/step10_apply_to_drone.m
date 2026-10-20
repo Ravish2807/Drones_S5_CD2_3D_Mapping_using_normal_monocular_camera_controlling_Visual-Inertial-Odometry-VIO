@@ -10,6 +10,10 @@
 % In the project: the controllers were designed on a LEARNED LINEAR model.
 % This step checks that they still work on the real (nonlinear, gusty,
 % motor-limited) drone.
+%
+% Note: here the controllers are given the TRUE state plus a little noise, as if a
+% perfect state sensor existed. Step 11 removes this shortcut: an EKF builds the
+% state from camera pixels and the gyroscope, and the controllers fly on that estimate.
 
 clc; clear; close all;
 here = fileparts(mfilename('fullpath')); if isempty(here), here = pwd; end
