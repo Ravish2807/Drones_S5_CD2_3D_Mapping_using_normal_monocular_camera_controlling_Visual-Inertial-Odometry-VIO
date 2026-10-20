@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Drones Controller Architecture Flowchart</title>
+<title>Drones Controller Architecture Flowchart - Canva Slide</title>
 <style>
   * {
     box-sizing: border-box;
@@ -16,7 +16,7 @@
     height: 1080px;
     background: #F8FAFC;
     color: #0F172A;
-    padding: 10px 16px;
+    padding: 8px 14px;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
@@ -35,7 +35,7 @@
     z-index: 100;
   }
 
-  /* Header Bar */
+  /* 1. Header Bar */
   .header-bar {
     display: flex;
     justify-content: space-between;
@@ -45,9 +45,10 @@
     border-radius: 8px;
     padding: 6px 16px;
     box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+    height: 52px;
   }
   .title-group h1 {
-    font-size: 19px;
+    font-size: 20px;
     font-weight: 800;
     color: #0F172A;
     letter-spacing: -0.3px;
@@ -56,9 +57,9 @@
     gap: 8px;
   }
   .title-group p {
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 600;
-    color: #64748B;
+    color: #475569;
     margin-top: 1px;
   }
   .legend-strip {
@@ -68,38 +69,39 @@
     background: #F1F5F9;
     padding: 4px 12px;
     border-radius: 6px;
-    border: 1px solid #E2E8F0;
+    border: 1px solid #CBD5E1;
   }
   .leg-item {
     display: flex;
     align-items: center;
-    gap: 5px;
-    font-size: 10px;
+    gap: 6px;
+    font-size: 11px;
     font-weight: 700;
-    color: #334155;
+    color: #1E293B;
   }
   .dot {
-    width: 10px;
-    height: 10px;
+    width: 11px;
+    height: 11px;
     border-radius: 3px;
   }
 
-  /* Deploy Strip */
+  /* 2. Deploy Strip */
   .deploy-strip {
     background: #FFFFFF;
     border: 1.5px solid #CBD5E1;
-    border-left: 5px solid #475569;
+    border-left: 5px solid #334155;
     border-radius: 8px;
-    padding: 5px 12px;
+    padding: 4px 12px;
     display: flex;
     align-items: center;
     gap: 8px;
     box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+    height: 48px;
   }
   .deploy-title {
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 800;
-    color: #334155;
+    color: #1E293B;
     text-transform: uppercase;
     letter-spacing: 0.5px;
     white-space: nowrap;
@@ -115,29 +117,30 @@
     gap: 1px;
   }
   .deploy-step .s-head {
-    font-size: 10.5px;
+    font-size: 11.5px;
     font-weight: 700;
     color: #0F172A;
   }
   .deploy-step .s-body {
-    font-size: 9px;
-    color: #475569;
+    font-size: 10px;
+    color: #334155;
     font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-weight: 600;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
   }
   .step-arrow {
-    color: #94A3B8;
+    color: #64748B;
     font-weight: 800;
-    font-size: 11px;
+    font-size: 12px;
   }
 
-  /* Main Pipeline Grid: 5 Horizontal Functional Columns */
+  /* 3. Main Pipeline Horizontal Grid */
   .pipeline-grid {
     display: grid;
-    grid-template-columns: 215px 235px 745px 235px 270px;
-    gap: 22px;
+    grid-template-columns: 230px 245px 785px 245px 285px;
+    gap: 20px;
     height: 810px;
     position: relative;
     z-index: 10;
@@ -150,12 +153,13 @@
     padding: 7px;
     display: flex;
     flex-direction: column;
-    gap: 7px;
+    justify-content: space-between;
     box-shadow: 0 1px 3px rgba(0,0,0,0.03);
     position: relative;
+    overflow: hidden;
   }
   .col-header {
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 800;
     text-transform: uppercase;
     letter-spacing: 0.5px;
@@ -164,8 +168,9 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+    margin-bottom: 2px;
   }
-  .header-blue { background: #E0E7FF; color: #3730A3; border: 1px solid #C7D2FE; }
+  .header-blue { background: #DBEAFE; color: #1E40AF; border: 1px solid #BFDBFE; }
   .header-cyan { background: #CFFAFE; color: #0E7490; border: 1px solid #A5F3FC; }
   .header-amber { background: #FEF3C7; color: #92400E; border: 1px solid #FDE68A; }
   .header-teal { background: #CCFBF1; color: #0F766E; border: 1px solid #99F6E4; }
@@ -175,51 +180,53 @@
     background: #FFFFFF;
     border: 1.5px solid #CBD5E1;
     border-radius: 6px;
-    padding: 6px 8px;
+    padding: 6px 9px;
     box-shadow: 0 1px 2px rgba(0,0,0,0.02);
     display: flex;
     flex-direction: column;
+    justify-content: flex-start;
     gap: 3px;
     position: relative;
+    overflow: hidden;
   }
   .card-head {
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 700;
     display: flex;
     justify-content: space-between;
     align-items: center;
   }
   .card-body {
-    font-size: 9.5px;
-    color: #334155;
-    line-height: 1.35;
+    font-size: 11px;
+    color: #1E293B;
+    line-height: 1.36;
   }
   .card-body code {
     background: #F1F5F9;
-    padding: 1px 3px;
+    padding: 1px 4px;
     border-radius: 3px;
     font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-    font-size: 9px;
-    font-weight: 600;
+    font-size: 10px;
+    font-weight: 700;
     color: #0F172A;
   }
   .tag {
-    font-size: 8.5px;
+    font-size: 9px;
     font-weight: 800;
-    padding: 1px 4px;
+    padding: 1px 5px;
     border-radius: 3px;
     text-transform: uppercase;
   }
 
   /* Color themes */
-  .theme-blue { border-left: 4px solid #3B82F6; background: #F8FAFC; }
-  .theme-cyan { border-left: 4px solid #06B6D4; background: #F8FAFC; }
-  .theme-green { border-left: 4px solid #10B981; background: #F0FDF4; }
-  .theme-orange { border-left: 4px solid #F97316; background: #FFF7ED; }
-  .theme-purple { border-left: 4px solid #8B5CF6; background: #F5F3FF; }
-  .theme-amber { border-left: 4px solid #F59E0B; background: #FFFBEB; }
-  .theme-red { border-left: 4px solid #EF4444; background: #FEF2F2; }
-  .theme-teal { border-left: 4px solid #0D9488; background: #F0FDFA; }
+  .theme-blue { border-left: 4.5px solid #2563EB; background: #F8FAFC; }
+  .theme-cyan { border-left: 4.5px solid #0891B2; background: #F8FAFC; }
+  .theme-green { border-left: 4.5px solid #059669; background: #F0FDF4; }
+  .theme-orange { border-left: 4.5px solid #D97706; background: #FFFBEB; }
+  .theme-purple { border-left: 4.5px solid #7C3AED; background: #F5F3FF; }
+  .theme-amber { border-left: 4.5px solid #D97706; background: #FFFBEB; }
+  .theme-red { border-left: 4.5px solid #DC2626; background: #FEF2F2; }
+  .theme-teal { border-left: 4.5px solid #0D9488; background: #F0FDFA; }
 
   /* Decision diamond containers */
   .decision-box {
@@ -234,12 +241,12 @@
     align-items: center;
   }
   .decision-title {
-    font-size: 11px;
+    font-size: 12.5px;
     font-weight: 800;
     color: #92400E;
   }
   .decision-sub {
-    font-size: 9px;
+    font-size: 10px;
     font-weight: 600;
     color: #B45309;
   }
@@ -248,8 +255,9 @@
   .controllers-col {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    justify-content: space-between;
     height: 100%;
+    overflow: hidden;
   }
   .controller-track {
     background: #FFFFFF;
@@ -258,55 +266,63 @@
     padding: 6px 8px;
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    justify-content: space-between;
     box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+    overflow: hidden;
   }
   .track-head {
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 800;
     padding: 3px 8px;
     border-radius: 4px;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    height: 24px;
+    margin-bottom: 4px;
   }
   .track-row {
     display: flex;
     gap: 16px;
     align-items: stretch;
-    height: 100%;
     position: relative;
+    flex: 1;
+    overflow: hidden;
   }
   .track-step {
     flex: 1;
     background: #FFFFFF;
-    border: 1px solid #CBD5E1;
+    border: 1.2px solid #CBD5E1;
     border-radius: 5px;
-    padding: 5px 6px;
+    padding: 5px 7px;
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
+    justify-content: flex-start;
+    gap: 4px;
     position: relative;
+    overflow: hidden;
   }
   .t-step-title {
-    font-size: 10px;
-    font-weight: 700;
+    font-size: 11.5px;
+    font-weight: 800;
     color: #0F172A;
-    margin-bottom: 2px;
+    border-bottom: 1px solid #E2E8F0;
+    padding-bottom: 2px;
   }
   .t-step-body {
-    font-size: 9px;
-    color: #334155;
-    line-height: 1.35;
+    font-size: 10.5px;
+    color: #1E293B;
+    line-height: 1.38;
   }
   .t-step-body code {
-    font-size: 8.5px;
+    font-size: 10px;
     background: #F1F5F9;
-    padding: 1px 3px;
+    padding: 1px 4px;
     border-radius: 2px;
+    font-weight: 700;
   }
 
-  /* Bottom Row: Where It Is Used */
+  /* 4. Bottom Row: Where It Is Used */
   .bottom-strip {
     background: #FFFFFF;
     border: 1.5px solid #CBD5E1;
@@ -317,9 +333,10 @@
     justify-content: space-between;
     align-items: center;
     box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+    height: 52px;
   }
   .bottom-left h3 {
-    font-size: 11.5px;
+    font-size: 12px;
     font-weight: 800;
     color: #0F766E;
     margin-bottom: 2px;
@@ -328,9 +345,9 @@
     gap: 6px;
   }
   .bottom-left p {
-    font-size: 10px;
+    font-size: 10.5px;
     font-weight: 500;
-    color: #334155;
+    color: #1E293B;
     line-height: 1.35;
   }
   .end-pill {
@@ -338,12 +355,13 @@
     color: #FFFFFF;
     font-size: 12px;
     font-weight: 800;
-    padding: 8px 18px;
+    padding: 7px 18px;
     border-radius: 20px;
     letter-spacing: 1px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
   }
 
-  /* Metrics Footer */
+  /* 5. Metrics Footer */
   .metrics-strip {
     display: flex;
     justify-content: space-between;
@@ -352,11 +370,12 @@
     color: #F8FAFC;
     padding: 5px 16px;
     border-radius: 6px;
-    font-size: 10px;
+    font-size: 10.5px;
     font-weight: 600;
+    height: 32px;
   }
-  .m-pass { color: #34D399; font-weight: 700; }
-  .m-val { color: #38BDF8; font-weight: 700; }
+  .m-pass { color: #34D399; font-weight: 800; }
+  .m-val { color: #38BDF8; font-weight: 800; }
 </style>
 </head>
 <body>
@@ -364,26 +383,26 @@
   <!-- DYNAMIC SVG LAYER -->
   <svg id="arrow-svg" viewBox="0 0 1920 1080">
     <defs>
-      <marker id="m-gray" markerWidth="7" markerHeight="5" refX="6" refY="2.5" orient="auto">
-        <polygon points="0 0, 7 2.5, 0 5" fill="#64748B" />
+      <marker id="m-gray" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+        <polygon points="0 0, 8 3, 0 6" fill="#64748B" />
       </marker>
-      <marker id="m-blue" markerWidth="7" markerHeight="5" refX="6" refY="2.5" orient="auto">
-        <polygon points="0 0, 7 2.5, 0 5" fill="#2563EB" />
+      <marker id="m-blue" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+        <polygon points="0 0, 8 3, 0 6" fill="#2563EB" />
       </marker>
-      <marker id="m-green" markerWidth="7" markerHeight="5" refX="6" refY="2.5" orient="auto">
-        <polygon points="0 0, 7 2.5, 0 5" fill="#059669" />
+      <marker id="m-green" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+        <polygon points="0 0, 8 3, 0 6" fill="#059669" />
       </marker>
-      <marker id="m-orange" markerWidth="7" markerHeight="5" refX="6" refY="2.5" orient="auto">
-        <polygon points="0 0, 7 2.5, 0 5" fill="#D97706" />
+      <marker id="m-orange" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+        <polygon points="0 0, 8 3, 0 6" fill="#D97706" />
       </marker>
-      <marker id="m-purple" markerWidth="7" markerHeight="5" refX="6" refY="2.5" orient="auto">
-        <polygon points="0 0, 7 2.5, 0 5" fill="#7C3AED" />
+      <marker id="m-purple" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+        <polygon points="0 0, 8 3, 0 6" fill="#7C3AED" />
       </marker>
-      <marker id="m-red" markerWidth="7" markerHeight="5" refX="6" refY="2.5" orient="auto">
-        <polygon points="0 0, 7 2.5, 0 5" fill="#DC2626" />
+      <marker id="m-red" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+        <polygon points="0 0, 8 3, 0 6" fill="#DC2626" />
       </marker>
-      <marker id="m-teal" markerWidth="7" markerHeight="5" refX="6" refY="2.5" orient="auto">
-        <polygon points="0 0, 7 2.5, 0 5" fill="#0D9488" />
+      <marker id="m-teal" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+        <polygon points="0 0, 8 3, 0 6" fill="#0D9488" />
       </marker>
     </defs>
     <!-- Paths and badges injected dynamically by JS -->
@@ -448,7 +467,7 @@
       </div>
 
       <!-- Vehicle State -->
-      <div class="card theme-blue" id="c1_veh" style="height:140px;">
+      <div class="card theme-blue" id="c1_veh" style="height:175px;">
         <div class="card-head">
           <span style="color:#1E40AF;">📡 Vehicle State (DDS)</span>
           <span class="tag" style="background:#DBEAFE;color:#1E40AF;">Sensor</span>
@@ -458,46 +477,55 @@
           &nbsp;&nbsp;Pos <i>[x, y, z]</i> &bull; Quat <i>[qx, qy, qz, qw]</i><br/>
           • <code>/ap/twist</code> (FLU Body @ 50 Hz)<br/>
           &nbsp;&nbsp;Linear <i>[vx, vy, vz]</i> &bull; Angular <i>[p, q, r]</i><br/>
-          • <code>/ap/v1/status</code> (Armed, Guided, EKF3)
+          • <code>/ap/v1/status</code> (10 Hz)<br/>
+          &nbsp;&nbsp;Armed flag, GUIDED mode, EKF3 health
         </div>
       </div>
 
       <!-- Pilot Teleop -->
-      <div class="card theme-blue" id="c1_tel" style="height:135px;">
+      <div class="card theme-blue" id="c1_tel" style="height:175px;">
         <div class="card-head">
           <span style="color:#1E40AF;">🎮 Pilot Teleop (Gamepad)</span>
           <span class="tag" style="background:#DBEAFE;color:#1E40AF;">Manual</span>
         </div>
         <div class="card-body">
-          • 8BitDo gamepad ➔ <code>teleop_cmd</code><br/>
-          • Axes: <i>Vx, Vy, Vz</i> (0.5..2.0 m/s), <i>yaw_rate</i><br/>
-          • Buttons: <b>Y</b>=GUIDED, <b>A</b>=ARM,<br/>
-          &nbsp;&nbsp;<b>X</b>=TAKEOFF 5M, <b>B</b>=BRAKE/HOVER
+          • 8BitDo gamepad ➔ <code>teleop_cmd</code> (50 Hz)<br/>
+          • Velocity axes: <i>Vx, Vy, Vz</i> (0.5..2.0 m/s)<br/>
+          • Yaw rate control: <i>&psi;&#775;</i> (0.5 rad/s)<br/>
+          • Flight buttons:<br/>
+          &nbsp;&nbsp;<b>Y</b>=GUIDED &bull; <b>A</b>=ARM &bull; <b>X</b>=TAKEOFF 5M<br/>
+          &nbsp;&nbsp;<b>B</b>=BRAKE/HOVER &bull; <b>LB/RB</b>=Speed toggle
         </div>
       </div>
 
       <!-- Mission Targets -->
-      <div class="card theme-blue" id="c1_mis" style="height:135px;">
+      <div class="card theme-blue" id="c1_mis" style="height:170px;">
         <div class="card-head">
           <span style="color:#1E40AF;">🎯 Mission Targets</span>
           <span class="tag" style="background:#DBEAFE;color:#1E40AF;">Auto</span>
         </div>
         <div class="card-body">
-          • Web UI at <code>http://localhost:8000</code><br/>
-          • Setpoint: <code>/target_pose</code><br/>
-          • Flight Services:<br/>
-          &nbsp;&nbsp;<code>/ap/arm_motors</code>, <code>/ap/takeoff</code>
+          • Web Dashboard at <code>http://localhost:8000</code><br/>
+          • 3D Waypoint setpoint: <code>/target_pose</code><br/>
+          • Asynchronous ROS 2 Service clients:<br/>
+          &nbsp;&nbsp;<code>/ap/arm_motors</code> (Motor arming)<br/>
+          &nbsp;&nbsp;<code>/ap/takeoff</code> (Autonomous 5.0m climb)<br/>
+          &nbsp;&nbsp;<code>/ap/mode_switch</code> (MAVLink modes)
         </div>
       </div>
 
       <!-- YAML & Camera -->
-      <div class="card theme-blue" id="c1_cfg" style="flex:1;">
+      <div class="card theme-blue" id="c1_cfg" style="height:165px;">
         <div class="card-head">
           <span style="color:#1E40AF;">⚙️ Config & Payload</span>
+          <span class="tag" style="background:#DBEAFE;color:#1E40AF;">YAML / CV</span>
         </div>
         <div class="card-body">
-          • <code>controller.yaml</code>: mass 1.5kg, Kp, Kv, vmax 1.0m/s, tilt ≤ 20°<br/>
-          • <code>/camera/image_raw</code> (640x480 RGB @ 30 FPS via ros_gz_bridge)
+          • <code>controller.yaml</code>: mass <i>m=1.5 kg</i>, <i>v<sub>max</sub>=1.0 m/s</i><br/>
+          &nbsp;&nbsp;Gains: <i>K<sub>p</sub>, K<sub>v</sub>, K<sub>R</sub>, K<sub>&Omega;</sub></i> &bull; Tilt limit &le; 20°<br/>
+          • <code>vehicle.yaml</code>: Inertia <i>J=diag(0.02, 0.02, 0.04)</i><br/>
+          • <code>/camera/image_raw</code>: 640&times;480 RGB @ 30 FPS<br/>
+          • Gimbal: -45° downward view via <code>ros_gz_bridge</code>
         </div>
       </div>
     </div>
@@ -510,61 +538,63 @@
       </div>
 
       <!-- ArduPilotInterface -->
-      <div class="card theme-cyan" id="c2_api" style="height:95px;">
+      <div class="card theme-cyan" id="c2_api" style="height:130px;">
         <div class="card-head">
           <span style="color:#0E7490;">🔌 ArduPilotInterface</span>
           <span class="tag" style="background:#CFFAFE;color:#0E7490;">50 Hz</span>
         </div>
         <div class="card-body">
-          • Subscribes DDS pose, twist, status<br/>
-          • Enforces timeout check (dt &lt; 0.20s)<br/>
-          • Publishes body velocity commands
+          • Subscribes DDS pose, twist, status topics<br/>
+          • Strict watchdog check: <i>&Delta;t &lt; 0.20s</i> timeout<br/>
+          • Publishes body velocity commands to AP_DDS<br/>
+          • Isolates transport from flight algorithms
         </div>
       </div>
 
-      <!-- State Valid? and Skip Cycle side-by-side to eliminate crossing! -->
-      <div style="display:flex;gap:6px;align-items:stretch;height:58px;">
-        <div class="decision-box" id="c2_val" style="flex:1.2;">
+      <!-- State Valid? and Skip Cycle side-by-side with 16px gap for arrow -->
+      <div style="display:flex;gap:16px;align-items:stretch;height:75px;">
+        <div class="decision-box" id="c2_val" style="flex:1.15;">
           <div class="decision-title">State Valid?</div>
           <div class="decision-sub">pos != NaN/Inf & dt &lt; 0.2s</div>
         </div>
-        <div class="card theme-red" id="c2_skp" style="flex:0.85;background:#FEF2F2;padding:4px 6px;">
-          <div style="font-size:9.5px;font-weight:700;color:#991B1B;">⚠️ Skip Cycle</div>
-          <div style="font-size:8.5px;color:#7F1D1D;">Log WARN & zero cmd</div>
+        <div class="card theme-red" id="c2_skp" style="flex:0.85;background:#FEF2F2;padding:6px;">
+          <div style="font-size:11px;font-weight:800;color:#991B1B;">⚠️ Skip Cycle</div>
+          <div style="font-size:10px;color:#7F1D1D;line-height:1.3;">Log WARN error & zero all flight commands</div>
         </div>
       </div>
 
       <!-- State Adapter -->
-      <div class="card theme-cyan" id="c2_ada" style="height:110px;">
+      <div class="card theme-cyan" id="c2_ada" style="height:140px;">
         <div class="card-head">
           <span style="color:#0E7490;">🔄 State Adapter</span>
           <span class="tag" style="background:#CFFAFE;color:#0E7490;">Lie SO(3)</span>
         </div>
         <div class="card-body">
-          • Quat ➔ SO(3) matrix <i>R &isin; &real;<sup>3&times;3</sup></i><br/>
-          • Frame: ENU (map) &harr; FLU (body)<br/>
-          • Lie algebra: <code>so3_exp</code> &bull; <code>so3_log</code><br/>
-          • Current yaw: <i>&psi; = atan2(R<sub>10</sub>, R<sub>00</sub>)</i>
+          • Converts Quat ➔ SO(3) matrix <i>R &isin; &real;<sup>3&times;3</sup></i><br/>
+          • Lie algebra: <code>so3_exp</code> &bull; <code>so3_log</code> map<br/>
+          • Coordinate transform: ENU map &harr; FLU body<br/>
+          • Current heading: <i>&psi; = atan2(R<sub>10</sub>, R<sub>00</sub>)</i>
         </div>
       </div>
 
       <!-- Target Manager -->
-      <div class="card theme-cyan" id="c2_tgt" style="height:120px;">
+      <div class="card theme-cyan" id="c2_tgt" style="height:145px;">
         <div class="card-head">
           <span style="color:#0E7490;">🎯 Target Manager</span>
           <span class="tag" style="background:#CFFAFE;color:#0E7490;">Arbiter</span>
         </div>
         <div class="card-body">
-          • Inputs: teleop_cmd, waypoint, YAML<br/>
-          • State: <i>p<sub>d</sub>, v<sub>d</sub>, a<sub>d</sub>, &psi;&#775;<sub>d</sub></i><br/>
-          • Auto position hold lock when sticks centered
+          • Integrator: blends teleop sticks with waypoints<br/>
+          • Generates full target state: <i>p<sub>d</sub>, v<sub>d</sub>, a<sub>d</sub>, &psi;&#775;<sub>d</sub></i><br/>
+          • Automatic Position Hold lock when sticks centered<br/>
+          • Jerk-limited kinematic trajectory smoothing
         </div>
       </div>
 
       <!-- Which Controller? Decision -->
-      <div class="decision-box" id="c2_dec" style="flex:1;min-height:70px;">
-        <div class="decision-title">Which Controller?</div>
-        <div class="decision-sub">Launch arg: <code>model:=0|1|2</code></div>
+      <div class="decision-box" id="c2_dec" style="height:105px;">
+        <div class="decision-title" style="font-size:13.5px;">Which Controller?</div>
+        <div class="decision-sub" style="font-size:11px;margin-top:3px;">Command-line launch argument:<br/><code>ros2 launch ... model:=0 | 1 | 2</code></div>
       </div>
     </div>
 
@@ -572,7 +602,7 @@
     <div class="controllers-col">
 
       <!-- TRACK 1: BASELINE SO(3) -->
-      <div class="controller-track" id="m0_track" style="height:235px;border-left:5px solid #059669;background:#F0FDF4;">
+      <div class="controller-track" id="m0_track" style="height:245px;border-left:5px solid #059669;background:#F0FDF4;">
         <div class="track-head" style="background:#DCFCE7;color:#166534;border:1px solid #BBF7D0;">
           <span>🟢 0 · BASELINE SO(3) CASCADED CONTROLLER (<code>controller_node.py</code>)</span>
           <span class="tag" style="background:#059669;color:#FFFFFF;">50 Hz Real-Time</span>
@@ -581,43 +611,54 @@
           <div class="track-step" id="m0_s1">
             <div class="t-step-title">1. Outer Loop PID</div>
             <div class="t-step-body">
-              <i>e<sub>p</sub> = p<sub>d</sub> - p</i><br/>
-              <i>e<sub>v</sub> = v<sub>d</sub> - v</i><br/>
+              <b>Position & Velocity Error:</b><br/>
+              <i>e<sub>p</sub> = p<sub>d</sub> - p &bull; e<sub>v</sub> = v<sub>d</sub> - v</i><br/>
+              <b>Desired Acceleration:</b><br/>
               <i>a<sub>d</sub> = p&#776;<sub>d</sub> + K<sub>p</sub>e<sub>p</sub> + K<sub>v</sub>e<sub>v</sub></i><br/>
-              <code>clamp(a_d, vmax=1.0m/s)</code>
+              <code>v_cmd = clamp(a_d, vmax=1.0m/s)</code><br/>
+              Gains: <i>K<sub>p</sub>=[4.5, 4.5, 6.0], K<sub>v</sub>=[3.0, 3.0, 4.0]</i>
             </div>
           </div>
           <div class="track-step" id="m0_s2">
             <div class="t-step-title">2. Attitude Generator</div>
             <div class="t-step-body">
-              <i>F<sub>d</sub> = m(a<sub>d</sub> - g)</i><br/>
-              Thrust axis: <i>b<sub>3d</sub> = F<sub>d</sub> / ||F<sub>d</sub>||</i><br/>
+              <b>Desired Total Force Vector:</b><br/>
+              <i>F<sub>d</sub> = m(a<sub>d</sub> - g e<sub>3</sub>) &bull; ||F<sub>d</sub>||</i><br/>
+              <b>Thrust Unit Direction:</b><br/>
+              <i>b<sub>3d</sub> = F<sub>d</sub> / ||F<sub>d</sub>||</i><br/>
+              <b>Desired Rotation Matrix:</b><br/>
               <i>R<sub>d</sub> = [b<sub>1d</sub>, b<sub>2d</sub>, b<sub>3d</sub>] &isin; SO(3)</i><br/>
-              Converts to desired quat <i>q<sub>d</sub></i>
+              Calculates desired orientation quat <i>q<sub>d</sub></i>
             </div>
           </div>
           <div class="track-step" id="m0_s3">
             <div class="t-step-title">3. SO(3) Inner Loop</div>
             <div class="t-step-body">
-              <i>e<sub>R</sub> = &frac12;(R<sub>d</sub><sup>T</sup>R - R<sup>T</sup>R<sub>d</sub>)<sup>&or;</sup></i><br/>
+              <b>Manifold Attitude Error:</b><br/>
+              <i>e<sub>R</sub> = &frac12;(R<sub>d</sub><sup>T</sup>R - R<sup>T</sup>R<sub>d</sub>)<sup>&or;</sup> &isin; &real;<sup>3</sup></i><br/>
+              <b>Angular Rate Error:</b><br/>
               <i>e<sub>&omega;</sub> = &omega; - R<sup>T</sup>R<sub>d</sub>&omega;<sub>d</sub></i><br/>
-              Torque: <i>&tau; = -K<sub>R</sub>e<sub>R</sub> - K<sub>&Omega;</sub>e<sub>&omega;</sub></i><br/>
-              Geometric tracking on manifold
+              <b>Control Torque Synthesis:</b><br/>
+              <i>&tau; = -K<sub>R</sub>e<sub>R</sub> - K<sub>&Omega;</sub>e<sub>&omega;</sub> + &omega;&times;J&omega;</i><br/>
+              Global exponential tracking on SO(3)
             </div>
           </div>
           <div class="track-step" id="m0_out" style="background:#DCFCE7;border-color:#86EFAC;">
             <div class="t-step-title" style="color:#166534;">4. Output Synthesis</div>
             <div class="t-step-body">
-              Publish body velocity command<br/>
-              <code>/ap/cmd_vel</code> @ 50 Hz<br/>
-              Telemetry: <i>e<sub>p</sub>, e<sub>v</sub>, e<sub>R</sub>, &tau;</i>
+              <b>Publish Velocity Command:</b><br/>
+              <code>/ap/cmd_vel</code> @ 50 Hz TwistStamped<br/>
+              <b>Real-Time Diagnostics:</b><br/>
+              Telemetry: <i>e<sub>p</sub>, e<sub>v</sub>, e<sub>R</sub>, &tau;, thrust</i><br/>
+              Active model ID: <code>BASELINE_SO3</code><br/>
+              Zero gimbal lock singularity up to 90°
             </div>
           </div>
         </div>
       </div>
 
       <!-- TRACK 2: MODEL 1 (ERROR-STATE EKF + GEOMETRIC SO3) -->
-      <div class="controller-track" id="m1_track" style="height:250px;border-left:5px solid #D97706;background:#FFFBEB;">
+      <div class="controller-track" id="m1_track" style="height:255px;border-left:5px solid #D97706;background:#FFFBEB;">
         <div class="track-head" style="background:#FEF3C7;color:#92400E;border:1px solid #FDE68A;">
           <span>🟠 MODEL 1 · ERROR-STATE EKF + GEOMETRIC SO(3) (<code>model1_so3_controller.py</code>)</span>
           <span class="tag" style="background:#D97706;color:#FFFFFF;">50 Hz Real-Time</span>
@@ -626,49 +667,63 @@
           <div class="track-step" id="m1_s1">
             <div class="t-step-title">1. Error-State EKF</div>
             <div class="t-step-body">
-              12-State &delta;x = [&delta;p, &delta;v, &delta;&theta;, &delta;&omega;]<sup>T</sup><br/>
-              Manifold: <i>R &larr; R &bull; Exp(&delta;&theta;)</i><br/>
-              Joseph: <i>(I-KH)P(I-KH)<sup>T</sup> + KRK<sup>T</sup></i><br/>
-              Sensor noise & bias rejection
+              <b>12-State Lie Manifold:</b><br/>
+              <i>&delta;x = [&delta;p, &delta;v, &delta;&theta;, &delta;&omega;]<sup>T</sup> &isin; &real;<sup>12</sup></i><br/>
+              <b>On-Manifold Retraction:</b><br/>
+              <i>R &larr; R &bull; Exp(&delta;&theta;)</i> (Lie group)<br/>
+              <b>Joseph Covariance Update:</b><br/>
+              <i>P &larr; (I-KH)P(I-KH)<sup>T</sup> + KRK<sup>T</sup></i><br/>
+              Rejects IMU noise & sensor bias
             </div>
           </div>
           <div class="track-step" id="m1_s2">
             <div class="t-step-title">2. Outer Position Loop</div>
             <div class="t-step-body">
-              Runs on estimator state: <i>p&#770;, v&#770;</i><br/>
+              <b>Filtered State Feedback:</b><br/>
+              Runs on estimator: <i>p&#770;, v&#770;</i><br/>
               <i>e<sub>p</sub> = p<sub>d</sub> - p&#770; &bull; e<sub>v</sub> = v<sub>d</sub> - v&#770;</i><br/>
-              <i>a<sub>d</sub> = p&#776;<sub>d</sub> + K<sub>p</sub>e<sub>p</sub> + K<sub>v</sub>e<sub>v</sub></i>
+              <b>Stabilized Acceleration:</b><br/>
+              <i>a<sub>d</sub> = p&#776;<sub>d</sub> + K<sub>p</sub>e<sub>p</sub> + K<sub>v</sub>e<sub>v</sub></i><br/>
+              Robust against noisy odometry
             </div>
           </div>
           <div class="track-step" id="m1_s3">
             <div class="t-step-title">3. Attitude Generator</div>
             <div class="t-step-body">
-              <i>F<sub>d</sub> = m(a<sub>d</sub> - g)</i><br/>
-              <i>b<sub>3d</sub> = F<sub>d</sub> / ||F<sub>d</sub>||</i> &bull; <i>R<sub>d</sub> &isin; SO(3)</i><br/>
-              Collective thrust: <i>T = F<sub>d</sub> &bull; (R e<sub>3</sub>)</i>
+              <b>Force Vector Synthesis:</b><br/>
+              <i>F<sub>d</sub> = m(a<sub>d</sub> - g e<sub>3</sub>)</i><br/>
+              <i>b<sub>3d</sub> = F<sub>d</sub> / ||F<sub>d</sub>|| &bull; R<sub>d</sub> &isin; SO(3)</i><br/>
+              <b>Collective Net Thrust:</b><br/>
+              <i>T = F<sub>d</sub> &bull; (R e<sub>3</sub>)</i><br/>
+              Dynamic feedforward compensation
             </div>
           </div>
           <div class="track-step" id="m1_s4">
             <div class="t-step-title">4. SO(3) Geometric</div>
             <div class="t-step-body">
+              <b>Manifold Tracking Error:</b><br/>
               <i>e<sub>R</sub> = &frac12;(R<sub>d</sub><sup>T</sup>R - R<sup>T</sup>R<sub>d</sub>)<sup>&or;</sup></i><br/>
+              <b>Attitude Control Law:</b><br/>
               <i>&tau; = -K<sub>R</sub>e<sub>R</sub> - K<sub>&Omega;</sub>e<sub>&omega;</sub> + &omega;&times;J&omega;</i><br/>
-              Singularity-free >90° tilt
+              Singularity-free >90° agile aerobatics<br/>
+              Lie group error: <i>&lt; 10⁻¹⁶</i>
             </div>
           </div>
           <div class="track-step" id="m1_out" style="background:#FEF3C7;border-color:#FDE68A;">
             <div class="t-step-title" style="color:#92400E;">5. Output Synthesis</div>
             <div class="t-step-body">
+              <b>Publish Velocity Cmd:</b><br/>
               <code>/ap/v1/cmd_vel</code> @ 50 Hz<br/>
               <code>controller_type = MODEL_1</code><br/>
-              Full EKF covariance broadcast
+              <b>Covariance Diagnostics:</b><br/>
+              Full 12x12 state covariance matrix & estimator innovations broadcast
             </div>
           </div>
         </div>
       </div>
 
       <!-- TRACK 3: MODEL 2 (DMDC + LQR / MPC) -->
-      <div class="controller-track" id="m2_track" style="flex:1;border-left:5px solid #7C3AED;background:#F5F3FF;">
+      <div class="controller-track" id="m2_track" style="height:275px;border-left:5px solid #7C3AED;background:#F5F3FF;">
         <div class="track-head" style="background:#EDE9FE;color:#5B21B6;border:1px solid #DDD6FE;">
           <span>🟣 MODEL 2 · DMDC DATA-DRIVEN SYSTEM ID + OPTIMAL CONTROL (<code>model2_dmdc_controller.py</code>)</span>
           <span class="tag" style="background:#7C3AED;color:#FFFFFF;">25 Hz Real-Time</span>
@@ -677,48 +732,62 @@
           <div class="track-step" id="m2_s1">
             <div class="t-step-title">1. State Deviation</div>
             <div class="t-step-body">
+              <b>12-State Deviation:</b><br/>
               <i>x<sub>k</sub> = [p-p<sub>d</sub>; v; Log(R); &omega;] &isin; &real;<sup>12</sup></i><br/>
+              <b>Control Deviation:</b><br/>
               <i>u<sub>k</sub> = [T-mg<sub>0</sub>; &tau;] &isin; &real;<sup>4</sup></i><br/>
-              Trim: <i>mg<sub>0</sub> = 14.7 N</i>
+              Hover equilibrium: <i>mg<sub>0</sub> = 14.7 N</i><br/>
+              Online rolling trajectory buffer
             </div>
           </div>
           <div class="track-step" id="m2_s2">
             <div class="t-step-title">2. DMDc System ID</div>
             <div class="t-step-body">
+              <b>Snapshot Regression:</b><br/>
               <i>[A B] = X<sup>+</sup> [X; U]<sup>&dagger;</sup></i><br/>
-              Online snapshot regression<br/>
-              Blended with hover prior
+              <b>Rank Truncation:</b> SVD <i>r=8</i><br/>
+              <b>Prior Blending:</b><br/>
+              <i>A = &alpha; A<sub>id</sub> + (1-&alpha;) A<sub>phys</sub></i><br/>
+              Adapts to payload & wind
             </div>
           </div>
-          <div class="track-step" id="m2_opt" style="flex:1.2;background:#FFFFFF;">
+          <div class="track-step" id="m2_opt" style="flex:1.3;background:#FFFFFF;">
             <div class="t-step-title" style="text-align:center;">3. Optimal Synthesis (LQR / MPC)</div>
-            <div style="display:flex;gap:4px;margin-top:2px;">
-              <div id="m2_lqr" style="flex:1;background:#F5F3FF;border:1px solid #DDD6FE;border-radius:4px;padding:3px;font-size:9px;">
-                <b>LQR (Infinite)</b><br/>
-                DARE: <i>P = A<sup>T</sup>PA + Q</i><br/>
-                <i>u = -K x<sub>k</sub></i>
+            <div style="display:flex;gap:5px;margin-top:2px;flex:1;overflow:hidden;">
+              <div id="m2_lqr" style="flex:1;background:#F5F3FF;border:1px solid #DDD6FE;border-radius:4px;padding:3px 5px;font-size:9.5px;line-height:1.35;overflow:hidden;">
+                <b style="color:#6D28D9;">LQR (Infinite)</b><br/>
+                DARE Riccati Equation:<br/>
+                <i>P = A<sup>T</sup>PA + Q</i><br/>
+                Gain: <i>K &isin; &real;<sup>4&times;12</sup></i><br/>
+                <i>u* = -K x<sub>k</sub></i> (tol: 5.2e-8)
               </div>
-              <div id="m2_mpc" style="flex:1;background:#F5F3FF;border:1px solid #DDD6FE;border-radius:4px;padding:3px;font-size:9px;">
-                <b>MPC (Receding)</b><br/>
-                N=25 (1.0s), OSQP solver<br/>
-                <i>5N &le; T &le; 25N</i> (0.42 ms)
+              <div id="m2_mpc" style="flex:1;background:#F5F3FF;border:1px solid #DDD6FE;border-radius:4px;padding:3px 5px;font-size:9.5px;line-height:1.35;overflow:hidden;">
+                <b style="color:#6D28D9;">MPC (Receding)</b><br/>
+                Horizon: <i>N=25</i> (1.0s)<br/>
+                OSQP QP Solver:<br/>
+                Solve: <b>0.42 ms</b> real-time<br/>
+                <i>5N &le; T &le; 25N &bull; |&tau;| &le; 0.5N&bull;m</i>
               </div>
             </div>
           </div>
           <div class="track-step" id="m2_syn">
             <div class="t-step-title">4. Synthesis</div>
             <div class="t-step-body">
+              <b>Actuation Sum:</b><br/>
               <i>u = u<sub>trim</sub> + u<sup>*</sup></i><br/>
-              Map optimal <i>[T; &tau;]</i><br/>
-              to body velocity
+              <b>Thrust & Torque Map:</b><br/>
+              Maps optimal <i>[T; &tau;]</i> to body velocity <code>cmd_vel</code><br/>
+              Bumpless saturation limiting
             </div>
           </div>
           <div class="track-step" id="m2_out" style="background:#EDE9FE;border-color:#DDD6FE;">
             <div class="t-step-title" style="color:#5B21B6;">5. Output</div>
             <div class="t-step-body">
-              <code>cmd_vel</code> body<br/>
+              <b>Publish Command:</b><br/>
+              <code>/ap/cmd_vel</code> @ 25 Hz<br/>
               <code>MODEL_2_DMDC</code><br/>
-              Residual monitor
+              <b>Residual Tracker:</b><br/>
+              DMDc identification fit residual broadcast
             </div>
           </div>
         </div>
@@ -734,69 +803,71 @@
       </div>
 
       <!-- Pilot / Autonomy Arbiter -->
-      <div class="card theme-amber" id="c4_arb" style="height:105px;">
+      <div class="card theme-amber" id="c4_arb" style="height:140px;">
         <div class="card-head">
           <span style="color:#92400E;">⚖️ Pilot / Autonomy Arbiter</span>
           <span class="tag" style="background:#FEF3C7;color:#92400E;">Priority</span>
         </div>
         <div class="card-body">
-          • Stick deflection &gt; 0.02 ➔ Manual body control<br/>
+          • Deadband: stick deflection <i>&gt; 0.02</i><br/>
+          • Stick active ➔ Manual body override (base_link)<br/>
           • Stick centered ➔ Auto waypoint tracking<br/>
-          • Bumpless smooth transfer
+          • First-order bumpless low-pass filter
         </div>
       </div>
 
       <!-- SafetyManager -->
-      <div class="card theme-amber" id="c4_saf" style="height:115px;">
+      <div class="card theme-amber" id="c4_saf" style="height:145px;">
         <div class="card-head">
           <span style="color:#92400E;">🛡️ SafetyManager</span>
           <span class="tag" style="background:#FEF3C7;color:#92400E;">Validation</span>
         </div>
         <div class="card-body">
-          • Rejects NaN / Inf ➔ Safe zero command<br/>
-          • Clamps: velocity &le; 1.0 m/s, tilt &le; 20°<br/>
-          • Ground-effect clamp: zero drift if Z &lt; 1.5m
+          • Rejects NaN / Inf ➔ Safe zero command lock<br/>
+          • Velocity clamp: <i>|v| &le; 1.0 m/s</i> &bull; Tilt: <i>&theta; &le; 20°</i><br/>
+          • Takeoff protection: zero drift if <i>Z &lt; 1.5m</i>
         </div>
       </div>
 
       <!-- FlightManager -->
-      <div class="card theme-amber" id="c4_flt" style="height:115px;">
+      <div class="card theme-amber" id="c4_flt" style="height:140px;">
         <div class="card-head">
           <span style="color:#92400E;">🕹️ FlightManager (FSM)</span>
           <span class="tag" style="background:#FEF3C7;color:#92400E;">FSM</span>
         </div>
         <div class="card-body">
           • State Machine:<br/>
-          &nbsp;&nbsp;INIT &rarr; ARMED &rarr; TAKEOFF &rarr; GUIDED &rarr; HOVER<br/>
-          • Pos tol: 0.05m &bull; Vel tol: 0.05 m/s
+          &nbsp;&nbsp;<b>INIT &rarr; ARMED &rarr; TAKEOFF &rarr; GUIDED &rarr; HOVER</b><br/>
+          • Tolerances: Pos <i>0.05m</i> &bull; Vel <i>0.05 m/s</i><br/>
+          • Connection timeout auto-land failsafe
         </div>
       </div>
 
       <!-- Airborne Gate? Decision & Branching -->
-      <div style="display:flex;flex-direction:column;gap:5px;">
-        <div class="decision-box" id="c4_gat" style="height:52px;">
-          <div class="decision-title">Airborne Gate?</div>
-          <div class="decision-sub">Altitude Z &ge; 0.50m</div>
+      <div style="display:flex;flex-direction:column;gap:5px;height:120px;justify-content:space-between;">
+        <div class="decision-box" id="c4_gat" style="height:55px;">
+          <div class="decision-title" style="font-size:12.5px;">Airborne Gate?</div>
+          <div class="decision-sub" style="font-size:10.5px;">Altitude Z &ge; 0.50m (Above ground effect)</div>
         </div>
         <div style="display:flex;gap:6px;">
-          <div class="card theme-red" id="c4_hld" style="flex:1;padding:4px 5px;background:#FEF2F2;">
-            <div style="font-size:9.5px;font-weight:700;color:#991B1B;">⛔ Hold Vel</div>
-            <div style="font-size:8.5px;color:#7F1D1D;">Z &lt; 0.5m: pause cmd</div>
+          <div class="card theme-red" id="c4_hld" style="flex:1;padding:5px 6px;background:#FEF2F2;height:55px;">
+            <div style="font-size:11px;font-weight:800;color:#991B1B;">⛔ Hold Vel</div>
+            <div style="font-size:9.5px;color:#7F1D1D;line-height:1.25;">Z &lt; 0.5m: zero vel, allow clean climb</div>
           </div>
-          <div class="card theme-green" id="c4_snd" style="flex:1;padding:4px 5px;background:#F0FDF4;">
-            <div style="font-size:9.5px;font-weight:700;color:#166534;">✅ Send Cmd</div>
-            <div style="font-size:8.5px;color:#14532D;"><code>/ap/cmd_vel</code> @ 50Hz</div>
+          <div class="card theme-green" id="c4_snd" style="flex:1;padding:5px 6px;background:#F0FDF4;height:55px;">
+            <div style="font-size:11px;font-weight:800;color:#166534;">✅ Send Cmd</div>
+            <div style="font-size:9.5px;color:#14532D;line-height:1.25;">Publish <code>/ap/cmd_vel</code> @ 50 Hz TwistStamped</div>
           </div>
         </div>
       </div>
 
       <!-- Telemetry Strip -->
-      <div class="card theme-amber" id="c4_tel" style="flex:1;">
-        <div class="card-head"><span style="color:#92400E;">📈 Telemetry & Log</span></div>
+      <div class="card theme-amber" id="c4_tel" style="height:115px;">
+        <div class="card-head"><span style="color:#92400E;">📈 Telemetry & Log (50 Hz)</span></div>
         <div class="card-body">
-          • <code>/position_error</code> (XYZ)<br/>
-          • <code>/desired_attitude</code> (Quat)<br/>
-          • Controller ID & DMDc residuals
+          • <code>/position_error</code> (XYZ tracking error)<br/>
+          • <code>/desired_attitude</code> (Target orientation)<br/>
+          • Active controller flag & DMDc residuals
         </div>
       </div>
     </div>
@@ -809,46 +880,52 @@
       </div>
 
       <!-- ArduHUD Ground Station -->
-      <div class="card theme-teal" id="c5_hud" style="height:135px;">
+      <div class="card theme-teal" id="c5_hud" style="height:165px;">
         <div class="card-head">
           <span style="color:#0F766E;">💻 ArduHUD Dashboard (:8000)</span>
           <span class="tag" style="background:#CCFBF1;color:#0F766E;">Web UI</span>
         </div>
         <div class="card-body">
-          • Browser UI at <code>http://localhost:8000</code><br/>
-          • Three.js 3D attitude visualizer & live gyro<br/>
-          • 30 FPS MJPEG camera video stream<br/>
+          • WebSocket browser dashboard at <code>:8000</code><br/>
+          • Three.js interactive 3D attitude visualizer<br/>
+          • Real-time gyro & artificial horizon display<br/>
+          • 30 FPS MJPEG camera video feed<br/>
           • Live 8BitDo gamepad stick deflection HUD
         </div>
       </div>
 
       <!-- Hardware Deployment Target -->
-      <div class="card theme-teal" id="c5_hw" style="height:95px;">
+      <div class="card theme-teal" id="c5_hw" style="height:140px;">
         <div class="card-head">
           <span style="color:#0F766E;">🖧 Real Hardware Integration</span>
+          <span class="tag" style="background:#CCFBF1;color:#0F766E;">Flight Stack</span>
         </div>
         <div class="card-body">
-          • Companion: NVIDIA Jetson Orin / RPi 4/5<br/>
-          • FCU: Pixhawk 6X / Cube Orange+<br/>
-          • FastRTPS DDS via Ethernet / UART
+          • Companion: NVIDIA Jetson Orin Nano<br/>
+          &nbsp;&nbsp;or Raspberry Pi 4/5 (Ubuntu 22.04 LTS)<br/>
+          • Autopilot FCU: Pixhawk 6X / Cube Orange+<br/>
+          • Transport: FastRTPS DDS via Ethernet / UART<br/>
+          • micro-XRCE Agent @ 921600 baud
         </div>
       </div>
 
       <!-- ArduPilot Services -->
-      <div class="card theme-teal" id="c5_srv" style="height:115px;">
+      <div class="card theme-teal" id="c5_srv" style="height:150px;">
         <div class="card-head">
           <span style="color:#0F766E;">🛸 ArduPilot Services & MAVLink</span>
           <span class="tag" style="background:#CCFBF1;color:#0F766E;">AP_DDS</span>
         </div>
         <div class="card-body">
           • Services: <code>/ap/arm_motors</code>, <code>/ap/takeoff</code><br/>
-          • Guided takeoff climb to 5.0m<br/>
-          • Flight mode switching (GUIDED / BRAKE)
+          • Guided autonomous climb to 5.0m altitude<br/>
+          • Flight mode switching (GUIDED / BRAKE)<br/>
+          • FastRTPS DDS micro-XRCE connection<br/>
+          • Bidirectional telemetry & parameter sync
         </div>
       </div>
 
-      <!-- SITL + Gazebo Harmonic (Aligned with Send Cmd!) -->
-      <div class="card theme-teal" id="c5_sit" style="flex:1;">
+      <!-- SITL + Gazebo Harmonic -->
+      <div class="card theme-teal" id="c5_sit" style="height:205px;">
         <div class="card-head">
           <span style="color:#0F766E;">🌐 ArduPilot SITL + Gazebo</span>
           <span class="tag" style="background:#CCFBF1;color:#0F766E;">Physics</span>
@@ -856,9 +933,10 @@
         <div class="card-body">
           • Iris quadcopter multi-body dynamic model<br/>
           • Mixer matrix &Gamma; maps <i>[T; &tau;]</i> &rarr; motor RPM<br/>
-          • Motor thrusts: <i>f<sub>i</sub> = k<sub>f</sub> &Omega;<sub>i</sub><sup>2</sup></i> (propeller dynamics)<br/>
-          • EKF3 sensor fusion (IMU, Baro, GPS, Mag)<br/>
-          • AP_DDS micro-XRCE bridge feeds kinematics
+          • Motor thrusts: <i>f<sub>i</sub> = k<sub>f</sub> &Omega;<sub>i</sub><sup>2</sup></i> (propeller physics)<br/>
+          • EKF3 24-state sensor fusion (IMU, Baro, GPS, Mag)<br/>
+          • Gazebo Harmonic physics step @ 1000 Hz<br/>
+          • Kinematic updates published to DDS @ 50 Hz
         </div>
       </div>
     </div>
@@ -910,7 +988,7 @@
         path.setAttribute('d', `M ${p1.x} ${p1.y} L ${p2.x} ${p2.y}`);
         path.setAttribute('fill', 'none');
         path.setAttribute('stroke', color);
-        path.setAttribute('stroke-width', '2');
+        path.setAttribute('stroke-width', '2.2');
         if (dashed) path.setAttribute('stroke-dasharray', '4,3');
         if (marker) path.setAttribute('marker-end', `url(#${marker})`);
         pathsGroup.appendChild(path);
@@ -922,7 +1000,7 @@
         path.setAttribute('d', `M ${p1.x} ${p1.y} C ${mx} ${p1.y}, ${mx} ${p2.y}, ${p2.x} ${p2.y}`);
         path.setAttribute('fill', 'none');
         path.setAttribute('stroke', color);
-        path.setAttribute('stroke-width', '2.2');
+        path.setAttribute('stroke-width', '2.4');
         if (dashed) path.setAttribute('stroke-dasharray', '5,3');
         if (marker) path.setAttribute('marker-end', `url(#${marker})`);
         pathsGroup.appendChild(path);
@@ -933,21 +1011,23 @@
         const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
         const txt = document.createElementNS('http://www.w3.org/2000/svg', 'text');
         
-        const padX = 6, h = 15;
+        const padX = 7, h = 18;
         txt.setAttribute('fill', textColor);
-        txt.setAttribute('font-size', '9');
+        txt.setAttribute('font-size', '10.5');
         txt.setAttribute('font-weight', '800');
         txt.setAttribute('text-anchor', 'middle');
         txt.setAttribute('dominant-baseline', 'central');
         txt.textContent = text;
         
-        const w = text.length * 6 + padX * 2;
+        const w = text.length * 6.8 + padX * 2;
         rect.setAttribute('x', x - w / 2);
         rect.setAttribute('y', y - h / 2);
         rect.setAttribute('width', w);
         rect.setAttribute('height', h);
-        rect.setAttribute('rx', '3');
+        rect.setAttribute('rx', '4');
         rect.setAttribute('fill', bgColor);
+        rect.setAttribute('stroke', '#FFFFFF');
+        rect.setAttribute('stroke-width', '1');
         
         txt.setAttribute('x', x);
         txt.setAttribute('y', y);
@@ -967,17 +1047,17 @@
       const c2_val_t = getPt('c2_val', 'top');
       drawLine(c2_api_b, c2_val_t, '#64748B', 'm-gray');
 
-      // State valid? -> [NO] -> Skip cycle (Clean horizontal connection between side-by-side boxes!)
+      // State valid? -> [NO] -> Skip cycle (Clean line in the 16px gap)
       const c2_val_r = getPt('c2_val', 'right');
       const c2_skp_l = getPt('c2_skp', 'left');
       drawLine(c2_val_r, c2_skp_l, '#DC2626', 'm-red');
-      addBadge((c2_val_r.x + c2_skp_l.x)/2, c2_val_r.y - 10, '[NO]', '#DC2626');
+      addBadge((c2_val_r.x + c2_skp_l.x)/2, c2_val_r.y - 12, '[NO]', '#DC2626');
 
-      // State valid? -> [YES] -> State Adapter (Clean vertical straight down line!)
+      // State valid? -> [YES] -> State Adapter
       const c2_val_b = getPt('c2_val', 'bottom');
       const c2_ada_t = getPt('c2_ada', 'top');
       drawLine(c2_val_b, c2_ada_t, '#059669', 'm-green');
-      addBadge(c2_val_b.x + 22, (c2_val_b.y + c2_ada_t.y)/2, '[YES]', '#059669');
+      addBadge(c2_val_b.x + 24, (c2_val_b.y + c2_ada_t.y)/2, '[YES]', '#059669');
 
       // State Adapter -> Target Manager
       drawLine(getPt('c2_ada', 'bottom'), getPt('c2_tgt', 'top'), '#64748B', 'm-gray');
@@ -1049,7 +1129,7 @@
       const c4_snd_r = getPt('c4_snd', 'right');
       const c5_srv_l = getPt('c5_srv', 'left');
       const c5_sit_l = getPt('c5_sit', 'left');
-      const midActX = (c4_snd_r.x + c5_sit_l.x) / 2;
+      const midActX = (c4_snd_r.x + c5_srv_l.x) / 2;
 
       drawCurve(c4_snd_r, c5_srv_l, '#059669', 'm-green', midActX);
       drawCurve(c4_snd_r, c5_sit_l, '#059669', 'm-green', midActX);
@@ -1060,13 +1140,13 @@
       // 11. PROMINENT CLOSED-LOOP FEEDBACK: Gazebo SITL back to Vehicle State
       const c5_sit_r = getPt('c5_sit', 'right');
       const c1_veh_l = getPt('c1_veh', 'left');
-      const loopY = 945; // Dedicated clear corridor below grid
+      const loopY = 948; // Dedicated clear corridor below grid
 
       const fbPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
       fbPath.setAttribute('d', `M ${c5_sit_r.x} ${c5_sit_r.y} L ${c5_sit_r.x + 16} ${c5_sit_r.y} L ${c5_sit_r.x + 16} ${loopY} L ${c1_veh_l.x - 14} ${loopY} L ${c1_veh_l.x - 14} ${c1_veh_l.y} L ${c1_veh_l.x} ${c1_veh_l.y}`);
       fbPath.setAttribute('fill', 'none');
       fbPath.setAttribute('stroke', '#0D9488');
-      fbPath.setAttribute('stroke-width', '2.8');
+      fbPath.setAttribute('stroke-width', '3');
       fbPath.setAttribute('stroke-dasharray', '8,4');
       fbPath.setAttribute('marker-end', 'url(#m-teal)');
       pathsGroup.appendChild(fbPath);

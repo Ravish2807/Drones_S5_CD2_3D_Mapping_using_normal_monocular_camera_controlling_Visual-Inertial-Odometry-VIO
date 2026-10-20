@@ -1,27 +1,27 @@
 <?xml version="1.0" ?>
-<mxfile host="Electron" modified="2026-10-20T19:30:00.000Z" agent="Antigravity Flowchart Generator" version="21.0.0" type="device">
+<mxfile host="Electron" modified="2026-10-20T19:50:00.000Z" agent="Antigravity Flowchart Generator" version="21.0.0" type="device">
   <diagram id="drones_controller_horizontal" name="Drones Controller Horizontal Pipeline">
     <mxGraphModel dx="1920" dy="1080" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1920" pageHeight="1080" background="#F8FAFC">
       <root>
         <mxCell id="0"/>
         <mxCell id="1" parent="0"/>
-        <mxCell id="hdr" value="&lt;b&gt;Drones Controller — Complete End-to-End Autonomous Flight Pipeline&lt;/b&gt;&lt;br/&gt;Precision Geometric SO(3), Error-State EKF &amp;amp; DMDc Optimal Control Integrated with ArduPilot DDS SITL &amp;amp; Gazebo Harmonic" vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#CBD5E1;fontSize=13;fontColor=#0F172A;align=left;spacingLeft=15;">
-          <mxGeometry x="20" y="10" width="1880" height="50" as="geometry"/>
+        <mxCell id="hdr" value="&lt;b&gt;Drones Controller — Complete End-to-End Autonomous Flight Pipeline&lt;/b&gt;&lt;br/&gt;Precision Geometric SO(3), Error-State EKF &amp;amp; DMDc Optimal Control Integrated with ArduPilot DDS SITL &amp;amp; Gazebo Harmonic" vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#CBD5E1;fontSize=14;fontColor=#0F172A;align=left;spacingLeft=15;">
+          <mxGeometry x="14" y="8" width="1892" height="52" as="geometry"/>
         </mxCell>
-        <mxCell id="d_start" value="&lt;b&gt;START&lt;/b&gt;&lt;br/&gt;Ubuntu 22.04 LTS, ROS 2 Humble" vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F8FAFC;strokeColor=#CBD5E1;fontSize=10;fontColor=#0F172A;">
-          <mxGeometry x="140" y="68" width="220" height="42" as="geometry"/>
+        <mxCell id="d_start" value="&lt;b&gt;START&lt;/b&gt;&lt;br/&gt;Ubuntu 22.04 LTS, ROS 2 Humble" vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F8FAFC;strokeColor=#CBD5E1;fontSize=11;fontColor=#0F172A;">
+          <mxGeometry x="140" y="68" width="220" height="48" as="geometry"/>
         </mxCell>
-        <mxCell id="d_build" value="&lt;b&gt;Build (~/ardu_ws)&lt;/b&gt;&lt;br/&gt;colcon build --packages-select drones_controller" vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F8FAFC;strokeColor=#CBD5E1;fontSize=10;fontColor=#0F172A;">
-          <mxGeometry x="400" y="68" width="260" height="42" as="geometry"/>
+        <mxCell id="d_build" value="&lt;b&gt;Build (~/ardu_ws)&lt;/b&gt;&lt;br/&gt;colcon build --packages-select drones_controller" vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F8FAFC;strokeColor=#CBD5E1;fontSize=11;fontColor=#0F172A;">
+          <mxGeometry x="400" y="68" width="260" height="48" as="geometry"/>
         </mxCell>
-        <mxCell id="d_sim" value="&lt;b&gt;T1: Simulator&lt;/b&gt;&lt;br/&gt;ros2 launch ardupilot_gz_bringup runway.launch.py" vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F8FAFC;strokeColor=#CBD5E1;fontSize=10;fontColor=#0F172A;">
-          <mxGeometry x="700" y="68" width="280" height="42" as="geometry"/>
+        <mxCell id="d_sim" value="&lt;b&gt;T1: Simulator&lt;/b&gt;&lt;br/&gt;ros2 launch ardupilot_gz_bringup runway.launch.py" vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F8FAFC;strokeColor=#CBD5E1;fontSize=11;fontColor=#0F172A;">
+          <mxGeometry x="700" y="68" width="280" height="48" as="geometry"/>
         </mxCell>
-        <mxCell id="d_ctrl" value="&lt;b&gt;T2: Controller&lt;/b&gt;&lt;br/&gt;ros2 launch drones_controller controller.launch.py model:=0|1|2" vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F8FAFC;strokeColor=#CBD5E1;fontSize=10;fontColor=#0F172A;">
-          <mxGeometry x="1020" y="68" width="300" height="42" as="geometry"/>
+        <mxCell id="d_ctrl" value="&lt;b&gt;T2: Controller&lt;/b&gt;&lt;br/&gt;ros2 launch drones_controller controller.launch.py model:=0|1|2" vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F8FAFC;strokeColor=#CBD5E1;fontSize=11;fontColor=#0F172A;">
+          <mxGeometry x="1020" y="68" width="300" height="48" as="geometry"/>
         </mxCell>
-        <mxCell id="d_gcs" value="&lt;b&gt;T3: Ground Station&lt;/b&gt;&lt;br/&gt;python3 bridge_server.py (:8000 Web UI + HUD)" vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F8FAFC;strokeColor=#CBD5E1;fontSize=10;fontColor=#0F172A;">
-          <mxGeometry x="1360" y="68" width="280" height="42" as="geometry"/>
+        <mxCell id="d_gcs" value="&lt;b&gt;T3: Ground Station&lt;/b&gt;&lt;br/&gt;python3 bridge_server.py (:8000 Web UI + HUD)" vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F8FAFC;strokeColor=#CBD5E1;fontSize=11;fontColor=#0F172A;">
+          <mxGeometry x="1360" y="68" width="280" height="48" as="geometry"/>
         </mxCell>
         <mxCell id="e_d1" value="" edge="1" parent="1" source="d_start" target="d_build" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#64748B;strokeWidth=2;">
           <mxGeometry relative="1" as="geometry"/>
@@ -35,37 +35,37 @@
         <mxCell id="e_d4" value="" edge="1" parent="1" source="d_ctrl" target="d_gcs" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#64748B;strokeWidth=2;">
           <mxGeometry relative="1" as="geometry"/>
         </mxCell>
-        <mxCell id="c1_veh" value="&lt;b&gt;📡 Vehicle State (DDS) [50 Hz]&lt;/b&gt;&lt;br/&gt;• /ap/pose (ENU Map): Pos [x,y,z], Quat [qx,qy,qz,qw]&lt;br/&gt;• /ap/twist (FLU Body): Linear [vx,vy,vz], Angular [p,q,r]&lt;br/&gt;• /ap/v1/status: Armed, GUIDED, EKF3 health" vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F8FAFC;strokeColor=#3B82F6;strokeWidth=2;fontSize=10;fontColor=#0F172A;align=left;spacingLeft=8;">
-          <mxGeometry x="20" y="130" width="215" height="140" as="geometry"/>
+        <mxCell id="c1_veh" value="&lt;b&gt;📡 Vehicle State (DDS) [50 Hz]&lt;/b&gt;&lt;br/&gt;• /ap/pose (ENU Map): Pos [x,y,z], Quat [qx,qy,qz,qw]&lt;br/&gt;• /ap/twist (FLU Body): Linear [vx,vy,vz], Angular [p,q,r]&lt;br/&gt;• /ap/v1/status: Armed, GUIDED, EKF3 health" vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F8FAFC;strokeColor=#2563EB;strokeWidth=2;fontSize=11;fontColor=#0F172A;align=left;spacingLeft=8;">
+          <mxGeometry x="14" y="130" width="230" height="175" as="geometry"/>
         </mxCell>
-        <mxCell id="c1_tel" value="&lt;b&gt;🎮 Pilot Teleop (Gamepad) [50 Hz]&lt;/b&gt;&lt;br/&gt;• 8BitDo gamepad → teleop_cmd&lt;br/&gt;• Axes: Vx, Vy, Vz (0.5..2.0 m/s), yaw_rate&lt;br/&gt;• Buttons: Y=GUIDED, A=ARM, X=TAKEOFF, B=HOVER" vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F8FAFC;strokeColor=#3B82F6;strokeWidth=2;fontSize=10;fontColor=#0F172A;align=left;spacingLeft=8;">
-          <mxGeometry x="20" y="285" width="215" height="135" as="geometry"/>
+        <mxCell id="c1_tel" value="&lt;b&gt;🎮 Pilot Teleop (Gamepad) [50 Hz]&lt;/b&gt;&lt;br/&gt;• 8BitDo gamepad → teleop_cmd&lt;br/&gt;• Axes: Vx, Vy, Vz (0.5..2.0 m/s), yaw_rate&lt;br/&gt;• Buttons: Y=GUIDED, A=ARM, X=TAKEOFF, B=HOVER" vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F8FAFC;strokeColor=#2563EB;strokeWidth=2;fontSize=11;fontColor=#0F172A;align=left;spacingLeft=8;">
+          <mxGeometry x="14" y="320" width="230" height="175" as="geometry"/>
         </mxCell>
-        <mxCell id="c1_mis" value="&lt;b&gt;🎯 Mission Targets&lt;/b&gt;&lt;br/&gt;• Web UI at http://localhost:8000&lt;br/&gt;• Setpoint: /target_pose&lt;br/&gt;• Services: /ap/arm_motors, /ap/takeoff" vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F8FAFC;strokeColor=#3B82F6;strokeWidth=2;fontSize=10;fontColor=#0F172A;align=left;spacingLeft=8;">
-          <mxGeometry x="20" y="435" width="215" height="130" as="geometry"/>
+        <mxCell id="c1_mis" value="&lt;b&gt;🎯 Mission Targets&lt;/b&gt;&lt;br/&gt;• Web UI at http://localhost:8000&lt;br/&gt;• Setpoint: /target_pose&lt;br/&gt;• Services: /ap/arm_motors, /ap/takeoff" vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F8FAFC;strokeColor=#2563EB;strokeWidth=2;fontSize=11;fontColor=#0F172A;align=left;spacingLeft=8;">
+          <mxGeometry x="14" y="510" width="230" height="170" as="geometry"/>
         </mxCell>
-        <mxCell id="c1_cfg" value="&lt;b&gt;⚙️ Config &amp;amp; Payload&lt;/b&gt;&lt;br/&gt;• controller.yaml: mass 1.5kg, vmax 1.0m/s, tilt ≤ 20°&lt;br/&gt;• /camera/image_raw (640x480 RGB @ 30 FPS)" vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F8FAFC;strokeColor=#3B82F6;strokeWidth=2;fontSize=10;fontColor=#0F172A;align=left;spacingLeft=8;">
-          <mxGeometry x="20" y="580" width="215" height="120" as="geometry"/>
+        <mxCell id="c1_cfg" value="&lt;b&gt;⚙️ Config &amp;amp; Payload&lt;/b&gt;&lt;br/&gt;• controller.yaml: mass 1.5kg, vmax 1.0m/s, tilt ≤ 20°&lt;br/&gt;• /camera/image_raw (640x480 RGB @ 30 FPS)" vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F8FAFC;strokeColor=#2563EB;strokeWidth=2;fontSize=11;fontColor=#0F172A;align=left;spacingLeft=8;">
+          <mxGeometry x="14" y="695" width="230" height="165" as="geometry"/>
         </mxCell>
-        <mxCell id="c2_api" value="&lt;b&gt;🔌 ArduPilotInterface [50 Hz]&lt;/b&gt;&lt;br/&gt;• Subscribes DDS pose, twist, status&lt;br/&gt;• Timeout check: dt &amp;lt; 0.20s&lt;br/&gt;• Publishes body velocity command" vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F8FAFC;strokeColor=#06B6D4;strokeWidth=2;fontSize=10;fontColor=#0F172A;align=left;spacingLeft=8;">
-          <mxGeometry x="255" y="130" width="235" height="95" as="geometry"/>
+        <mxCell id="c2_api" value="&lt;b&gt;🔌 ArduPilotInterface [50 Hz]&lt;/b&gt;&lt;br/&gt;• Subscribes DDS pose, twist, status&lt;br/&gt;• Timeout check: dt &amp;lt; 0.20s&lt;br/&gt;• Publishes body velocity command" vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F8FAFC;strokeColor=#0891B2;strokeWidth=2;fontSize=11;fontColor=#0F172A;align=left;spacingLeft=8;">
+          <mxGeometry x="264" y="130" width="245" height="130" as="geometry"/>
         </mxCell>
-        <mxCell id="c2_val" value="&lt;b&gt;State Valid?&lt;/b&gt;&lt;br/&gt;pos != NaN/Inf &amp;amp; dt &amp;lt; 0.2s" vertex="1" parent="1" style="rhombus;whiteSpace=wrap;html=1;fillColor=#FEF3C7;strokeColor=#F59E0B;fontSize=10;fontColor=#92400E;">
-          <mxGeometry x="255" y="240" width="130" height="55" as="geometry"/>
+        <mxCell id="c2_val" value="&lt;b&gt;State Valid?&lt;/b&gt;&lt;br/&gt;pos != NaN/Inf &amp;amp; dt &amp;lt; 0.2s" vertex="1" parent="1" style="rhombus;whiteSpace=wrap;html=1;fillColor=#FEF3C7;strokeColor=#F59E0B;fontSize=11;fontColor=#92400E;">
+          <mxGeometry x="264" y="275" width="130" height="75" as="geometry"/>
         </mxCell>
-        <mxCell id="c2_skp" value="&lt;b&gt;⚠️ Skip Cycle&lt;/b&gt;&lt;br/&gt;Log WARN &amp;amp; zero cmd" vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FEF2F2;strokeColor=#EF4444;fontSize=9.5;fontColor=#991B1B;">
-          <mxGeometry x="395" y="240" width="95" height="55" as="geometry"/>
+        <mxCell id="c2_skp" value="&lt;b&gt;⚠️ Skip Cycle&lt;/b&gt;&lt;br/&gt;Log WARN &amp;amp; zero cmd" vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FEF2F2;strokeColor=#EF4444;fontSize=10;fontColor=#991B1B;">
+          <mxGeometry x="410" y="275" width="99" height="75" as="geometry"/>
         </mxCell>
-        <mxCell id="c2_ada" value="&lt;b&gt;🔄 State Adapter [Lie SO(3)]&lt;/b&gt;&lt;br/&gt;• Quat → SO(3) matrix R ∈ ℝ³ˣ³ (so3_exp)&lt;br/&gt;• Frame transform: ENU map ↔ FLU body&lt;br/&gt;• Current yaw: ψ = atan2(R₁₀, R₀₀)" vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F8FAFC;strokeColor=#06B6D4;strokeWidth=2;fontSize=10;fontColor=#0F172A;align=left;spacingLeft=8;">
-          <mxGeometry x="255" y="310" width="235" height="110" as="geometry"/>
+        <mxCell id="c2_ada" value="&lt;b&gt;🔄 State Adapter [Lie SO(3)]&lt;/b&gt;&lt;br/&gt;• Quat → SO(3) matrix R ∈ ℝ³ˣ³ (so3_exp)&lt;br/&gt;• Frame transform: ENU map ↔ FLU body&lt;br/&gt;• Current yaw: ψ = atan2(R₁₀, R₀₀)" vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F8FAFC;strokeColor=#0891B2;strokeWidth=2;fontSize=11;fontColor=#0F172A;align=left;spacingLeft=8;">
+          <mxGeometry x="264" y="365" width="245" height="140" as="geometry"/>
         </mxCell>
-        <mxCell id="c2_tgt" value="&lt;b&gt;🎯 Target Manager [Arbiter]&lt;/b&gt;&lt;br/&gt;• Inputs: teleop_cmd, waypoint, YAML&lt;br/&gt;• State: pd, vd, ad, ψ̇d&lt;br/&gt;• Auto position hold lock when sticks centered" vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F8FAFC;strokeColor=#06B6D4;strokeWidth=2;fontSize=10;fontColor=#0F172A;align=left;spacingLeft=8;">
-          <mxGeometry x="255" y="435" width="235" height="115" as="geometry"/>
+        <mxCell id="c2_tgt" value="&lt;b&gt;🎯 Target Manager [Arbiter]&lt;/b&gt;&lt;br/&gt;• Inputs: teleop_cmd, waypoint, YAML&lt;br/&gt;• State: pd, vd, ad, ψ̇d&lt;br/&gt;• Auto position hold lock when sticks centered" vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F8FAFC;strokeColor=#0891B2;strokeWidth=2;fontSize=11;fontColor=#0F172A;align=left;spacingLeft=8;">
+          <mxGeometry x="264" y="520" width="245" height="145" as="geometry"/>
         </mxCell>
-        <mxCell id="c2_dec" value="&lt;b&gt;Which Controller?&lt;/b&gt;&lt;br/&gt;model:=0 | 1 | 2" vertex="1" parent="1" style="rhombus;whiteSpace=wrap;html=1;fillColor=#FEF3C7;strokeColor=#F59E0B;fontSize=11;fontColor=#92400E;fontStyle=1;">
-          <mxGeometry x="255" y="565" width="235" height="70" as="geometry"/>
+        <mxCell id="c2_dec" value="&lt;b&gt;Which Controller?&lt;/b&gt;&lt;br/&gt;model:=0 | 1 | 2" vertex="1" parent="1" style="rhombus;whiteSpace=wrap;html=1;fillColor=#FEF3C7;strokeColor=#F59E0B;fontSize=12;fontColor=#92400E;fontStyle=1;">
+          <mxGeometry x="264" y="680" width="245" height="105" as="geometry"/>
         </mxCell>
-        <mxCell id="e_c1_c2" value="" edge="1" parent="1" source="c1_veh" target="c2_api" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#2563EB;strokeWidth=2;">
+        <mxCell id="e_c1_c2" value="" edge="1" parent="1" source="c1_veh" target="c2_api" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#2563EB;strokeWidth=2.2;">
           <mxGeometry relative="1" as="geometry"/>
         </mxCell>
         <mxCell id="e_api_val" value="" edge="1" parent="1" source="c2_api" target="c2_val" style="strokeColor=#64748B;strokeWidth=2;">
@@ -83,17 +83,17 @@
         <mxCell id="e_tgt_dec" value="" edge="1" parent="1" source="c2_tgt" target="c2_dec" style="strokeColor=#64748B;strokeWidth=2;">
           <mxGeometry relative="1" as="geometry"/>
         </mxCell>
-        <mxCell id="m0_s1" value="&lt;b&gt;1. Outer Loop PID&lt;/b&gt;&lt;br/&gt;ep = pd - p, ev = vd - v&lt;br/&gt;ad = p̈d + Kp ep + Kv ev&lt;br/&gt;clamp(ad, vmax=1.0m/s)" vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#10B981;fontSize=9.5;fontColor=#0F172A;align=left;spacingLeft=6;">
-          <mxGeometry x="515" y="160" width="165" height="160" as="geometry"/>
+        <mxCell id="m0_s1" value="&lt;b&gt;1. Outer Loop PID&lt;/b&gt;&lt;br/&gt;ep = pd - p, ev = vd - v&lt;br/&gt;ad = p̈d + Kp ep + Kv ev&lt;br/&gt;clamp(ad, vmax=1.0m/s)" vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#059669;fontSize=10.5;fontColor=#0F172A;align=left;spacingLeft=6;">
+          <mxGeometry x="529" y="160" width="175" height="175" as="geometry"/>
         </mxCell>
-        <mxCell id="m0_s2" value="&lt;b&gt;2. Attitude Generator&lt;/b&gt;&lt;br/&gt;Fd = m(ad - g)&lt;br/&gt;b3d = Fd / ||Fd||&lt;br/&gt;Rd = [b1d, b2d, b3d] ∈ SO(3)&lt;br/&gt;Converts to quat qd" vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#10B981;fontSize=9.5;fontColor=#0F172A;align=left;spacingLeft=6;">
-          <mxGeometry x="695" y="160" width="165" height="160" as="geometry"/>
+        <mxCell id="m0_s2" value="&lt;b&gt;2. Attitude Generator&lt;/b&gt;&lt;br/&gt;Fd = m(ad - g)&lt;br/&gt;b3d = Fd / ||Fd||&lt;br/&gt;Rd = [b1d, b2d, b3d] ∈ SO(3)&lt;br/&gt;Converts to quat qd" vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#059669;fontSize=10.5;fontColor=#0F172A;align=left;spacingLeft=6;">
+          <mxGeometry x="720" y="160" width="175" height="175" as="geometry"/>
         </mxCell>
-        <mxCell id="m0_s3" value="&lt;b&gt;3. SO(3) Inner Loop&lt;/b&gt;&lt;br/&gt;eR = ½(Rdᵀ R - Rᵀ Rd)ᵛ&lt;br/&gt;eω = ω - Rᵀ Rd ωd&lt;br/&gt;τ = -KR eR - KΩ eω&lt;br/&gt;Geometric on manifold" vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#10B981;fontSize=9.5;fontColor=#0F172A;align=left;spacingLeft=6;">
-          <mxGeometry x="875" y="160" width="165" height="160" as="geometry"/>
+        <mxCell id="m0_s3" value="&lt;b&gt;3. SO(3) Inner Loop&lt;/b&gt;&lt;br/&gt;eR = ½(Rdᵀ R - Rᵀ Rd)ᵛ&lt;br/&gt;eω = ω - Rᵀ Rd ωd&lt;br/&gt;τ = -KR eR - KΩ eω&lt;br/&gt;Geometric on manifold" vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#059669;fontSize=10.5;fontColor=#0F172A;align=left;spacingLeft=6;">
+          <mxGeometry x="911" y="160" width="175" height="175" as="geometry"/>
         </mxCell>
-        <mxCell id="m0_out" value="&lt;b&gt;4. Output Synthesis&lt;/b&gt;&lt;br/&gt;Publish /ap/cmd_vel @ 50 Hz&lt;br/&gt;Telemetry: ep, ev, eR, τ&lt;br/&gt;Real-Time Lie Group" vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DCFCE7;strokeColor=#10B981;fontSize=10;fontColor=#166534;fontStyle=1;">
-          <mxGeometry x="1055" y="160" width="165" height="160" as="geometry"/>
+        <mxCell id="m0_out" value="&lt;b&gt;4. Output Synthesis&lt;/b&gt;&lt;br/&gt;Publish /ap/cmd_vel @ 50 Hz&lt;br/&gt;Telemetry: ep, ev, eR, τ&lt;br/&gt;Real-Time Lie Group" vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DCFCE7;strokeColor=#059669;fontSize=11;fontColor=#166534;fontStyle=1;">
+          <mxGeometry x="1102" y="160" width="175" height="175" as="geometry"/>
         </mxCell>
         <mxCell id="e_m0_12" value="" edge="1" parent="1" source="m0_s1" target="m0_s2" style="strokeColor=#059669;strokeWidth=2;">
           <mxGeometry relative="1" as="geometry"/>
@@ -104,20 +104,20 @@
         <mxCell id="e_m0_34" value="" edge="1" parent="1" source="m0_s3" target="m0_out" style="strokeColor=#059669;strokeWidth=2;">
           <mxGeometry relative="1" as="geometry"/>
         </mxCell>
-        <mxCell id="m1_s1" value="&lt;b&gt;1. Error-State EKF&lt;/b&gt;&lt;br/&gt;12-State δx = [δp,δv,δθ,δω]ᵀ&lt;br/&gt;R ← R · Exp(δθ)&lt;br/&gt;P ← (I-KH)P(I-KH)ᵀ+KRKᵀ" vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#F97316;fontSize=9.5;fontColor=#0F172A;align=left;spacingLeft=6;">
-          <mxGeometry x="515" y="410" width="135" height="175" as="geometry"/>
+        <mxCell id="m1_s1" value="&lt;b&gt;1. Error-State EKF&lt;/b&gt;&lt;br/&gt;12-State δx = [δp,δv,δθ,δω]ᵀ&lt;br/&gt;R ← R · Exp(δθ)&lt;br/&gt;P ← (I-KH)P(I-KH)ᵀ+KRKᵀ" vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#D97706;fontSize=10.5;fontColor=#0F172A;align=left;spacingLeft=6;">
+          <mxGeometry x="529" y="415" width="142" height="185" as="geometry"/>
         </mxCell>
-        <mxCell id="m1_s2" value="&lt;b&gt;2. Outer Loop&lt;/b&gt;&lt;br/&gt;Runs on estimator: p̂, v̂&lt;br/&gt;ep = pd - p̂, ev = vd - v̂&lt;br/&gt;ad = p̈d + Kp ep + Kv ev" vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#F97316;fontSize=9.5;fontColor=#0F172A;align=left;spacingLeft=6;">
-          <mxGeometry x="660" y="410" width="135" height="175" as="geometry"/>
+        <mxCell id="m1_s2" value="&lt;b&gt;2. Outer Loop&lt;/b&gt;&lt;br/&gt;Runs on estimator: p̂, v̂&lt;br/&gt;ep = pd - p̂, ev = vd - v̂&lt;br/&gt;ad = p̈d + Kp ep + Kv ev" vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#D97706;fontSize=10.5;fontColor=#0F172A;align=left;spacingLeft=6;">
+          <mxGeometry x="687" y="415" width="142" height="185" as="geometry"/>
         </mxCell>
-        <mxCell id="m1_s3" value="&lt;b&gt;3. Attitude Gen&lt;/b&gt;&lt;br/&gt;Fd = m(ad - g)&lt;br/&gt;b3d = Fd / ||Fd||, Rd ∈ SO(3)&lt;br/&gt;Thrust: T = Fd · (R e3)" vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#F97316;fontSize=9.5;fontColor=#0F172A;align=left;spacingLeft=6;">
-          <mxGeometry x="805" y="410" width="135" height="175" as="geometry"/>
+        <mxCell id="m1_s3" value="&lt;b&gt;3. Attitude Gen&lt;/b&gt;&lt;br/&gt;Fd = m(ad - g)&lt;br/&gt;b3d = Fd / ||Fd||, Rd ∈ SO(3)&lt;br/&gt;Thrust: T = Fd · (R e3)" vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#D97706;fontSize=10.5;fontColor=#0F172A;align=left;spacingLeft=6;">
+          <mxGeometry x="845" y="415" width="142" height="185" as="geometry"/>
         </mxCell>
-        <mxCell id="m1_s4" value="&lt;b&gt;4. SO(3) Geometric&lt;/b&gt;&lt;br/&gt;eR = ½(Rdᵀ R - Rᵀ Rd)ᵛ&lt;br/&gt;τ = -KR eR - KΩ eω + ω×Jω&lt;br/&gt;Singularity-free &amp;gt;90° tilt" vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#F97316;fontSize=9.5;fontColor=#0F172A;align=left;spacingLeft=6;">
-          <mxGeometry x="950" y="410" width="135" height="175" as="geometry"/>
+        <mxCell id="m1_s4" value="&lt;b&gt;4. SO(3) Geometric&lt;/b&gt;&lt;br/&gt;eR = ½(Rdᵀ R - Rᵀ Rd)ᵛ&lt;br/&gt;τ = -KR eR - KΩ eω + ω×Jω&lt;br/&gt;Singularity-free &amp;gt;90° tilt" vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#D97706;fontSize=10.5;fontColor=#0F172A;align=left;spacingLeft=6;">
+          <mxGeometry x="1003" y="415" width="142" height="185" as="geometry"/>
         </mxCell>
-        <mxCell id="m1_out" value="&lt;b&gt;5. Output Synthesis&lt;/b&gt;&lt;br/&gt;/ap/v1/cmd_vel @ 50 Hz&lt;br/&gt;controller_type = MODEL_1&lt;br/&gt;Covariance broadcast" vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FEF3C7;strokeColor=#F97316;fontSize=10;fontColor=#92400E;fontStyle=1;">
-          <mxGeometry x="1095" y="410" width="135" height="175" as="geometry"/>
+        <mxCell id="m1_out" value="&lt;b&gt;5. Output Synthesis&lt;/b&gt;&lt;br/&gt;/ap/v1/cmd_vel @ 50 Hz&lt;br/&gt;controller_type = MODEL_1&lt;br/&gt;Covariance broadcast" vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FEF3C7;strokeColor=#D97706;fontSize=11;fontColor=#92400E;fontStyle=1;">
+          <mxGeometry x="1161" y="415" width="142" height="185" as="geometry"/>
         </mxCell>
         <mxCell id="e_m1_12" value="" edge="1" parent="1" source="m1_s1" target="m1_s2" style="strokeColor=#D97706;strokeWidth=2;">
           <mxGeometry relative="1" as="geometry"/>
@@ -131,20 +131,20 @@
         <mxCell id="e_m1_45" value="" edge="1" parent="1" source="m1_s4" target="m1_out" style="strokeColor=#D97706;strokeWidth=2;">
           <mxGeometry relative="1" as="geometry"/>
         </mxCell>
-        <mxCell id="m2_s1" value="&lt;b&gt;1. State Deviation&lt;/b&gt;&lt;br/&gt;xk = [p-pd; v; Log(R); ω]&lt;br/&gt;uk = [T-mg0; τ] ∈ ℝ⁴&lt;br/&gt;Trim: mg0 = 14.7 N" vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#8B5CF6;fontSize=9.5;fontColor=#0F172A;align=left;spacingLeft=6;">
-          <mxGeometry x="515" y="680" width="135" height="180" as="geometry"/>
+        <mxCell id="m2_s1" value="&lt;b&gt;1. State Deviation&lt;/b&gt;&lt;br/&gt;xk = [p-pd; v; Log(R); ω]&lt;br/&gt;uk = [T-mg0; τ] ∈ ℝ⁴&lt;br/&gt;Trim: mg0 = 14.7 N" vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#7C3AED;fontSize=10.5;fontColor=#0F172A;align=left;spacingLeft=6;">
+          <mxGeometry x="529" y="680" width="142" height="195" as="geometry"/>
         </mxCell>
-        <mxCell id="m2_s2" value="&lt;b&gt;2. DMDc System ID&lt;/b&gt;&lt;br/&gt;[A B] = X⁺ [X; U]†&lt;br/&gt;Snapshot regression&lt;br/&gt;Blended hover prior" vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#8B5CF6;fontSize=9.5;fontColor=#0F172A;align=left;spacingLeft=6;">
-          <mxGeometry x="660" y="680" width="135" height="180" as="geometry"/>
+        <mxCell id="m2_s2" value="&lt;b&gt;2. DMDc System ID&lt;/b&gt;&lt;br/&gt;[A B] = X⁺ [X; U]†&lt;br/&gt;Snapshot regression&lt;br/&gt;Blended hover prior" vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#7C3AED;fontSize=10.5;fontColor=#0F172A;align=left;spacingLeft=6;">
+          <mxGeometry x="687" y="680" width="142" height="195" as="geometry"/>
         </mxCell>
-        <mxCell id="m2_opt" value="&lt;b&gt;3. Optimal Synthesis&lt;/b&gt;&lt;br/&gt;• &lt;b&gt;LQR:&lt;/b&gt; DARE P = AᵀPA + Q, u = -K xk&lt;br/&gt;• &lt;b&gt;MPC:&lt;/b&gt; N=25 (1s), OSQP solver (0.42 ms)&lt;br/&gt;Bounds: 5N ≤ T ≤ 25N, |τ| ≤ 0.5Nm" vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#8B5CF6;fontSize=9.5;fontColor=#0F172A;align=left;spacingLeft=6;">
-          <mxGeometry x="805" y="680" width="170" height="180" as="geometry"/>
+        <mxCell id="m2_opt" value="&lt;b&gt;3. Optimal Synthesis&lt;/b&gt;&lt;br/&gt;• &lt;b&gt;LQR:&lt;/b&gt; DARE P = AᵀPA + Q, u = -K xk&lt;br/&gt;• &lt;b&gt;MPC:&lt;/b&gt; N=25 (1s), OSQP solver (0.42 ms)&lt;br/&gt;Bounds: 5N ≤ T ≤ 25N, |τ| ≤ 0.5Nm" vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#7C3AED;fontSize=10.5;fontColor=#0F172A;align=left;spacingLeft=6;">
+          <mxGeometry x="845" y="680" width="175" height="195" as="geometry"/>
         </mxCell>
-        <mxCell id="m2_syn" value="&lt;b&gt;4. Synthesis&lt;/b&gt;&lt;br/&gt;u = utrim + u*&lt;br/&gt;Map optimal [T; τ]&lt;br/&gt;to body velocity" vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#8B5CF6;fontSize=9.5;fontColor=#0F172A;align=left;spacingLeft=6;">
-          <mxGeometry x="985" y="680" width="115" height="180" as="geometry"/>
+        <mxCell id="m2_syn" value="&lt;b&gt;4. Synthesis&lt;/b&gt;&lt;br/&gt;u = utrim + u*&lt;br/&gt;Map optimal [T; τ]&lt;br/&gt;to body velocity" vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#7C3AED;fontSize=10.5;fontColor=#0F172A;align=left;spacingLeft=6;">
+          <mxGeometry x="1036" y="680" width="125" height="195" as="geometry"/>
         </mxCell>
-        <mxCell id="m2_out" value="&lt;b&gt;5. Output&lt;/b&gt;&lt;br/&gt;cmd_vel body&lt;br/&gt;MODEL_2_DMDC&lt;br/&gt;Residual monitor" vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EDE9FE;strokeColor=#8B5CF6;fontSize=10;fontColor=#5B21B6;fontStyle=1;">
-          <mxGeometry x="1110" y="680" width="120" height="180" as="geometry"/>
+        <mxCell id="m2_out" value="&lt;b&gt;5. Output&lt;/b&gt;&lt;br/&gt;cmd_vel body&lt;br/&gt;MODEL_2_DMDC&lt;br/&gt;Residual monitor" vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EDE9FE;strokeColor=#7C3AED;fontSize=11;fontColor=#5B21B6;fontStyle=1;">
+          <mxGeometry x="1177" y="680" width="126" height="195" as="geometry"/>
         </mxCell>
         <mxCell id="e_m2_12" value="" edge="1" parent="1" source="m2_s1" target="m2_s2" style="strokeColor=#7C3AED;strokeWidth=2;">
           <mxGeometry relative="1" as="geometry"/>
@@ -167,34 +167,34 @@
         <mxCell id="e_dec_m2" value="model:=2" edge="1" parent="1" source="c2_dec" target="m2_s1" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#7C3AED;strokeWidth=2.5;fontColor=#7C3AED;">
           <mxGeometry relative="1" as="geometry"/>
         </mxCell>
-        <mxCell id="c4_arb" value="&lt;b&gt;⚖️ Pilot / Autonomy Arbiter&lt;/b&gt;&lt;br/&gt;• Stick deflection &amp;gt; 0.02 → Manual&lt;br/&gt;• Stick centered → Auto waypoint lock&lt;br/&gt;• Bumpless smooth transfer" vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFBEB;strokeColor=#F59E0B;strokeWidth=2;fontSize=10;fontColor=#0F172A;align=left;spacingLeft=8;">
-          <mxGeometry x="1260" y="130" width="235" height="105" as="geometry"/>
+        <mxCell id="c4_arb" value="&lt;b&gt;⚖️ Pilot / Autonomy Arbiter&lt;/b&gt;&lt;br/&gt;• Stick deflection &amp;gt; 0.02 → Manual&lt;br/&gt;• Stick centered → Auto waypoint lock&lt;br/&gt;• Bumpless smooth transfer" vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFBEB;strokeColor=#D97706;strokeWidth=2;fontSize=11;fontColor=#0F172A;align=left;spacingLeft=8;">
+          <mxGeometry x="1334" y="130" width="245" height="140" as="geometry"/>
         </mxCell>
-        <mxCell id="c4_saf" value="&lt;b&gt;🛡️ SafetyManager [Validation]&lt;/b&gt;&lt;br/&gt;• Rejects NaN / Inf → Safe zero cmd&lt;br/&gt;• Clamps: vel ≤ 1.0 m/s, tilt ≤ 20°&lt;br/&gt;• Ground-effect clamp: zero drift if Z &amp;lt; 1.5m" vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFBEB;strokeColor=#F59E0B;strokeWidth=2;fontSize=10;fontColor=#0F172A;align=left;spacingLeft=8;">
-          <mxGeometry x="1260" y="250" width="235" height="115" as="geometry"/>
+        <mxCell id="c4_saf" value="&lt;b&gt;🛡️ SafetyManager [Validation]&lt;/b&gt;&lt;br/&gt;• Rejects NaN / Inf → Safe zero cmd&lt;br/&gt;• Clamps: vel ≤ 1.0 m/s, tilt ≤ 20°&lt;br/&gt;• Ground-effect clamp: zero drift if Z &amp;lt; 1.5m" vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFBEB;strokeColor=#D97706;strokeWidth=2;fontSize=11;fontColor=#0F172A;align=left;spacingLeft=8;">
+          <mxGeometry x="1334" y="285" width="245" height="145" as="geometry"/>
         </mxCell>
-        <mxCell id="c4_flt" value="&lt;b&gt;🕹️ FlightManager (FSM)&lt;/b&gt;&lt;br/&gt;• State Machine:&lt;br/&gt;&amp;nbsp;&amp;nbsp;INIT → ARMED → TAKEOFF → GUIDED → HOVER&lt;br/&gt;• Pos tol: 0.05m • Vel tol: 0.05 m/s" vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFBEB;strokeColor=#F59E0B;strokeWidth=2;fontSize=10;fontColor=#0F172A;align=left;spacingLeft=8;">
-          <mxGeometry x="1260" y="380" width="235" height="115" as="geometry"/>
+        <mxCell id="c4_flt" value="&lt;b&gt;🕹️ FlightManager (FSM)&lt;/b&gt;&lt;br/&gt;• State Machine:&lt;br/&gt;&amp;nbsp;&amp;nbsp;INIT → ARMED → TAKEOFF → GUIDED → HOVER&lt;br/&gt;• Pos tol: 0.05m • Vel tol: 0.05 m/s" vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFBEB;strokeColor=#D97706;strokeWidth=2;fontSize=11;fontColor=#0F172A;align=left;spacingLeft=8;">
+          <mxGeometry x="1334" y="445" width="245" height="140" as="geometry"/>
         </mxCell>
-        <mxCell id="c4_gat" value="&lt;b&gt;Airborne Gate?&lt;/b&gt;&lt;br/&gt;Altitude Z ≥ 0.50m" vertex="1" parent="1" style="rhombus;whiteSpace=wrap;html=1;fillColor=#FEF3C7;strokeColor=#F59E0B;fontSize=10;fontColor=#92400E;fontStyle=1;">
-          <mxGeometry x="1260" y="510" width="235" height="52" as="geometry"/>
+        <mxCell id="c4_gat" value="&lt;b&gt;Airborne Gate?&lt;/b&gt;&lt;br/&gt;Altitude Z ≥ 0.50m" vertex="1" parent="1" style="rhombus;whiteSpace=wrap;html=1;fillColor=#FEF3C7;strokeColor=#F59E0B;fontSize=11;fontColor=#92400E;fontStyle=1;">
+          <mxGeometry x="1334" y="600" width="245" height="55" as="geometry"/>
         </mxCell>
-        <mxCell id="c4_hld" value="&lt;b&gt;⛔ Hold Vel&lt;/b&gt;&lt;br/&gt;Z &amp;lt; 0.5m: pause cmd" vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FEF2F2;strokeColor=#EF4444;fontSize=9.5;fontColor=#991B1B;">
-          <mxGeometry x="1260" y="575" width="112" height="55" as="geometry"/>
+        <mxCell id="c4_hld" value="&lt;b&gt;⛔ Hold Vel&lt;/b&gt;&lt;br/&gt;Z &amp;lt; 0.5m: pause cmd" vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FEF2F2;strokeColor=#EF4444;fontSize=10.5;fontColor=#991B1B;">
+          <mxGeometry x="1334" y="665" width="117" height="55" as="geometry"/>
         </mxCell>
-        <mxCell id="c4_snd" value="&lt;b&gt;✅ Send Cmd&lt;/b&gt;&lt;br/&gt;/ap/cmd_vel @ 50Hz" vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F0FDF4;strokeColor=#10B981;fontSize=9.5;fontColor=#166534;">
-          <mxGeometry x="1383" y="575" width="112" height="55" as="geometry"/>
+        <mxCell id="c4_snd" value="&lt;b&gt;✅ Send Cmd&lt;/b&gt;&lt;br/&gt;/ap/cmd_vel @ 50Hz" vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F0FDF4;strokeColor=#059669;fontSize=10.5;fontColor=#166534;">
+          <mxGeometry x="1461" y="665" width="117" height="55" as="geometry"/>
         </mxCell>
-        <mxCell id="c4_tel" value="&lt;b&gt;📈 Telemetry &amp;amp; Log&lt;/b&gt;&lt;br/&gt;• /position_error (XYZ)&lt;br/&gt;• /desired_attitude (Quat)&lt;br/&gt;• Controller ID &amp;amp; DMDc residuals" vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFBEB;strokeColor=#F59E0B;strokeWidth=2;fontSize=10;fontColor=#0F172A;align=left;spacingLeft=8;">
-          <mxGeometry x="1260" y="645" width="235" height="95" as="geometry"/>
+        <mxCell id="c4_tel" value="&lt;b&gt;📈 Telemetry &amp;amp; Log&lt;/b&gt;&lt;br/&gt;• /position_error (XYZ)&lt;br/&gt;• /desired_attitude (Quat)&lt;br/&gt;• Controller ID &amp;amp; DMDc residuals" vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFBEB;strokeColor=#D97706;strokeWidth=2;fontSize=11;fontColor=#0F172A;align=left;spacingLeft=8;">
+          <mxGeometry x="1334" y="735" width="245" height="115" as="geometry"/>
         </mxCell>
-        <mxCell id="e_m0_arb" value="" edge="1" parent="1" source="m0_out" target="c4_arb" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#059669;strokeWidth=2;">
+        <mxCell id="e_m0_arb" value="" edge="1" parent="1" source="m0_out" target="c4_arb" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#059669;strokeWidth=2.2;">
           <mxGeometry relative="1" as="geometry"/>
         </mxCell>
-        <mxCell id="e_m1_arb" value="" edge="1" parent="1" source="m1_out" target="c4_arb" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#D97706;strokeWidth=2;">
+        <mxCell id="e_m1_arb" value="" edge="1" parent="1" source="m1_out" target="c4_arb" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#D97706;strokeWidth=2.2;">
           <mxGeometry relative="1" as="geometry"/>
         </mxCell>
-        <mxCell id="e_m2_arb" value="" edge="1" parent="1" source="m2_out" target="c4_arb" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#7C3AED;strokeWidth=2;">
+        <mxCell id="e_m2_arb" value="" edge="1" parent="1" source="m2_out" target="c4_arb" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#7C3AED;strokeWidth=2.2;">
           <mxGeometry relative="1" as="geometry"/>
         </mxCell>
         <mxCell id="e_arb_saf" value="" edge="1" parent="1" source="c4_arb" target="c4_saf" style="strokeColor=#64748B;strokeWidth=2;">
@@ -212,22 +212,22 @@
         <mxCell id="e_gat_snd" value="[YES]" edge="1" parent="1" source="c4_gat" target="c4_snd" style="strokeColor=#059669;strokeWidth=2.5;fontColor=#059669;">
           <mxGeometry relative="1" as="geometry"/>
         </mxCell>
-        <mxCell id="c5_hud" value="&lt;b&gt;💻 ArduHUD Dashboard (:8000)&lt;/b&gt;&lt;br/&gt;• Browser UI at http://localhost:8000&lt;br/&gt;• Three.js 3D attitude visualizer &amp;amp; gyro&lt;br/&gt;• 30 FPS MJPEG camera video stream&lt;br/&gt;• Live 8BitDo gamepad stick deflection HUD" vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F0FDFA;strokeColor=#0D9488;strokeWidth=2;fontSize=10;fontColor=#0F172A;align=left;spacingLeft=8;">
-          <mxGeometry x="1530" y="130" width="270" height="135" as="geometry"/>
+        <mxCell id="c5_hud" value="&lt;b&gt;💻 ArduHUD Dashboard (:8000)&lt;/b&gt;&lt;br/&gt;• Browser UI at http://localhost:8000&lt;br/&gt;• Three.js 3D attitude visualizer &amp;amp; gyro&lt;br/&gt;• 30 FPS MJPEG camera video stream&lt;br/&gt;• Live 8BitDo gamepad stick deflection HUD" vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F0FDFA;strokeColor=#0D9488;strokeWidth=2;fontSize=11;fontColor=#0F172A;align=left;spacingLeft=8;">
+          <mxGeometry x="1609" y="130" width="285" height="165" as="geometry"/>
         </mxCell>
-        <mxCell id="c5_hw" value="&lt;b&gt;🖧 Real Hardware Integration Target&lt;/b&gt;&lt;br/&gt;• Companion: NVIDIA Jetson Orin / RPi 4/5&lt;br/&gt;• FCU: Pixhawk 6X / Cube Orange+&lt;br/&gt;• FastRTPS DDS via Ethernet / UART" vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F0FDFA;strokeColor=#0D9488;strokeWidth=2;fontSize=10;fontColor=#0F172A;align=left;spacingLeft=8;">
-          <mxGeometry x="1530" y="280" width="270" height="95" as="geometry"/>
+        <mxCell id="c5_hw" value="&lt;b&gt;🖧 Real Hardware Integration Target&lt;/b&gt;&lt;br/&gt;• Companion: NVIDIA Jetson Orin / RPi 4/5&lt;br/&gt;• FCU: Pixhawk 6X / Cube Orange+&lt;br/&gt;• FastRTPS DDS via Ethernet / UART" vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F0FDFA;strokeColor=#0D9488;strokeWidth=2;fontSize=11;fontColor=#0F172A;align=left;spacingLeft=8;">
+          <mxGeometry x="1609" y="310" width="285" height="140" as="geometry"/>
         </mxCell>
-        <mxCell id="c5_srv" value="&lt;b&gt;🛸 ArduPilot Services &amp;amp; MAVLink&lt;/b&gt;&lt;br/&gt;• Services: /ap/arm_motors, /ap/takeoff&lt;br/&gt;• Guided takeoff climb to 5.0m&lt;br/&gt;• Flight mode switching (GUIDED / BRAKE)" vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F0FDFA;strokeColor=#0D9488;strokeWidth=2;fontSize=10;fontColor=#0F172A;align=left;spacingLeft=8;">
-          <mxGeometry x="1530" y="390" width="270" height="115" as="geometry"/>
+        <mxCell id="c5_srv" value="&lt;b&gt;🛸 ArduPilot Services &amp;amp; MAVLink&lt;/b&gt;&lt;br/&gt;• Services: /ap/arm_motors, /ap/takeoff&lt;br/&gt;• Guided takeoff climb to 5.0m&lt;br/&gt;• Flight mode switching (GUIDED / BRAKE)" vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F0FDFA;strokeColor=#0D9488;strokeWidth=2;fontSize=11;fontColor=#0F172A;align=left;spacingLeft=8;">
+          <mxGeometry x="1609" y="465" width="285" height="150" as="geometry"/>
         </mxCell>
-        <mxCell id="c5_sit" value="&lt;b&gt;🌐 ArduPilot SITL + Gazebo Harmonic&lt;/b&gt;&lt;br/&gt;• Iris quadcopter multi-body dynamic model&lt;br/&gt;• Mixer matrix Γ maps [T; τ] → motor RPM&lt;br/&gt;• Motor thrusts: fi = kf Ωi² (propeller dynamics)&lt;br/&gt;• EKF3 sensor fusion (IMU, Baro, GPS, Mag)&lt;br/&gt;• AP_DDS micro-XRCE bridge feeds kinematics" vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F0FDFA;strokeColor=#0D9488;strokeWidth=2;fontSize=10;fontColor=#0F172A;align=left;spacingLeft=8;">
-          <mxGeometry x="1530" y="520" width="270" height="175" as="geometry"/>
+        <mxCell id="c5_sit" value="&lt;b&gt;🌐 ArduPilot SITL + Gazebo Harmonic&lt;/b&gt;&lt;br/&gt;• Iris quadcopter multi-body dynamic model&lt;br/&gt;• Mixer matrix Γ maps [T; τ] → motor RPM&lt;br/&gt;• Motor thrusts: fi = kf Ωi² (propeller dynamics)&lt;br/&gt;• EKF3 sensor fusion (IMU, Baro, GPS, Mag)&lt;br/&gt;• AP_DDS micro-XRCE bridge feeds kinematics" vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F0FDFA;strokeColor=#0D9488;strokeWidth=2;fontSize=11;fontColor=#0F172A;align=left;spacingLeft=8;">
+          <mxGeometry x="1609" y="630" width="285" height="205" as="geometry"/>
         </mxCell>
-        <mxCell id="e_snd_srv" value="" edge="1" parent="1" source="c4_snd" target="c5_srv" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#059669;strokeWidth=2;">
+        <mxCell id="e_snd_srv" value="" edge="1" parent="1" source="c4_snd" target="c5_srv" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#059669;strokeWidth=2.2;">
           <mxGeometry relative="1" as="geometry"/>
         </mxCell>
-        <mxCell id="e_snd_sit" value="" edge="1" parent="1" source="c4_snd" target="c5_sit" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#059669;strokeWidth=2;">
+        <mxCell id="e_snd_sit" value="" edge="1" parent="1" source="c4_snd" target="c5_sit" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#059669;strokeWidth=2.2;">
           <mxGeometry relative="1" as="geometry"/>
         </mxCell>
         <mxCell id="e_srv_sit" value="" edge="1" parent="1" source="c5_srv" target="c5_sit" style="strokeColor=#64748B;strokeWidth=2;">
@@ -236,17 +236,17 @@
         <mxCell id="e_feedback" value="🔁 Closed-Loop Feedback: Gazebo Kinematics → AP_DDS State @ 50 Hz" edge="1" parent="1" source="c5_sit" target="c1_veh" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#0D9488;strokeWidth=3;dashed=1;fontColor=#0D9488;fontStyle=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;">
           <mxGeometry relative="1" as="geometry"/>
         </mxCell>
-        <mxCell id="bot_use" value="&lt;b&gt;📍 WHERE IT IS USED &amp;amp; REAL-WORLD DEPLOYMENT PIPELINE&lt;/b&gt;&lt;br/&gt;• &lt;b&gt;Autonomous Waypoint Tracking:&lt;/b&gt; High-precision 3D trajectory tracking in GPS / GPS-denied environments.&lt;br/&gt;• &lt;b&gt;Controller Benchmarking:&lt;/b&gt; Direct comparative analysis between geometric SO(3) and data-driven DMDc optimal control.&lt;br/&gt;• &lt;b&gt;Hardware Flight Stack:&lt;/b&gt; Companion computer (Jetson / RPi) connected to Pixhawk FCU running ArduPilot 4.5+ with FastRTPS DDS bridge." vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#0D9488;strokeWidth=2;fontSize=10;fontColor=#0F172A;align=left;spacingLeft=12;">
-          <mxGeometry x="20" y="978" width="1720" height="54" as="geometry"/>
+        <mxCell id="bot_use" value="&lt;b&gt;📍 WHERE IT IS USED &amp;amp; REAL-WORLD DEPLOYMENT PIPELINE&lt;/b&gt;&lt;br/&gt;• &lt;b&gt;Autonomous Waypoint Tracking:&lt;/b&gt; High-precision 3D trajectory tracking in GPS / GPS-denied environments.&lt;br/&gt;• &lt;b&gt;Controller Benchmarking:&lt;/b&gt; Direct comparative analysis between geometric SO(3) and data-driven DMDc optimal control.&lt;br/&gt;• &lt;b&gt;Hardware Flight Stack:&lt;/b&gt; Companion computer (Jetson / RPi) connected to Pixhawk FCU running ArduPilot 4.5+ with FastRTPS DDS bridge." vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#0D9488;strokeWidth=2;fontSize=11;fontColor=#0F172A;align=left;spacingLeft=12;">
+          <mxGeometry x="14" y="980" width="1720" height="52" as="geometry"/>
         </mxCell>
-        <mxCell id="bot_end" value="&lt;b&gt;END 🏁&lt;/b&gt;" vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0F172A;strokeColor=#0F172A;fontSize=13;fontColor=#FFFFFF;fontStyle=1;">
-          <mxGeometry x="1760" y="978" width="140" height="54" as="geometry"/>
+        <mxCell id="bot_end" value="&lt;b&gt;END 🏁&lt;/b&gt;" vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0F172A;strokeColor=#0F172A;fontSize=14;fontColor=#FFFFFF;fontStyle=1;">
+          <mxGeometry x="1748" y="980" width="158" height="52" as="geometry"/>
         </mxCell>
         <mxCell id="e_use_end" value="" edge="1" parent="1" source="bot_use" target="bot_end" style="strokeColor=#0F172A;strokeWidth=2;">
           <mxGeometry relative="1" as="geometry"/>
         </mxCell>
-        <mxCell id="metrics" value="SYSTEM STATUS: 15/15 Automated Unit Tests Passing  |  Lie Group SO(3) Accuracy: &amp;lt; 10⁻¹⁶  |  DARE Riccati Tolerance: 5.2×10⁻⁸  |  MPC QP Solve Time: 0.42 ms  |  Control Loop Rate: 50.0 Hz Real-Time  |  Takeoff Protection Gate: Active (Z ≥ 0.50m)" vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0F172A;strokeColor=#0F172A;fontSize=10;fontColor=#34D399;fontStyle=1;align=center;">
-          <mxGeometry x="20" y="1038" width="1880" height="32" as="geometry"/>
+        <mxCell id="metrics" value="SYSTEM STATUS: 15/15 Automated Unit Tests Passing  |  Lie Group SO(3) Accuracy: &amp;lt; 10⁻¹⁶  |  DARE Riccati Tolerance: 5.2×10⁻⁸  |  MPC QP Solve Time: 0.42 ms  |  Control Loop Rate: 50.0 Hz Real-Time  |  Takeoff Protection Gate: Active (Z ≥ 0.50m)" vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0F172A;strokeColor=#0F172A;fontSize=11;fontColor=#34D399;fontStyle=1;align=center;">
+          <mxGeometry x="14" y="1038" width="1892" height="32" as="geometry"/>
         </mxCell>
       </root>
     </mxGraphModel>
