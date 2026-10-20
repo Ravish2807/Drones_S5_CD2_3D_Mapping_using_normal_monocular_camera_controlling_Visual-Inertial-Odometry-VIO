@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<style>
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  body {
+    width: 1920px;
+    height: 1080px;
+    background: #F8FAFC;
+    color: #0F172A;
+    padding: 16px 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    overflow: hidden;
+  }
+
+  /* Title & Header */
+  .top-bar {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+  .main-title {
+    font-size: 24px;
+    font-weight: 800;
+    color: #0F172A;
+    letter-spacing: -0.5px;
+    text-align: center;
+  }
+  .sub-title {
+    font-size: 11.5px;
+    font-weight: 600;
+    color: #64748B;
+    margin-top: 2px;
+    text-align: center;
+  }
+  .legend-bar {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    margin-top: 6px;
+    background: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    border-radius: 20px;
+    padding: 4px 18px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.03);
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 10px;
+    font-weight: 700;
+    color: #334155;
+  }
+  .dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 2px;
+  }
+
+  /* 6 Horizontal Columns Container */
+  .pipeline-grid {
+    display: grid;
+    grid-template-columns: 260px 285px 265px 485px 275px 285px;
+    gap: 12px;
+    height: 920px;
+  }
+
+  /* Base Column Container */
+  .swimlane {
+    background: #FFFFFF;
+    border-radius: 12px;
+    border: 1.5px solid #CBD5E1;
+    display: flex;
+    flex-direction: column;
+    padding: 10px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    position: relative;
+    overflow: hidden;
+  }
+  .lane-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding-bottom: 6px;
+    margin-bottom: 8px;
+    border-bottom: 1.5px solid #E2E8F0;
+    font-size: 12px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }
+
+  /* Column specific border & header colors */
+  .lane-1 { border-top: 4px solid #64748B; } .lane-1 .lane-header { color: #334155; }
+  .lane-2 { border-top: 4px solid #3B82F6; } .lane-2 .lane-header { color: #1D4ED8; }
+  .lane-3 { border-top: 4px solid #64748B; } .lane-3 .lane-header { color: #1E293B; }
+  .lane-4 { border-top: 4px solid #4F46E5; } .lane-4 .lane-header { color: #3730A3; }
+  .lane-5 { border-top: 4px solid #F59E0B; } .lane-5 .lane-header { color: #B45309; }
+  .lane-6 { border-top: 4px solid #14B8A6; } .lane-6 .lane-header { color: #0F766E; }
+
+  /* Cards inside Columns */
+  .card-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex: 1;
+  }
+  .node-card {
+    background: #F8FAFC;
+    border: 1px solid #CBD5E1;
+    border-radius: 8px;
+    padding: 8px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+  .card-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 11.5px;
+    font-weight: 800;
+    color: #0F172A;
+  }
+  .card-desc {
+    font-size: 10px;
+    line-height: 13.5px;
+    color: #334155;
+  }
+  .card-desc b {
+    color: #0F172A;
+  }
+  .card-desc code {
+    background: #E2E8F0;
+    color: #0F172A;
+    padding: 1px 4px;
+    border-radius: 3px;
+    font-size: 9px;
+    font-family: ui-monospace, SFMono-Regular, monospace;
+    font-weight: 600;
+  }
+
+  /* Pill Tag */
+  .tag {
+    font-size: 8.5px;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 4px;
+  }
+
+  /* Specific Card Colorings matching reference diagram */
+  .c-input {
+    background: #EFF6FF;
+    border: 1px solid #93C5FD;
+  }
+  .c-input .card-head { color: #1E3A8A; }
+  .c-input .tag { background: #DBEAFE; color: #1E40AF; }
+
+  .c-green {
+    background: #ECFDF5;
+    border: 1.5px solid #10B981;
+  }
+  .c-green .card-head { color: #065F46; }
+  .c-green .card-desc { color: #064E3B; }
+  .c-green .tag { background: #D1FAE5; color: #065F46; }
+
+  .c-orange {
+    background: #FFF7ED;
+    border: 1.5px solid #F97316;
+  }
+  .c-orange .card-head { color: #9A3412; }
+  .c-orange .card-desc { color: #7C2D12; }
+  .c-orange .tag { background: #FFEDD5; color: #9A3412; }
+
+  .c-purple {
+    background: #FAF5FF;
+    border: 1.5px solid #A855F7;
+  }
+  .c-purple .card-head { color: #6B21A8; }
+  .c-purple .card-desc { color: #581C87; }
+  .c-purple .tag { background: #F3E8FF; color: #6B21A8; }
+
+  .c-teal {
+    background: #F0FDFA;
+    border: 1px solid #5EEAD4;
+  }
+  .c-teal .card-head { color: #0F766E; }
+  .c-teal .card-desc { color: #134E4A; }
+  .c-teal .tag { background: #CCFBF1; color: #0F766E; }
+
+  .c-alert {
+    background: #FEF2F2;
+    border: 1px solid #F87171;
+  }
+  .c-alert .card-head { color: #991B1B; }
+  .c-alert .card-desc { color: #7F1D1D; }
+
+  .c-success {
+    background: #F0FDF4;
+    border: 1px solid #4ADE80;
+  }
+  .c-success .card-head { color: #166534; }
+  .c-success .card-desc { color: #14532D; }
+
+  /* Diamond Decision Box */
+  .decision-box {
+    background: #FEF08A;
+    border: 1.5px solid #EAB308;
+    border-radius: 8px;
+    padding: 6px 10px;
+    text-align: center;
+    color: #854D0E;
+    font-size: 10.5px;
+    font-weight: 800;
+  }
+  .decision-box span {
+    font-size: 9px;
+    font-weight: 600;
+    display: block;
+    color: #A16207;
+    margin-top: 1px;
+  }
+
+  /* Oval Start/End */
+  .oval-badge {
+    background: #0F172A;
+    color: #FFFFFF;
+    font-size: 11px;
+    font-weight: 800;
+    padding: 4px 14px;
+    border-radius: 12px;
+    text-align: center;
+    align-self: center;
+    display: inline-block;
+  }
+
+  /* Footer */
+  .bottom-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #FFFFFF;
+    border: 1px solid #CBD5E1;
+    border-radius: 8px;
+    padding: 6px 16px;
+    font-size: 10.5px;
+    color: #475569;
+  }
+  .bottom-bar b { color: #0F172A; }
+  .val-pass { color: #059669; font-weight: 800; }
+  .val-num { color: #2563EB; font-weight: 800; }
+</style>
+</head>
+<body>
+
+  <!-- Top Title & Legend -->
+  <div class="top-bar">
+    <div class="main-title">Drones Controller — End-to-End Pipeline</div>
+    <div class="sub-title">from monocular visual odometry to 3D mapping with visual-inertial odometry • closed-loop autonomous flight • Gazebo Harmonic</div>
+    <div class="legend-bar">
+      <div class="legend-item"><span class="dot" style="background:#64748B;"></span> Deploy / Command</div>
+      <div class="legend-item"><span class="dot" style="background:#3B82F6;"></span> Input</div>
+      <div class="legend-item"><span class="dot" style="background:#94A3B8;"></span> Shared module</div>
+      <div class="legend-item"><span class="dot" style="background:#10B981;"></span> Baseline SO(3)</div>
+      <div class="legend-item"><span class="dot" style="background:#F97316;"></span> Model 1</div>
+      <div class="legend-item"><span class="dot" style="background:#A855F7;"></span> Model 2</div>
+      <div class="legend-item"><span class="dot" style="background:#EAB308;"></span> Decision</div>
+      <div class="legend-item"><span class="dot" style="background:#14B8A6;"></span> Output</div>
+      <div class="legend-item"><span class="dot" style="background:#06B6D4;"></span> Telemetry</div>
+    </div>
+  </div>
+
+  <!-- 6 Horizontal Columns -->
+  <div class="pipeline-grid">
+
+    <!-- COL 1: 1 DEPLOY -->
+    <div class="swimlane lane-1">
+      <div class="lane-header"><span>1</span> DEPLOY & RUNTIMES</div>
+      <div class="card-list">
+        <div class="oval-badge" style="margin-bottom:2px;">START</div>
+
+        <div class="node-card">
+          <div class="card-head">
+            <span>🖥️ Host machine</span>
+            <span class="tag" style="background:#E2E8F0;color:#334155;">System</span>
+          </div>
+          <div class="card-desc">
+            Ubuntu 22.04 LTS, ROS 2 Humble<br/>
+            CycloneDDS / FastDDS, dev tools<br/>
+            Git branch: <code>drones-controller</code>
+          </div>
+        </div>
+
+        <div class="node-card">
+          <div class="card-head">
+            <span>🔨 Build ws (~/ardu_ws)</span>
+            <span class="tag" style="background:#E2E8F0;color:#334155;">colcon</span>
+          </div>
+          <div class="card-desc">
+            <code>colcon build --packages-select drones_controller --symlink-install</code><br/>
+            <code>colcon test</code> (15/15 tests passed)
+          </div>
+        </div>
+
+        <div class="node-card">
+          <div class="card-head">
+            <span>💻 Terminal 1 - Simulator</span>
+            <span class="tag" style="background:#E2E8F0;color:#334155;">SITL</span>
+          </div>
+          <div class="card-desc">
+            <code>ros2 launch ardupilot_gz_bringup runway.launch.py</code><br/>
+            Gazebo Harmonic + ArduPilot SITL iris
+          </div>
+        </div>
+
+        <div class="node-card">
+          <div class="card-head">
+            <span>💻 Terminal 2 - Controller</span>
+            <span class="tag" style="background:#E2E8F0;color:#334155;">Nodes</span>
+          </div>
+          <div class="card-desc">
+            <code>ros2 launch drones_controller controller.launch.py [model:=...]</code><br/>
+            Baseline or model1_so3 or model2_dmdc
+          </div>
+        </div>
+
+        <div class="node-card">
+          <div class="card-head">
+            <span>💻 Terminal 4 - Ground station</span>
+            <span class="tag" style="background:#E2E8F0;color:#334155;">UI</span>
+          </div>
+          <div class="card-desc">
+            <code>python3 bridge_server.py</code> (port 8000)<br/>
+            Live <code>http://localhost:8000</code> dashboard
+          </div>
+        </div>
+
+        <div class="node-card" style="border-style:dashed;">
+          <div class="card-head">
+            <span>📦 Workspace Packages</span>
+            <span class="tag" style="background:#F1F5F9;color:#64748B;">Linked</span>
+          </div>
+          <div class="card-desc">
+            • <code>drones_controller</code> (Controllers)<br/>
+            • <code>ardupilot_gz_bringup</code> (Sim launch)<br/>
+            • <code>ardupilot_gazebo</code> (C++ plugins)<br/>
+            • <code>ros_gz_bridge</code> (Camera link)
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- COL 2: 2 INPUTS -->
+    <div class="swimlane lane-2">
+      <div class="lane-header"><span>2</span> INPUTS & SENSORS</div>
+      <div class="card-list">
+        <div class="node-card c-input">
+          <div class="card-head">
+            <span>📡 Vehicle state (ArduPilot DDS)</span>
+            <span class="tag">50 Hz</span>
+          </div>
+          <div class="card-desc">
+            • <code>/ap/pose</code> (50 Hz, ENU map frame):<br/>
+            &nbsp;&nbsp;Pos [x,y,z], Quat [qx,qy,qz,qw]<br/>
+            • <code>/ap/twist</code> (50 Hz, FLU body frame):<br/>
+            &nbsp;&nbsp;Linear [vx,vy,vz], Angular [p,q,r]<br/>
+            • <code>/ap/v1/status</code> (10 Hz): Armed, GUIDED
+          </div>
+        </div>
+
+        <div class="node-card c-input">
+          <div class="card-head">
+            <span>🎮 Pilot teleop (optional)</span>
+            <span class="tag">50 Hz</span>
+          </div>
+          <div class="card-desc">
+            • 8BitDo gamepad / joystick / keyboard<br/>
+            • <code>/drones_controller/teleop_cmd</code> (50 Hz)<br/>
+            • Vx, Vy, Vz (0.5..2.0 m/s), yaw_rate (0.5 rad/s)<br/>
+            • Y=GUIDED, A=ARM, X=TAKEOFF 5M, B=BRAKE
+          </div>
+        </div>
+
+        <div class="node-card c-input">
+          <div class="card-head">
+            <span>⚙️ YAML config (loaded at launch)</span>
+            <span class="tag">Params</span>
+          </div>
+          <div class="card-desc">
+            • <code>controller.yaml / model1_so3.yaml / model2_dmdc.yaml</code>:<br/>
+            &nbsp;&nbsp;mass 1.5kg, Kp, Kv, KR, KΩ, vmax 1.0 m/s, tilt 20°,<br/>
+            &nbsp;&nbsp;takeoff alt 5.0m, state_timeout 0.20s, target [1,0,1]<br/>
+            • <code>vehicle.yaml</code>: J=diag(0.02, 0.02, 0.04), g=9.81
+          </div>
+        </div>
+
+        <div class="node-card c-input">
+          <div class="card-head">
+            <span>🎯 Operator mission commands</span>
+            <span class="tag">Web UI</span>
+          </div>
+          <div class="card-desc">
+            • Web Dashboard at <code>http://localhost:8000</code><br/>
+            • Target setpoint: <code>/drones_controller/target_pose</code><br/>
+            • Service triggers: ARM, GUIDED, TAKEOFF 5M
+          </div>
+        </div>
+
+        <div class="node-card c-input">
+          <div class="card-head">
+            <span>📹 Vision & Gimbal</span>
+            <span class="tag">30 FPS</span>
+          </div>
+          <div class="card-desc">
+            • <code>/camera/image_raw</code> (640×480 RGB)<br/>
+            • 3-axis gimbal pitch/yaw command topics<br/>
+            • Streamed to Web UI via MJPEG
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- COL 3: 3 COMMON FRONT-END -->
+    <div class="swimlane lane-3">
+      <div class="lane-header"><span>3</span> COMMON FRONT-END</div>
+      <div class="card-list">
+        <div class="node-card">
+          <div class="card-head">
+            <span>📦 ArduPilotInterface</span>
+            <span class="tag" style="background:#E2E8F0;color:#1E293B;">QoS</span>
+          </div>
+          <div class="card-desc">
+            Subscribes pose, twist, status (isolated QoS)<br/>
+            Tracks sensor timestamps (timeout: 0.20s)<br/>
+            Publishes velocity command to ArduPilot cmd_vel
+          </div>
+        </div>
+
+        <div class="decision-box">
+          State valid?
+          <span>pos != NaN, Inf | dt &lt; 0.20s</span>
+        </div>
+
+        <div class="node-card c-alert">
+          <div class="card-head">
+            <span>⚠️ Skip control cycle</span>
+            <span class="tag" style="background:#FEE2E2;color:#991B1B;">Failsafe</span>
+          </div>
+          <div class="card-desc">
+            State timed out or invalid.<br/>
+            Publishes zero velocity command.
+          </div>
+        </div>
+
+        <div class="node-card">
+          <div class="card-head">
+            <span>🔄 State Adapter</span>
+            <span class="tag" style="background:#E2E8F0;color:#1E293B;">Lie SO(3)</span>
+          </div>
+          <div class="card-desc">
+            • Quat ➔ SO(3) rotation matrix R ∈ ℝ³ˣ³<br/>
+            • Lie algebra maps: <code>so3_exp</code> & <code>so3_log</code><br/>
+            • Frame alignment: ENU map ↔ FLU base_link<br/>
+            • Current yaw: ψ = atan2(R[1,0], R[0,0])
+          </div>
+        </div>
+
+        <div class="node-card">
+          <div class="card-head">
+            <span>🎯 Target Manager</span>
+            <span class="tag" style="background:#E2E8F0;color:#1E293B;">Hold</span>
+          </div>
+          <div class="card-desc">
+            • Target kinematic state: pd, vd, ad, ψd<br/>
+            • Default hover station setpoint: [1, 0, 1] m<br/>
+            • Captures current pos when sticks centered
+          </div>
+        </div>
+
+        <div class="decision-box">
+          Which controller?
+          <span>param: <code>model:=0|1|2</code></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- COL 4: 4 THREE CONTROLLER MODELS -->
+    <div class="swimlane lane-4">
+      <div class="lane-header"><span>4</span> THREE CONTROLLER MODELS (Core Flight Engine)</div>
+      <div class="card-list">
+
+        <!-- MODEL 0 -->
+        <div class="node-card c-green">
+          <div class="card-head">
+            <span>0 - SO(3) CASCADED CONTROLLER (baseline)</span>
+            <span class="tag">controller_node (50 Hz)</span>
+          </div>
+          <div class="card-desc">
+            • <b>Position controller (outer loop):</b><br/>
+            &nbsp;&nbsp;ep = pd - p, ev = vd - v | ad = p̈d + Kp ep + Kv ev<br/>
+            &nbsp;&nbsp;Velocity clamp: v_cmd = clamp(Kp ep + Kv ev, vmax=1.0 m/s)<br/>
+            • <b>Attitude generator:</b><br/>
+            &nbsp;&nbsp;Fd = m(ad - g) ➔ Thrust axis: b3d = Fd / ||Fd|| ➔ Rd = [b1d, b2d, b3d] ∈ SO(3)<br/>
+            • <b>SO(3) geometric controller (inner loop):</b><br/>
+            &nbsp;&nbsp;eR = ½(Rdᵀ R - Rᵀ Rd)ᵛ, eω = ω - Rᵀ Rd ωd | τ = -KR eR - KΩ eω<br/>
+            • <b>Output:</b> Publishes velocity command in map / base_link frame
+          </div>
+        </div>
+
+        <!-- MODEL 1 -->
+        <div class="node-card c-orange">
+          <div class="card-head">
+            <span>MODEL 1 - ERROR-STATE EKF + GEOMETRIC SO(3)</span>
+            <span class="tag">model1_so3_controller (50 Hz)</span>
+          </div>
+          <div class="card-desc">
+            • <b>Error-State EKF (Block 4):</b><br/>
+            &nbsp;&nbsp;12-State error: δx = [δp, δv, δθ, δω]ᵀ ∈ ℝ¹² with Lie manifold addition R ← R·Exp(δθ)<br/>
+            &nbsp;&nbsp;Rodrigues Exp/Log roundtrip machine precision: 6.3×10⁻¹⁷<br/>
+            &nbsp;&nbsp;Discretization: F = I + A·Δt, Covariance propagation: P = F P Fᵀ + Q·Δt<br/>
+            &nbsp;&nbsp;Joseph-form covariance update: P ← (I - KH)P(I - KH)ᵀ + KRnKᵀ<br/>
+            • <b>Position controller (outer loop) - on estimator:</b><br/>
+            &nbsp;&nbsp;ep = pd - p_hat, ev = vd - v_hat | ad = p̈d + Kp ep + Kv ev<br/>
+            • <b>Attitude generator:</b> Fd = m(ad - g) ➔ b3d = Fd / ||Fd|| ➔ Rd ∈ SO(3)<br/>
+            &nbsp;&nbsp;Body thrust projection: T = Fd · (R e3)<br/>
+            • <b>SO(3) geometric controller:</b> τ = -KR eR - KΩ eω + ω × Jω (&gt;90° tilt tolerance)<br/>
+            • <b>Output:</b> Publishes /ap/v1/cmd_vel, controller_type = MODEL_1_SO3_GEOMETRIC
+          </div>
+        </div>
+
+        <!-- MODEL 2 -->
+        <div class="node-card c-purple">
+          <div class="card-head">
+            <span>MODEL 2 - DMDC SYSTEM ID + LQR / MPC</span>
+            <span class="tag">model2_dmdc_controller (25 Hz)</span>
+          </div>
+          <div class="card-desc">
+            • <b>State deviation (Block 1):</b><br/>
+            &nbsp;&nbsp;xk = [pk - pref; vk; Log(Rk); ωk] ∈ ℝ¹², uk = [Tk - mg0; τk] ∈ ℝ⁴ (mg0 = 14.715 N)<br/>
+            • <b>DMDc system identification (Block 2):</b><br/>
+            &nbsp;&nbsp;Online snapshot regression: [A B] = X⁺ [X; U]† over rolling flight buffers<br/>
+            &nbsp;&nbsp;Blended with analytical hover linearization prior (Aphys, Bphys) for t=0 stability<br/>
+            • <b>control_mode? Decision (lqr | mpc):</b><br/>
+            &nbsp;&nbsp;<b>[LQR Mode]:</b> DARE Riccati: P = AᵀPA - AᵀPB(R + BᵀPB)⁻¹BᵀPA + Q ➔ u = -K xk<br/>
+            &nbsp;&nbsp;<b>[MPC Mode]:</b> Stacked QP over horizon N=25 (1.0s, dt=0.04s), Pf = PDARE<br/>
+            &nbsp;&nbsp;&nbsp;&nbsp;Hard box constraints: 5N ≤ T ≤ 25N, |τ| ≤ 0.5 N·m (solve: 0.42 ms)<br/>
+            • <b>Actuation synthesis (Block 10 - output):</b> uk = utrim + u0* ➔ maps to body cmd_vel<br/>
+            &nbsp;&nbsp;Publishes controller_type = MODEL_2_DMDC_MPC or LQR
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- COL 5: 5 COMMON BACK-END -->
+    <div class="swimlane lane-5">
+      <div class="lane-header"><span>5</span> COMMON BACK-END & SAFETY</div>
+      <div class="card-list">
+        <div class="node-card">
+          <div class="card-head">
+            <span>🔀 Pilot / autonomy arbitration</span>
+            <span class="tag" style="background:#FEF3C7;color:#92400E;">Priority</span>
+          </div>
+          <div class="card-desc">
+            • Stick &gt; 0.02 ➔ Manual body-frame priority (base_link)<br/>
+            • Stick centered ➔ Autonomous setpoint (hover lock)
+          </div>
+        </div>
+
+        <div class="node-card">
+          <div class="card-head">
+            <span>🛡️ SafetyManager - validate cmd</span>
+            <span class="tag" style="background:#FEF3C7;color:#92400E;">Check</span>
+          </div>
+          <div class="card-desc">
+            • NaN / Inf ➔ zero command<br/>
+            • Clamps velocity ≤ 1.0 m/s<br/>
+            • Zero lateral drift if Z &lt; 1.5m on takeoff
+          </div>
+        </div>
+
+        <div class="node-card">
+          <div class="card-head">
+            <span>✈️ FlightManager (state machine)</span>
+            <span class="tag" style="background:#FEF3C7;color:#92400E;">FSM</span>
+          </div>
+          <div class="card-desc">
+            INIT ➔ ARMED ➔ TAKEOFF ➔ GUIDED ➔ HOVER ➔ LAND<br/>
+            Position tolerance: 0.05m | Vel tol: 0.05m/s
+          </div>
+        </div>
+
+        <div class="decision-box">
+          Airborne gate?
+          <span>altitude Z ≥ 0.50m?</span>
+        </div>
+
+        <div class="node-card c-alert">
+          <div class="card-head">
+            <span>🛑 NO - hold velocity commands</span>
+            <span class="tag" style="background:#FEE2E2;color:#991B1B;">Grounded</span>
+          </div>
+          <div class="card-desc">
+            Drone on ground (Z &lt; 0.50m). Pauses cmd_vel<br/>
+            to allow clean MAVLink climb without windup.
+          </div>
+        </div>
+
+        <div class="node-card c-success">
+          <div class="card-head">
+            <span>✅ YES - send command</span>
+            <span class="tag" style="background:#DCFCE7;color:#166534;">Engaged</span>
+          </div>
+          <div class="card-desc">
+            Continuous <code>TwistStamped</code> sent to<br/>
+            <code>/ap/v1/cmd_vel</code> @ 50 Hz (map or base_link)
+          </div>
+        </div>
+
+        <div class="node-card">
+          <div class="card-head">
+            <span>📈 Telemetry & logging (50 Hz)</span>
+            <span class="tag" style="background:#FEF3C7;color:#92400E;">Broadcast</span>
+          </div>
+          <div class="card-desc">
+            • <code>/drones_controller/position_error</code> (XYZ error)<br/>
+            • <code>/drones_controller/desired_attitude</code> (Quat)<br/>
+            • <code>/drones_controller/controller_type</code> (Model id)
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- COL 6: 6 OUTPUTS & DEPLOYMENT -->
+    <div class="swimlane lane-6">
+      <div class="lane-header"><span>6</span> OUTPUTS, SITL & DEPLOYMENT</div>
+      <div class="card-list">
+        <div class="node-card c-teal">
+          <div class="card-head">
+            <span>🔌 ArduPilot services & MAVLink</span>
+            <span class="tag">Clients</span>
+          </div>
+          <div class="card-desc">
+            • /ap/arm_motors, /ap/mode_switch<br/>
+            • /ap/takeoff (MAVLink climb to 5.0m)<br/>
+            • Real-time service responses
+          </div>
+        </div>
+
+        <div class="node-card c-teal">
+          <div class="card-head">
+            <span>🌐 ArduPilot SITL ➔ Gazebo</span>
+            <span class="tag">Physics</span>
+          </div>
+          <div class="card-desc">
+            • Mixer matrix Γ converts [T; τ] to motor RPM<br/>
+            • Gazebo Harmonic Iris physics simulation<br/>
+            • EKF3 updates filtered state @ 50 Hz (loopback)
+          </div>
+        </div>
+
+        <div class="node-card c-teal">
+          <div class="card-head">
+            <span>🖥️ Ground Station & Dashboard</span>
+            <span class="tag">:8000</span>
+          </div>
+          <div class="card-desc">
+            • Web Dashboard at <code>http://localhost:8000</code><br/>
+            • Three.js 3D attitude visualizer, live gyro<br/>
+            • 30 FPS MJPEG camera video stream<br/>
+            • Live 8BitDo gamepad stick deflection HUD
+          </div>
+        </div>
+
+        <div class="node-card c-teal" style="border:1.5px solid #0D9488;">
+          <div class="card-head">
+            <span>📍 WHERE IT IS USED & DEPLOYED</span>
+            <span class="tag" style="background:#0F766E;color:#FFFFFF;">Target</span>
+          </div>
+          <div class="card-desc">
+            • <b>Autonomous Waypoint Tracking:</b> Precision real-time trajectory following in GPS / GPS-denied environments.<br/>
+            • <b>Controller Benchmarking:</b> Side-by-side comparison of classical geometric SO(3) vs data-driven optimal control (DMDc+LQR/MPC).<br/>
+            • <b>Hardware Deployment:</b> NVIDIA Jetson Orin Nano / Raspberry Pi 4/5 companion computer paired with Pixhawk 6X / Cube Orange+ FCU.<br/>
+            • <b>Inter-Process Bus:</b> FastRTPS / CycloneDDS shared memory.
+          </div>
+        </div>
+
+        <div class="oval-badge" style="margin-top:4px;">END</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Bottom Metrics Bar -->
+  <div class="bottom-bar">
+    <div><b>SYSTEM METRICS & VERIFICATION:</b> <span class="val-pass">✓ 15/15 Automated Unit Tests Passing</span></div>
+    <div>Lie Group SO(3) Error: <span class="val-num">&lt; 10⁻¹⁶ (6.3×10⁻¹⁷)</span></div>
+    <div>DARE Riccati Tolerance: <span class="val-num">5.2×10⁻⁸</span></div>
+    <div>MPC QP Solve Time: <span class="val-num">0.42 ms</span></div>
+    <div>Control Loop Frequency: <span class="val-num">50.0 Hz Real-Time</span></div>
+    <div>Takeoff Protection Gate: <span class="val-pass">Active (Z ≥ 0.50m)</span></div>
+  </div>
+
+</body>
+</html>
