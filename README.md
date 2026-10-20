@@ -1,265 +1,256 @@
-<p align="center">
-  <img src="https://github.com/user-attachments/assets/060f7774-a73f-4132-9413-36887ed09cfa" alt="Amrita Vishwa Vidyapeetham" width="430">
-</p>
+<div align="center">
 
-# $\color{#9B2226}{\textsf{\textbf{3D\ MAPPING\ OF\ AN\ ENVIRONMENT\ USING\ NORMAL\ MONOCULAR}}}$ <br> $\color{#9B2226}{\textsf{\textbf{CAMERA\ AND\ CONTROLLING\ THE\ DRONE\ BY\ VISUAL-INERTIAL\ ODOMETRY\ (VIO)}}}$
+<img src="https://github.com/user-attachments/assets/060f7774-a73f-4132-9413-36887ed09cfa" alt="Amrita Vishwa Vidyapeetham" width="320">
 
-### *A First-Principles, Euler-Angle-Free Approach for Autonomous Multirotor UAVs*
+# 3D Environment Mapping & Monocular Visual-Inertial Odometry
 
-**Presented by Group CD2**
+### Quaternion-based Geometric Control for Autonomous Multirotor UAVs
 
-[![ROS 2 Humble](https://img.shields.io/badge/ROS%202-Humble-22314E?logo=ros&logoColor=white)](https://docs.ros.org/en/humble/index.html)
-[![Python](https://img.shields.io/badge/Python-3.x-3776AB?logo=python&logoColor=white)](https://www.python.org/)
-[![ArduPilot SITL](https://img.shields.io/badge/ArduPilot-SITL-FF6F00)](https://ardupilot.org/dev/docs/sitl-simulator-software-in-the-loop.html)
-[![Gazebo](https://img.shields.io/badge/Gazebo-Simulation-264653)](https://gazebosim.org/)
-[![MATLAB](https://img.shields.io/badge/MATLAB-Toolbox-FF8C00)](https://www.mathworks.com/products/ros.html)
-[![SO(3)](https://img.shields.io/badge/Control-SO(3)-1D4ED8)](#methodology)
-[![Quaternion](https://img.shields.io/badge/Orientation-Quaternion-1E40AF)](#state--control-parameters)
+**Group CD2 · Amrita Vishwa Vidyapeetham, Coimbatore**
+
+[![ROS 2 Humble](https://img.shields.io/badge/ROS_2-Humble-22314E?style=for-the-badge&logo=ros&logoColor=white)](https://docs.ros.org/en/humble/index.html)
+[![Python](https://img.shields.io/badge/Python-3.x-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
+[![ArduPilot SITL](https://img.shields.io/badge/ArduPilot-SITL-E76F00?style=for-the-badge)](https://ardupilot.org/dev/docs/sitl-simulator-software-in-the-loop.html)
+[![Gazebo](https://img.shields.io/badge/Simulation-Gazebo-264653?style=for-the-badge)](https://gazebosim.org/)
+[![MATLAB](https://img.shields.io/badge/Tools-MATLAB-0076A8?style=for-the-badge)](https://www.mathworks.com/products/ros.html)
+[![License](https://img.shields.io/badge/License-Apache--2.0-2A9D8F?style=for-the-badge)](LICENSE)
+
+**Explore the project:** [Controller](#-controller-at-a-glance) · [Architecture](#-system-architecture) · [Quick start](#-quick-start) · [Results](#-results--visual-evidence) · [Team](#-team)
 
 </div>
 
----
 
-## Team Members
+## 👥 Team
 
-| Name | Roll Number | Email |
-|---|---|---|
-| **Ravishanmugam K** | `CB.SC.U4AIE24347` | `ravish2007801@gmail.com` |
-| **Ishwarya Murugesan** | `CB.SC.U4AIE24220` | `ishwarya15m@gmail.com` |
-| **Aparna Bharani** | `CB.SC.U4AIE24304` | `aparnabharani2006@gmail.com` |
-| **Cibikumar B** | `CB.SC.U4AIE24212` | `cibikumar30@gmail.com` |
-| **Akhilan S** | `CB.SC.U4AIE24362` | `akhilan1010@gmail.com` |
-
----
-
-## Table of Contents
-
-- [Abstract](#abstract)
-- [Introduction](#introduction)
-- [Methodology](#methodology)
-- [3D Mapping & VIO Pipeline](#3d-mapping--vio-pipeline)
-- [State & Control Parameters](#state--control-parameters)
-- [Comparative Analysis](#comparative-analysis)
-- [Results](#results)
-- [Conclusion](#conclusion)
-- [References](#references)
-- [Project Tree](#project-tree)
+| Name | Roll number |
+| --- | --- |
+| Ravishanmugam K | `CB.SC.U4AIE24347` |
+| Ishwarya Murugesan | `CB.SC.U4AIE24220` |
+| Aparna Bharani | `CB.SC.U4AIE24304` |
+| Cibikumar B | `CB.SC.U4AIE24212` |
+| Akhilan S | `CB.SC.U4AIE24362` |
 
 ---
 
-## Abstract
+> [!IMPORTANT]
+> **Implementation scope:** The current committed ROS 2 implementation focuses on SO(3) geometric control and ArduPilot topic integration. Monocular VIO and full 3D reconstruction are project goals/research context; this README does not present them as completed ROS 2 modules.
 
-This repository presents a first-principles multirotor control workflow centered on geometric attitude control in $SO(3)$ and quaternion-based orientation handling, implemented as a ROS 2 Python package (`drones_controller`) and supported by MATLAB live scripts (`Toy Model/`). The controller consumes filtered pose/twist state streams from an ArduPilot SITL + Gazebo simulation setup and computes force/moment-level geometric control quantities along with commandable velocity outputs.
+## ✨ Overview
 
-The project direction targets monocular-camera-driven VIO and 3D mapping; however, in the current repository snapshot, those perception modules are represented as project scope/results context rather than fully implemented ROS 2 mapping nodes. This keeps claims aligned with available implementation artifacts.
+Drones operating indoors or in GPS-denied environments need reliable state estimation, position control, and a useful representation of the surrounding space. This project explores that broader challenge while implementing a modular multirotor controller built around **rotation matrices, quaternions, and geometric attitude control on SO(3)**.
 
-[IMPORTANT]
-> The controller avoids Euler-angle internal attitude feedback and uses rotation matrices/quaternions to avoid gimbal-lock singularities in the control law.
+The repository combines a ROS 2 Python package, an ArduPilot SITL/Gazebo interface, MATLAB live scripts for staged modelling and experimentation, and saved result images.
 
----
+### What is in this repository?
 
-## Introduction
+| Area | Current contents |
+| --- | --- |
+| **Geometric control** | Position/velocity error calculation, desired-force and attitude construction, SO(3) attitude errors, and moment-control calculations |
+| **ROS 2 integration** | Controller node that consumes filtered pose/twist state and publishes velocity commands plus diagnostics |
+| **Simulation workflow** | ArduPilot SITL and Gazebo integration context |
+| **MATLAB experiments** | Staged live scripts covering waypoints, trajectories, synthetic sensors, state estimation, controller logic, dynamics, and results |
+| **Mapping & VIO** | Project objective and research direction; dedicated end-to-end perception/mapping nodes are not currently included in the main ROS 2 package |
 
-Multirotor UAV dynamics are nonlinear, coupled, and underactuated: translational tracking and attitude dynamics cannot be treated as independent in aggressive or disturbance-rich maneuvers. Classical Euler-angle pipelines are practical but can suffer singularity issues that complicate globally consistent control analysis.
+## 🚁 Controller at a glance
 
-This project adopts a geometric control formulation in $SO(3)$ and quaternion-based state conversion, implemented in `drones_controller/drones_controller/so3_controller.py`, `state_adapter.py`, and `controller_node.py`. The architecture is organized around ArduPilot SITL state topics, ROS 2/DDS transport, and Gazebo-based simulation.
+The controller avoids Euler angles as its internal attitude representation. It uses rotation matrices and quaternion conversions to represent orientation and computes geometric tracking errors to form control quantities.
 
-MATLAB Live Scripts in `Toy Model/` provide a structured progression (waypoints, trajectory, synthetic sensing, state estimation, SO(3) controller, dynamics, and final results), complementing the ROS 2 controller implementation.
+- **Position and velocity feedback** to track a desired state.
+- **SO(3) attitude handling** using desired rotation matrices and geometric attitude error.
+- **Configurable gains and setpoints** stored in `drones_controller/config/controller.yaml`.
+- **ROS 2 diagnostics** for position error, velocity error, desired force/moment, attitude error, and desired attitude.
+- **Command gating**: `enable_command` defaults to `false` in the supplied configuration.
 
----
+## 🧭 System architecture
 
-## Methodology
+The animated architecture diagram is maintained as a standalone SVG so it can be previewed and edited independently of this README. Animated nodes, connectors, and traveling dots illustrate the flow from simulation and ROS 2 state topics through the SO(3) controller to command output and diagnostics.
 
-### 1) Position Control
+![Animated drone control system architecture](docs/system_architecture.svg)
 
-The controller computes translational tracking errors from desired and measured states:
+**Control loop, simplified**
 
-$$
-\mathbf{e}_x = \mathbf{x}_d - \mathbf{x}, \qquad
-\mathbf{e}_v = \mathbf{v}_d - \mathbf{v}
-$$
+1. Read the filtered pose and twist state from ROS 2 topics.
+2. Compare measured position and velocity with the desired state.
+3. Compute desired force and construct a target attitude.
+4. Calculate geometric attitude and angular-velocity errors.
+5. Publish diagnostics and a bounded velocity command through the configured interface.
 
-and desired force (ENU-adapted implementation):
+> [!NOTE]
+> The controller's force and moment calculations are geometric-control quantities. The currently configured command interface publishes a `geometry_msgs/TwistStamped` velocity command; do not interpret the diagnostics as direct motor-level actuator outputs.
 
-$$
-\mathbf{F}_d = m\left(K_p\mathbf{e}_x + K_v\mathbf{e}_v + \mathbf{a}_d + g\mathbf{e}_3\right)
-$$
+## 🛠️ Technology stack
 
-### 2) Desired Attitude Construction
+| Technology | Role |
+| --- | --- |
+| [ROS 2 Humble](https://docs.ros.org/en/humble/index.html) | Nodes, messages, topics, and runtime integration |
+| [ArduPilot SITL](https://ardupilot.org/dev/docs/sitl-simulator-software-in-the-loop.html) | Software-in-the-loop flight stack and vehicle interface |
+| [Gazebo](https://gazebosim.org/) | Simulation environment |
+| Python + NumPy | Controller implementation and numerical linear algebra |
+| MATLAB Live Scripts | Staged modelling and controller experiments |
 
-The force direction defines the target body $b_3$ axis:
+## 🚀 Quick start
 
-$$
-\mathbf{b}_{3d}=\frac{\mathbf{F}_d}{\|\mathbf{F}_d\|}
-$$
+These steps build the `drones_controller` package inside an existing ROS 2 workspace. They do **not** install or launch ArduPilot or Gazebo for you.
 
-Using desired yaw heading, orthonormal body axes are constructed and stacked as $R_d \in SO(3)$.
+### Prerequisites
 
-### 3) Geometric Attitude Control
+- A working ROS 2 installation compatible with the workspace (the project uses ROS 2 Humble).
+- Python dependencies declared by the package, including NumPy.
+- A configured ArduPilot SITL/DDS and simulation environment if you intend to connect to the vehicle topics.
+- `colcon` installed in your ROS 2 environment.
 
-Attitude and angular-rate errors:
+### 1. Put the package in your workspace
 
-$$
-\mathbf{e}_R = \frac{1}{2}(R_d^TR - R^TR_d)^\vee,
-\qquad
-\mathbf{e}_{\Omega} = \Omega - R^TR_d\Omega_d
-$$
+The package directory should be inside your workspace's `src/` directory. For example:
 
-Implemented moment control law (`compute_moment`):
-
-$$
-\mathbf{M}_d = -K_R\mathbf{e}_R - K_\Omega\mathbf{e}_{\Omega} + \mathbf{\Omega} \times (J\mathbf{\Omega}) - J\left(\hat{\mathbf{\Omega}} R^T R_d \mathbf{\Omega}_d - R^T R_d \dot{\mathbf{\Omega}}_d\right)
-$$
-
-### 4) Command Interface / Allocation Path
-
-The node publishes geometric diagnostics (desired force/moment, attitude error, etc.) and translates position/velocity intent to bounded `/ap/v1/cmd_vel` velocity commands for the current ArduPilot interface.
-
-```mermaid
-flowchart LR
-    A[/ap/v1/pose/filtered\ngeometry_msgs/PoseStamped/] --> B[Controller Node\nso3_controller]
-    C[/ap/v1/twist/filtered\ngeometry_msgs/TwistStamped/] --> B
-    B --> D[SO3Controller\nforce + attitude + moment]
-    D --> E[/drones_controller/* diagnostics\nVector3Stamped, PoseStamped/]
-    B --> F[Velocity Command Translator]
-    F --> G[/ap/v1/cmd_vel\ngeometry_msgs/TwistStamped/]
-    H[WaypointGenerator\nconstant desired state] --> B
+```bash
+mkdir -p ~/drones_ws/src
+cd ~/drones_ws/src
+git clone https://github.com/Ravish2807/Drones_S5_CD2_3D_Mapping_using_normal_monocular_camera_controlling_Visual-Inertial-Odometry-VIO.git
 ```
 
-[!NOTE]
-> In the current implementation, dedicated estimator and actuator-bridge ROS 2 nodes are not separate packages; the controller consumes filtered state from ArduPilot topics and publishes command/diagnostic topics.
+If you already cloned this repository, use that local checkout instead of cloning it again.
 
----
+### 2. Build the controller
 
-## 3D Mapping & VIO Pipeline
+```bash
+cd ~/drones_ws
+source /opt/ros/humble/setup.bash
+colcon build --symlink-install --packages-select drones_controller
+source install/setup.bash
+```
 
-### Implemented in this repository
-- Geometric control pipeline with quaternion/SO(3) attitude handling.
-- ROS 2 topic-level integration for filtered state + velocity command output.
-- MATLAB staged workflow (`step1` ... `step7`) for trajectory/control experimentation.
+### 3. Inspect available executables
 
-### Targeted / referenced project direction
-- **Visual Input:** monocular camera observations.
-- **IMU + VIO fusion:** state estimation for $(x,y,z)$ and orientation.
-- **SLAM / 3D mapping:** environment reconstruction pipeline.
+```bash
+ros2 pkg executables drones_controller
+```
 
-[!TIP]
-> The repository title and `Results/` artifacts indicate mapping/VIO scope, but no dedicated ROS 2 VIO/SLAM package (e.g., OctoMap/Voxblox node integration) is currently committed here.
+The package declares these console entry points:
 
----
+- `controller_node` — the geometric controller node.
+- `teleop` — keyboard velocity teleoperation.
 
-## State & Control Parameters
+### 4. Check topics before running
 
-| Category | Parameters |
-|---|---|
-| Position | $(x, y, z)$ |
-| Orientation | Quaternion $q$ / $R \in SO(3)$ |
-| Linear Velocity | $(\dot{x}, \dot{y}, \dot{z})$ |
-| Angular Velocity | $(\Omega_x, \Omega_y, \Omega_z)$ |
-| Camera | Monocular stream (project scope) |
-| Control | Desired force $\mathbf{F}_d$, desired moment $\mathbf{M}_d$, bounded velocity command |
-| Estimation | Filtered pose/twist from ArduPilot topics |
-| Communication | ROS 2 (DDS transport), ArduPilot interface topics |
+Start your configured simulation and DDS bridge, then inspect the topics actually available in your environment:
 
-**Configured controller parameters** (`drones_controller/config/controller.yaml`):
-`mass`, `gravity`, `kp`, `kv`, `kR`, `kOmega`, `inertia`, `max_velocity`, `state_timeout`, `control_rate`, and desired position/yaw setpoints.
+```bash
+ros2 topic list
+ros2 topic info /ap/v1/pose/filtered
+ros2 topic info /ap/v1/twist/filtered
+```
 
----
+The controller defaults to these topic names, which can be changed via ROS parameters:
 
-## Comparative Analysis
+| Parameter | Default | Purpose |
+| --- | --- | --- |
+| `pose_topic` | `/ap/v1/pose/filtered` | Filtered pose input |
+| `twist_topic` | `/ap/v1/twist/filtered` | Filtered velocity input |
+| `cmd_vel_topic` | `/ap/v1/cmd_vel` | Velocity command output |
+| `control_rate` | `25.0` | Controller timer frequency in Hz |
+| `desired_x`, `desired_y`, `desired_z` | `0.0`, `0.0`, `2.0` | Desired position |
+| `desired_yaw` | `0.0` | Desired heading |
+| `max_velocity` | `1.0` | Velocity command limit configured by the node |
+| `state_timeout` | `0.5` | Maximum state age used by the controller |
+| `enable_command` | `false` | Command publishing gate |
 
-| Feature | Existing/Base Work | Proposed Work in This Repository |
-|---|---|---|
-| Control | Conventional flight-stack interaction | Custom nonlinear geometric control core in $SO(3)$ + quaternion conversions |
-| Architecture | Less modular control experimentation | ROS 2 package (`drones_controller`) + MATLAB staged workflow |
-| Attitude Representation | Often Euler-angle-centric in practical stacks | Rotation matrix + quaternion internal handling |
-| Mapping Scope | Monocular visual reconstruction baseline direction | Mapping/VIO objective stated; controller implementation is currently the strongest committed component |
-| Communication | Platform-specific interfaces | ROS 2/DDS topic interfaces with ArduPilot SITL/Gazebo state exchange |
-| Simulation | Base setup context | Explicit ArduPilot SITL + Gazebo + ROS 2 controller linkage |
+> [!WARNING]
+> **Safety first:** Keep command publishing disabled while checking the topics and controller setup. Before enabling commands, verify the simulation, coordinate frames, topic remappings, setpoints, and emergency-stop procedure. Test in simulation before considering any physical vehicle.
 
----
+## ⚙️ Configuration
 
-## Results
+Controller parameters live in [`drones_controller/config/controller.yaml`](drones_controller/config/controller.yaml). The file includes:
 
-### Repository result images (available in `Results/`)
+- Vehicle mass and gravity.
+- Position/velocity gains (`kp`, `kv`).
+- Attitude/angular-rate gains (`kR`, `kOmega`).
+- Diagonal inertia values.
+- Desired position and yaw.
+- Command rate, velocity limit, state timeout, and command enable flag.
 
-| Preview | File |
-|---|---|
-| ![Result 1](Results/image1.png) | `Results/image1.png` |
-| ![Result 2](Results/image2.png) | `Results/image2.png` |
-| ![Result 3](Results/image3.png) | `Results/image3.png` |
-| ![Result 4](Results/image4.png) | `Results/image4.png` |
+Treat the supplied values as example configuration, not as validated gains for every aircraft. Confirm units, frame conventions, and model assumptions for your vehicle before flight.
 
-Additional files in the same folder include `image5.png`, `image6.png`, `image22.jpeg`, and multiple `untitled*.png`/`untitled*.jpeg` captures.
+## 🧪 MATLAB toy-model workflow
 
-[video.webm](https://github.com/user-attachments/assets/0ed8133c-c115-4816-8c9a-0bfaf4fb959b)
+The `Toy Model/` directory contains a staged set of MATLAB Live Scripts:
 
-Video reference provided by the team: [Project Video](https://drive.google.com/drive/folders/1iowpdHYk4qTKaGRoWc7l1Y_70IvifeuA?usp=sharing)
+| Step | Script | Focus |
+| --- | --- | --- |
+| 1 | `step1_waypoints.mlx` | Waypoints |
+| 2 | `step2_trajectory.mlx` | Trajectory generation |
+| 3 | `step3_synthetic_sensors.mlx` | Synthetic sensing |
+| 4 | `step4_state_estimation.mlx` | State estimation |
+| 5 | `step5_so3_controller.mlx` | SO(3) controller |
+| 6 | `step6_drone_dynamics.mlx` | Drone dynamics |
+| 7 | `step7_final_results.mlx` | Final experiment/results |
 
----
+Open the scripts in MATLAB to inspect the assumptions and execute the stages supported by your installed toolboxes.
 
-## Conclusion
 
-The repository establishes a modular foundation around:
+## 🖼️ Results & Visual Evidence
 
-$$
-\boxed{\text{3D Mapping Scope} + \text{VIO Scope} + SO(3) + \text{Quaternions} + \text{Autonomous Control}}
-$$
+Selected simulation and controller results are shown below.
 
-with practical simulation/control integration through Gazebo, ArduPilot SITL, ROS 2/DDS messaging, and MATLAB-assisted experimentation. Current committed implementation is strongest on geometric control and simulation interfacing, while perception-heavy mapping/VIO components remain an explicit project direction.
+<table>
+  <tr>
+    <th align="center" width="50%">Result 2</th>
+    <th align="center" width="50%">Result 3</th>
+  </tr>
+  <tr>
+    <td align="center" width="50%">
+      <img src="https://github.com/user-attachments/assets/d122ae33-f167-4c13-a4c2-f45f272cd94b" alt="SO(3) controller result image 2" width="480" />
+    </td>
+    <td align="center" width="50%">
+      <img src="https://github.com/user-attachments/assets/3f261eaa-6f23-4e33-86c8-9594887bc254" alt="SO(3) controller result image 3" width="480" />
+    </td>
+  </tr>
+</table>
 
----
+### 🎥 SO(3) Target-Point Flight Demonstration
 
-## References
+<video src="https://github.com/user-attachments/assets/9868e487-e9f7-4664-9d9b-47bc433d0293" controls muted loop playsinline width="100%">
+  Your browser does not support embedded video. [Watch the SO(3) target-point flight demonstration](https://github.com/user-attachments/assets/9868e487-e9f7-4664-9d9b-47bc433d0293).
+</video>
 
-1. **Base Paper (repository file):** [Base Paper.pdf](https://github.com/Ravish2807/Drones_S5_CD2_3D_Mapping_using_normal_monocular_camera_controlling_Visual-Inertial-Odometry-VIO/blob/main/Base%20Paper.pdf)
-2. Lee, T., Leok, M., McClamroch, N. H. *Geometric Tracking Control of a Quadrotor UAV on SE(3)* — [arXiv](https://arxiv.org/abs/1003.2005)
-3. Quaternion attitude representation overview — [Link](https://arxiv.org/pdf/1708.08680)
-4. VIO literature (VINS-Mono) — [arXiv](https://arxiv.org/abs/1708.03852)
-5. SLAM literature (ORB-SLAM2) — [GitHub](https://github.com/raulmur/ORB_SLAM2)
-6. ArduPilot SITL documentation — [ardupilot.org](https://ardupilot.org/dev/docs/sitl-simulator-software-in-the-loop.html)
-7. ROS 2 Humble documentation — [docs.ros.org](https://docs.ros.org/en/humble/index.html)
-8. Gazebo documentation — [gazebosim.org](https://gazebosim.org/docs)
-9. MATLAB ROS Toolbox documentation — [mathworks.com](https://www.mathworks.com/help/ros/)
-10. MAVLink protocol documentation — [mavlink.io](https://mavlink.io/en/)
-11. DROID-SLAM (if integrated in future perception stack) — [GitHub](https://github.com/princeton-vl/DROID-SLAM)
-12. OctoMap (mapping reference) — [octomap.github.io](https://octomap.github.io/)
-13. Voxblox (mapping reference) — [GitHub](https://github.com/ethz-asl/voxblox)
+**Video:** [SO3_TARGET(pt)_FLYING.webm](https://github.com/user-attachments/assets/9868e487-e9f7-4664-9d9b-47bc433d0293)
 
----
 
-## Project Tree
+## 📐 Key state and control quantities
+
+| Quantity | Meaning |
+| --- | --- |
+| Position, `p = (x, y, z)` | Vehicle position in the configured local frame |
+| Linear velocity, `v` | Translational velocity feedback |
+| Quaternion, `q` | Orientation representation used by the state adapter |
+| Rotation matrix, `R ∈ SO(3)` | Geometric attitude representation |
+| Desired force, `F_d` | Translational-control output |
+| Desired moment, `M_d` | Geometric attitude-control quantity |
+| Position/velocity/attitude errors | Published controller diagnostics |
+
+## 📁 Repository layout
 
 ```text
+.
 ├── Base Paper.pdf
+├── Introduction to Drones.pptx
 ├── LICENSE
 ├── README.md
 ├── Results/
 │   ├── image1.png
 │   ├── image2.png
-│   ├── image22.jpeg
 │   ├── image3.png
 │   ├── image4.png
-│   ├── image5.png
-│   ├── image6.png
-│   └── untitled*.png/jpeg
+│   └── ... additional result captures
 ├── Toy Model/
-│   ├── step1_waypoints.mlx
-│   ├── step2_trajectory.mlx
-│   ├── step3_synthetic_sensors.mlx
-│   ├── step4_state_estimation.mlx
-│   ├── step5_so3_controller.mlx
-│   ├── step6_drone_dynamics.mlx
-│   └── step7_final_results.mlx
+│   └── step1_waypoints.mlx ... step7_final_results.mlx
 └── drones_controller/
     ├── README.md
     ├── package.xml
     ├── setup.py
-    ├── setup.cfg
     ├── config/
     │   └── controller.yaml
     └── drones_controller/
-        ├── __init__.py
         ├── controller_node.py
         ├── so3_controller.py
         ├── state_adapter.py
@@ -267,10 +258,24 @@ with practical simulation/control integration through Gazebo, ArduPilot SITL, RO
         └── trajectory_generator.py
 ```
 
+For package-specific details, see [`drones_controller/README.md`](drones_controller/README.md).
+
+## 📚 References
+
+1. **Geometric quadrotor control:** Lee, T., Leok, M., and McClamroch, N. H., *Geometric Tracking Control of a Quadrotor UAV on SE(3)* — [arXiv:1003.2005](https://arxiv.org/abs/1003.2005).
+2. **Visual-inertial odometry:** [VINS-Mono paper](https://arxiv.org/abs/1708.03852).
+3. **Monocular SLAM reference:** [ORB-SLAM2](https://github.com/raulmur/ORB_SLAM2).
+4. **ArduPilot SITL documentation:** [Developer documentation](https://ardupilot.org/dev/docs/sitl-simulator-software-in-the-loop.html).
+5. **ROS 2 Humble documentation:** [Official docs](https://docs.ros.org/en/humble/index.html).
+6. **Gazebo documentation:** [Official docs](https://gazebosim.org/docs).
+7. **MATLAB ROS Toolbox:** [MathWorks documentation](https://www.mathworks.com/help/ros/).
+8. **Base paper:** [`Base Paper.pdf`](Base%20Paper.pdf).
+
 ---
 
 <div align="center">
 
-**Amrita Vishwa Vidyapeetham · Group CD2 · Autonomous UAV Control & Mapping Research**
+**Amrita Vishwa Vidyapeetham · Group CD2**  
+*Geometric Control · ROS 2 · Autonomous UAV Research*
 
 </div>
