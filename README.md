@@ -19,6 +19,17 @@
 
 </div>
 
+
+## 👥 Team
+
+| Name | Roll number |
+| --- | --- |
+| Ravishanmugam K | `CB.SC.U4AIE24347` |
+| Ishwarya Murugesan | `CB.SC.U4AIE24220` |
+| Aparna Bharani | `CB.SC.U4AIE24304` |
+| Cibikumar B | `CB.SC.U4AIE24212` |
+| Akhilan S | `CB.SC.U4AIE24362` |
+
 ---
 
 > [!IMPORTANT]
@@ -52,19 +63,9 @@ The controller avoids Euler angles as its internal attitude representation. It u
 
 ## 🧭 System architecture
 
-```mermaid
-flowchart TD
-    A["ArduPilot SITL + Gazebo"] --> B["ROS 2 / DDS state topics"]
-    B --> C["ControllerNode"]
-    C --> D["State adapter<br/>Quaternion ↔ Rotation Matrix"]
-    D --> E["SO(3) geometric controller"]
-    E --> F["Desired force, attitude & moment"]
-    E --> G["Position / velocity diagnostics"]
-    C --> H["Velocity command interface"]
-    H --> I["/ap/v1/cmd_vel"]
-    J["WaypointGenerator<br/>desired position & yaw"] --> C
-    K["MATLAB live scripts"] -. "offline modelling & experiments" .-> E
-```
+The animated architecture diagram is maintained as a standalone SVG so it can be previewed and edited independently of this README. Animated nodes, connectors, and traveling dots illustrate the flow from simulation and ROS 2 state topics through the SO(3) controller to command output and diagnostics.
+
+![Animated drone control system architecture](docs/system_architecture.svg)
 
 **Control loop, simplified**
 
@@ -188,17 +189,12 @@ Open the scripts in MATLAB to inspect the assumptions and execute the stages sup
 
 ## 🖼️ Results & visual evidence
 
-The `Results/` directory contains saved figures and experiment screenshots. A few examples are shown below.
+Selected project evidence is shown below.
 
-| Result 1 | Result 2 |
+| Result 2 | Result 3 |
 | --- | --- |
-| ![Result image 1](Results/image1.png) | ![Result image 2](Results/image2.png) |
-| [Open full-size image](Results/image1.png) | [Open full-size image](Results/image2.png) |
-
-| Result 3 | Result 4 |
-| --- | --- |
-| ![Result image 3](Results/image3.png) | ![Result image 4](Results/image4.png) |
-| [Open full-size image](Results/image3.png) | [Open full-size image](Results/image4.png) |
+| ![Result image 2](Results/image2.png) | ![Result image 3](Results/image3.png) |
+| [Open full-size image](Results/image2.png) | [Open full-size image](Results/image3.png) |
 
 Project video: [View the shared project video folder](https://drive.google.com/drive/folders/1iowpdHYk4qTKaGRoWc7l1Y_70IvifeuA?usp=sharing)
 
@@ -245,16 +241,6 @@ Project video: [View the shared project video folder](https://drive.google.com/d
 ```
 
 For package-specific details, see [`drones_controller/README.md`](drones_controller/README.md).
-
-## 👥 Team
-
-| Name | Roll number |
-| --- | --- |
-| Ravishanmugam K | `CB.SC.U4AIE24347` |
-| Ishwarya Murugesan | `CB.SC.U4AIE24220` |
-| Aparna Bharani | `CB.SC.U4AIE24304` |
-| Cibikumar B | `CB.SC.U4AIE24212` |
-| Akhilan S | `CB.SC.U4AIE24362` |
 
 ## 📚 References
 
