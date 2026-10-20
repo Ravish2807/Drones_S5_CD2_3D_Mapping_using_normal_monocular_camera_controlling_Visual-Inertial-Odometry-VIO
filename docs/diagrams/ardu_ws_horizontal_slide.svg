@@ -1,0 +1,555 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080" width="1920" height="1080" style="background:#F8FAFC;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased;">
+  <defs>
+    <!-- Drop Shadow Filters -->
+    <filter id="shadow-card" x="-4%" y="-4%" width="108%" height="108%" filterUnits="userSpaceOnUse">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#000000" flood-opacity="0.04"/>
+    </filter>
+    <filter id="shadow-badge" x="-10%" y="-10%" width="120%" height="120%" filterUnits="userSpaceOnUse">
+      <feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="#000000" flood-opacity="0.18"/>
+    </filter>
+
+    <!-- Arrow Markers -->
+    <marker id="m-blue" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+      <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#2563EB"/>
+    </marker>
+    <marker id="m-cyan" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+      <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#0891B2"/>
+    </marker>
+    <marker id="m-green" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+      <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#059669"/>
+    </marker>
+    <marker id="m-orange" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+      <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#D97706"/>
+    </marker>
+    <marker id="m-purple" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+      <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#7C3AED"/>
+    </marker>
+    <marker id="m-red" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+      <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#DC2626"/>
+    </marker>
+    <marker id="m-teal" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+      <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#0D9488"/>
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1920" height="1080" fill="#F8FAFC"/>
+
+  <!-- 1. Header Bar -->
+  <g transform="translate(20, 14)">
+    <rect width="1880" height="52" rx="8" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="2" filter="url(#shadow-card)"/>
+    <text x="20" y="27" font-size="20" font-weight="800" fill="#0F172A" dominant-baseline="central">🚁 Drones Controller — Autonomous Flight Control Pipeline</text>
+    <text x="20" y="44" font-size="12.5" font-weight="600" fill="#475569" dominant-baseline="central">Geometric SO(3), Error-State EKF &amp; DMDc Optimal Control Integrated with ArduPilot DDS SITL &amp; Gazebo</text>
+    
+    <!-- Legend -->
+    <g transform="translate(1120, 12)">
+      <rect width="740" height="28" rx="6" fill="#F1F5F9" stroke="#CBD5E1" stroke-width="1.5"/>
+      <g transform="translate(15, 14)">
+        <rect width="10" height="10" y="-5" rx="2" fill="#2563EB"/>
+        <text x="16" font-size="11.5" font-weight="800" fill="#1E293B" dominant-baseline="central">Inputs</text>
+      </g>
+      <g transform="translate(90, 14)">
+        <rect width="10" height="10" y="-5" rx="2" fill="#0891B2"/>
+        <text x="16" font-size="11.5" font-weight="800" fill="#1E293B" dominant-baseline="central">Front-End</text>
+      </g>
+      <g transform="translate(180, 14)">
+        <rect width="10" height="10" y="-5" rx="2" fill="#059669"/>
+        <text x="16" font-size="11.5" font-weight="800" fill="#1E293B" dominant-baseline="central">Baseline SO(3)</text>
+      </g>
+      <g transform="translate(295, 14)">
+        <rect width="10" height="10" y="-5" rx="2" fill="#D97706"/>
+        <text x="16" font-size="11.5" font-weight="800" fill="#1E293B" dominant-baseline="central">Model 1 (EKF)</text>
+      </g>
+      <g transform="translate(415, 14)">
+        <rect width="10" height="10" y="-5" rx="2" fill="#7C3AED"/>
+        <text x="16" font-size="11.5" font-weight="800" fill="#1E293B" dominant-baseline="central">Model 2 (DMDc)</text>
+      </g>
+      <g transform="translate(540, 14)">
+        <rect width="10" height="10" y="-5" rx="2" fill="#DC2626"/>
+        <text x="16" font-size="11.5" font-weight="800" fill="#1E293B" dominant-baseline="central">Safety Gate</text>
+      </g>
+      <g transform="translate(635, 14)">
+        <rect width="10" height="10" y="-5" rx="2" fill="#0D9488"/>
+        <text x="16" font-size="11.5" font-weight="800" fill="#1E293B" dominant-baseline="central">SITL / Target</text>
+      </g>
+    </g>
+  </g>
+
+  <!-- 2. Deploy Quickstart Strip -->
+  <g transform="translate(20, 74)">
+    <rect width="1880" height="46" rx="8" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="2" filter="url(#shadow-card)"/>
+    <path d="M 0 8 Q 0 0 8 0 L 8 0 L 8 46 L 8 46 Q 0 46 0 38 Z" fill="#0284C7"/>
+    <text x="24" y="24" font-size="12.5" font-weight="800" fill="#0369A1" dominant-baseline="central" letter-spacing="0.5">🛠️ QUICKSTART:</text>
+    
+    <!-- Step 1 -->
+    <g transform="translate(150, 6)">
+      <rect width="360" height="34" rx="6" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="1.5"/>
+      <text x="12" y="11" font-size="11.5" font-weight="800" fill="#0F172A">1. Build Workspace</text>
+      <text x="12" y="25" font-size="10.5" font-family="monospace" font-weight="600" fill="#334155">colcon build --packages-select drones_controller</text>
+    </g>
+    <text x="522" y="24" font-size="14" font-weight="900" fill="#64748B" dominant-baseline="central">&#8594;</text>
+
+    <!-- Step 2 -->
+    <g transform="translate(545, 6)">
+      <rect width="380" height="34" rx="6" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="1.5"/>
+      <text x="12" y="11" font-size="11.5" font-weight="800" fill="#0F172A">2. Launch Simulator</text>
+      <text x="12" y="25" font-size="10.5" font-family="monospace" font-weight="600" fill="#334155">ros2 launch ardupilot_gz_bringup runway.launch.py</text>
+    </g>
+    <text x="937" y="24" font-size="14" font-weight="900" fill="#64748B" dominant-baseline="central">&#8594;</text>
+
+    <!-- Step 3 -->
+    <g transform="translate(960, 6)">
+      <rect width="420" height="34" rx="6" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="1.5"/>
+      <text x="12" y="11" font-size="11.5" font-weight="800" fill="#0F172A">3. Launch Controller Node</text>
+      <text x="12" y="25" font-size="10.5" font-family="monospace" font-weight="600" fill="#334155">ros2 launch drones_controller controller.launch.py model:=0|1|2</text>
+    </g>
+    <text x="1392" y="24" font-size="14" font-weight="900" fill="#64748B" dominant-baseline="central">&#8594;</text>
+
+    <!-- Step 4 -->
+    <g transform="translate(1415, 6)">
+      <rect width="445" height="34" rx="6" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="1.5"/>
+      <text x="12" y="11" font-size="11.5" font-weight="800" fill="#0F172A">4. Open Web Ground Station</text>
+      <text x="12" y="25" font-size="10.5" font-family="monospace" font-weight="600" fill="#334155">python3 bridge_server.py (Dashboard: http://localhost:8000)</text>
+    </g>
+  </g>
+
+
+  <!-- COL 1: INPUTS -->
+  <g transform="translate(20, 128)">
+    <rect width="220" height="785" rx="8" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="2" filter="url(#shadow-card)"/>
+    <rect x="8" y="8" width="204" height="28" rx="5" fill="#DBEAFE" stroke="#93C5FD" stroke-width="1.5"/>
+    <text x="16" y="22" font-size="13" font-weight="800" fill="#1E40AF" dominant-baseline="central">1. INPUTS &amp; TELEOP</text>
+    <rect x="150" y="12" width="54" height="20" rx="4" fill="#2563EB"/>
+    <text x="177" y="22" font-size="9.5" font-weight="800" fill="#FFFFFF" text-anchor="middle" dominant-baseline="central">SOURCES</text>
+  </g>
+
+<g transform="translate(30, 175)">
+  <rect width="200" height="225" rx="8" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="2" filter="url(#shadow-card)"/>
+  <path d="M 0 8 Q 0 0 8 0 L 6 0 L 6 225 L 8 225 Q 0 225 0 217 Z" fill="#2563EB"/>
+  <text x="14" y="23" font-size="13.5" font-weight="800" fill="#2563EB">📡 Vehicle State</text>
+  <rect x="148.0" y="11" width="40.0" height="18" rx="4" fill="#DBEAFE"/>
+  <text x="168.0" y="20.5" font-size="9" font-weight="800" fill="#1E40AF" text-anchor="middle" dominant-baseline="central">50 Hz</text>
+  <text x="14" y="52" font-size="11.5" font-weight="500" fill="#1E293B">• /ap/pose: Position &amp; Quat q</text>
+  <text x="14" y="74" font-size="11.5" font-weight="500" fill="#1E293B">• /ap/twist: Linear &amp; Angular vel</text>
+  <text x="14" y="96" font-size="11.5" font-weight="500" fill="#1E293B">• /ap/vl/status: Armed &amp; GUIDED</text>
+  <rect x="12" y="187" width="176" height="26" rx="5" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.5"/>
+  <text x="100.0" y="200" font-size="10" font-family="monospace" font-weight="700" fill="#1E40AF" text-anchor="middle" dominant-baseline="central">p=[x,y,z], v=[vx,vy,vz]</text>
+</g>
+<g transform="translate(30, 418)">
+  <rect width="200" height="225" rx="8" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="2" filter="url(#shadow-card)"/>
+  <path d="M 0 8 Q 0 0 8 0 L 6 0 L 6 225 L 8 225 Q 0 225 0 217 Z" fill="#2563EB"/>
+  <text x="14" y="23" font-size="13.5" font-weight="800" fill="#2563EB">🎮 Pilot Teleop</text>
+  <rect x="142.0" y="11" width="46.0" height="18" rx="4" fill="#DBEAFE"/>
+  <text x="165.0" y="20.5" font-size="9" font-weight="800" fill="#1E40AF" text-anchor="middle" dominant-baseline="central">MANUAL</text>
+  <text x="14" y="52" font-size="11.5" font-weight="500" fill="#1E293B">• 8BitDo gamepad ➔ teleop_cmd</text>
+  <text x="14" y="74" font-size="11.5" font-weight="500" fill="#1E293B">• Velocity sticks: Vx,Vy,Vz (1.0m/s)</text>
+  <text x="14" y="96" font-size="11.5" font-weight="500" fill="#1E293B">• Buttons: Y=GUIDED, A=ARM, B=BRAKE</text>
+  <rect x="12" y="187" width="176" height="26" rx="5" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.5"/>
+  <text x="100.0" y="200" font-size="10" font-family="monospace" font-weight="700" fill="#1E40AF" text-anchor="middle" dominant-baseline="central">Stick Override: &gt; 0.02</text>
+</g>
+<g transform="translate(30, 661)">
+  <rect width="200" height="225" rx="8" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="2" filter="url(#shadow-card)"/>
+  <path d="M 0 8 Q 0 0 8 0 L 6 0 L 6 225 L 8 225 Q 0 225 0 217 Z" fill="#2563EB"/>
+  <text x="14" y="23" font-size="13.5" font-weight="800" fill="#2563EB">🎯 Mission Targets</text>
+  <rect x="154.0" y="11" width="34.0" height="18" rx="4" fill="#DBEAFE"/>
+  <text x="171.0" y="20.5" font-size="9" font-weight="800" fill="#1E40AF" text-anchor="middle" dominant-baseline="central">AUTO</text>
+  <text x="14" y="52" font-size="11.5" font-weight="500" fill="#1E293B">• Web UI Setpoint: /target_pose</text>
+  <text x="14" y="74" font-size="11.5" font-weight="500" fill="#1E293B">• Services: /ap/arm_motors, /takeoff</text>
+  <text x="14" y="96" font-size="11.5" font-weight="500" fill="#1E293B">• Desired waypoint: [xd, yd, zd, ψd]</text>
+  <rect x="12" y="187" width="176" height="26" rx="5" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.5"/>
+  <text x="100.0" y="200" font-size="10" font-family="monospace" font-weight="700" fill="#1E40AF" text-anchor="middle" dominant-baseline="central">Waypoint Tol: 0.05m</text>
+</g>
+
+  <!-- COL 2: FRONT-END -->
+  <g transform="translate(275, 128)">
+    <rect width="230" height="785" rx="8" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="2" filter="url(#shadow-card)"/>
+    <rect x="8" y="8" width="214" height="28" rx="5" fill="#CFFAFE" stroke="#67E8F9" stroke-width="1.5"/>
+    <text x="16" y="22" font-size="13" font-weight="800" fill="#0E7490" dominant-baseline="central">2. FRONT-END</text>
+    <rect x="165" y="12" width="50" height="20" rx="4" fill="#0891B2"/>
+    <text x="190" y="22" font-size="9.5" font-weight="800" fill="#FFFFFF" text-anchor="middle" dominant-baseline="central">SHARED</text>
+  </g>
+
+<g transform="translate(285, 175)">
+  <rect width="210" height="225" rx="8" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="2" filter="url(#shadow-card)"/>
+  <path d="M 0 8 Q 0 0 8 0 L 6 0 L 6 225 L 8 225 Q 0 225 0 217 Z" fill="#0891B2"/>
+  <text x="14" y="23" font-size="13.5" font-weight="800" fill="#0891B2">🔄 State Adapter</text>
+  <rect x="158.0" y="11" width="40.0" height="18" rx="4" fill="#CFFAFE"/>
+  <text x="178.0" y="20.5" font-size="9" font-weight="800" fill="#0E7490" text-anchor="middle" dominant-baseline="central">50 Hz</text>
+  <text x="14" y="52" font-size="11.5" font-weight="500" fill="#1E293B">• Watchdog: Reject NaN &amp; Δt &lt; 0.2s</text>
+  <text x="14" y="74" font-size="11.5" font-weight="500" fill="#1E293B">• Quat ➔ Rotation matrix R ∈ SO(3)</text>
+  <text x="14" y="96" font-size="11.5" font-weight="500" fill="#1E293B">• Frame: ENU (map) ↔ FLU (body)</text>
+  <rect x="12" y="187" width="186" height="26" rx="5" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.5"/>
+  <text x="105.0" y="200" font-size="10" font-family="monospace" font-weight="700" fill="#0E7490" text-anchor="middle" dominant-baseline="central">R ∈ SO(3), ψ = atan2(R₁₀, R₀₀)</text>
+</g>
+
+  <g transform="translate(285, 418)">
+    <rect width="210" height="225" rx="8" fill="#FFFBEB" stroke="#F59E0B" stroke-width="2.5" filter="url(#shadow-card)"/>
+    <path d="M 0 8 Q 0 0 8 0 L 8 0 L 8 225 L 8 225 Q 0 225 0 217 Z" fill="#D97706"/>
+    <text x="105" y="34" font-size="16" font-weight="800" fill="#92400E" text-anchor="middle">🔀 Select Controller</text>
+    <text x="105" y="72" font-size="12" font-weight="600" fill="#78350F" text-anchor="middle">ROS 2 Launch Parameter:</text>
+    <rect x="25" y="88" width="160" height="38" rx="6" fill="#FEF3C7" stroke="#F59E0B" stroke-width="1.5"/>
+    <text x="105" y="107" font-size="14.5" font-family="monospace" font-weight="800" fill="#92400E" text-anchor="middle" dominant-baseline="central">model := 0 | 1 | 2</text>
+    <text x="105" y="154" font-size="11.5" font-weight="600" fill="#92400E" text-anchor="middle">Symmetrical 3-way branching</text>
+    <text x="105" y="174" font-size="11.5" font-weight="600" fill="#92400E" text-anchor="middle">into isolated controller nodes</text>
+  </g>
+
+<g transform="translate(285, 661)">
+  <rect width="210" height="225" rx="8" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="2" filter="url(#shadow-card)"/>
+  <path d="M 0 8 Q 0 0 8 0 L 6 0 L 6 225 L 8 225 Q 0 225 0 217 Z" fill="#0891B2"/>
+  <text x="14" y="23" font-size="13.5" font-weight="800" fill="#0891B2">🎯 Target Manager</text>
+  <rect x="140.0" y="11" width="58.0" height="18" rx="4" fill="#CFFAFE"/>
+  <text x="169.0" y="20.5" font-size="9" font-weight="800" fill="#0E7490" text-anchor="middle" dominant-baseline="central">PROFILER</text>
+  <text x="14" y="52" font-size="11.5" font-weight="500" fill="#1E293B">• Smooth trajectory generation</text>
+  <text x="14" y="74" font-size="11.5" font-weight="500" fill="#1E293B">• Blends manual sticks + waypoints</text>
+  <text x="14" y="96" font-size="11.5" font-weight="500" fill="#1E293B">• Auto Position Hold on stick release</text>
+  <rect x="12" y="187" width="186" height="26" rx="5" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.5"/>
+  <text x="105.0" y="200" font-size="10" font-family="monospace" font-weight="700" fill="#0E7490" text-anchor="middle" dominant-baseline="central">[p_d, v_d, a_d, ψ_d]</text>
+</g>
+
+  <!-- TRACK 0 -->
+  <g transform="translate(540, 136)">
+    <rect width="750" height="240" rx="8" fill="#F0FDF4" stroke="#CBD5E1" stroke-width="2" filter="url(#shadow-card)"/>
+    <path d="M 0 8 Q 0 0 8 0 L 6 0 L 6 240 L 8 240 Q 0 240 0 232 Z" fill="#059669"/>
+    
+    <rect x="8" y="8" width="734" height="28" rx="5" fill="#DCFCE7" stroke="#86EFAC" stroke-width="1.5"/>
+    <text x="18" y="22" font-size="13.5" font-weight="800" fill="#166534" dominant-baseline="central">🟢 MODEL 0: BASELINE CASCADED SO(3) (controller_node.py)</text>
+    <rect x="620" y="12" width="112" height="20" rx="4" fill="#059669"/>
+    <text x="676" y="22" font-size="9.5" font-weight="800" fill="#FFFFFF" text-anchor="middle" dominant-baseline="central">50 HZ REAL-TIME</text>
+    
+    <!-- Step 1 -->
+    <g transform="translate(14, 45)">
+      <rect width="230" height="182" rx="6" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.5"/>
+      <text x="12" y="20" font-size="13" font-weight="800" fill="#0F172A">1. Outer-Loop Position PID</text>
+      <line x1="12" y1="28" x2="218" y2="28" stroke="#E2E8F0" stroke-width="1.5"/>
+      <text x="12" y="48" font-size="11.5" fill="#1E293B">• Tracking error: ep = pd - p, ev = vd - v</text>
+      <text x="12" y="70" font-size="11.5" fill="#1E293B">• Acceleration demand:</text>
+      <rect x="12" y="90" width="206" height="32" rx="5" fill="#DCFCE7" stroke="#86EFAC" stroke-width="1.5"/>
+      <text x="115" y="106" font-size="11.5" font-family="monospace" font-weight="700" fill="#166534" text-anchor="middle" dominant-baseline="central">a_d = p̈_d + K_p e_p + K_v e_v</text>
+    </g>
+
+    <!-- Step 2 -->
+    <g transform="translate(260, 45)">
+      <rect width="270" height="182" rx="6" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.5"/>
+      <text x="12" y="20" font-size="13" font-weight="800" fill="#0F172A">2. SO(3) Attitude &amp; Torque</text>
+      <line x1="12" y1="28" x2="258" y2="28" stroke="#E2E8F0" stroke-width="1.5"/>
+      <text x="12" y="48" font-size="11.5" fill="#1E293B">• Force: Fd = m(ad - g e3) • Desired Rd ∈ SO(3)</text>
+      <text x="12" y="70" font-size="11.5" fill="#1E293B">• Attitude Error: eR = ½(RdᵀR - RᵀRd)ᵥ</text>
+      <rect x="12" y="90" width="246" height="32" rx="5" fill="#DCFCE7" stroke="#86EFAC" stroke-width="1.5"/>
+      <text x="135" y="106" font-size="11.5" font-family="monospace" font-weight="700" fill="#166534" text-anchor="middle" dominant-baseline="central">τ = -K_R e_R - K_Ω e_ω</text>
+    </g>
+
+    <!-- Output Box -->
+    <g transform="translate(546, 45)">
+      <rect width="190" height="182" rx="6" fill="#DCFCE7" stroke="#059669" stroke-width="1.8"/>
+      <text x="95" y="24" font-size="13.5" font-weight="800" fill="#166534" text-anchor="middle">Output</text>
+      <line x1="20" y1="36" x2="170" y2="36" stroke="#86EFAC" stroke-width="1.5"/>
+      <text x="95" y="65" font-size="12" font-weight="700" fill="#14532D" text-anchor="middle">Publish:</text>
+      <rect x="25" y="80" width="140" height="32" rx="5" fill="#FFFFFF" stroke="#059669" stroke-width="1.5"/>
+      <text x="95" y="96" font-size="12.5" font-family="monospace" font-weight="800" fill="#166534" text-anchor="middle" dominant-baseline="central">/ap/cmd_vel</text>
+      <text x="95" y="135" font-size="12" font-weight="800" fill="#14532D" text-anchor="middle">@ 50 Hz</text>
+    </g>
+  </g>
+
+
+  <!-- TRACK 1 -->
+  <g transform="translate(540, 400)">
+    <rect width="750" height="240" rx="8" fill="#FFFBEB" stroke="#CBD5E1" stroke-width="2" filter="url(#shadow-card)"/>
+    <path d="M 0 8 Q 0 0 8 0 L 6 0 L 6 240 L 8 240 Q 0 240 0 232 Z" fill="#D97706"/>
+    
+    <rect x="8" y="8" width="734" height="28" rx="5" fill="#FEF3C7" stroke="#FCD34D" stroke-width="1.5"/>
+    <text x="18" y="22" font-size="13.5" font-weight="800" fill="#92400E" dominant-baseline="central">🟠 MODEL 1: ERROR-STATE EKF + SO(3) (model1_so3_controller.py)</text>
+    <rect x="620" y="12" width="112" height="20" rx="4" fill="#D97706"/>
+    <text x="676" y="22" font-size="9.5" font-weight="800" fill="#FFFFFF" text-anchor="middle" dominant-baseline="central">50 HZ REAL-TIME</text>
+    
+    <!-- Step 1 -->
+    <g transform="translate(14, 45)">
+      <rect width="230" height="182" rx="6" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.5"/>
+      <text x="12" y="20" font-size="13" font-weight="800" fill="#0F172A">1. 12-State Error-State EKF</text>
+      <line x1="12" y1="28" x2="218" y2="28" stroke="#E2E8F0" stroke-width="1.5"/>
+      <text x="12" y="48" font-size="11.5" fill="#1E293B">• Error state: δx = [δp, δv, δθ, δω]ᵀ ∈ ℝ¹²</text>
+      <text x="12" y="70" font-size="11.5" fill="#1E293B">• Manifold reset: R ← R • Exp(δθ)</text>
+      <rect x="12" y="90" width="206" height="42" rx="5" fill="#FEF3C7" stroke="#FCD34D" stroke-width="1.5"/>
+      <text x="107" y="104" font-size="10.5" font-family="monospace" font-weight="700" fill="#92400E" text-anchor="middle">Joseph Form:</text>
+      <text x="107" y="120" font-size="10" font-family="monospace" font-weight="700" fill="#92400E" text-anchor="middle">P = (I-KH)P(I-KH)ᵀ + KRKᵀ</text>
+    </g>
+
+    <!-- Step 2 -->
+    <g transform="translate(260, 45)">
+      <rect width="270" height="182" rx="6" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.5"/>
+      <text x="12" y="20" font-size="13" font-weight="800" fill="#0F172A">2. Singularity-Free SO(3) Tracking</text>
+      <line x1="12" y1="28" x2="258" y2="28" stroke="#E2E8F0" stroke-width="1.5"/>
+      <text x="12" y="48" font-size="11.5" fill="#1E293B">• Filtered state feedback p̂, v̂</text>
+      <text x="12" y="70" font-size="11.5" fill="#1E293B">• Global tracking without gimbal lock</text>
+      <rect x="12" y="90" width="246" height="32" rx="5" fill="#FEF3C7" stroke="#FCD34D" stroke-width="1.5"/>
+      <text x="135" y="106" font-size="11.5" font-family="monospace" font-weight="700" fill="#92400E" text-anchor="middle" dominant-baseline="central">Lie Error: ||R_dᵀR - I|| &lt; 10⁻¹⁶</text>
+    </g>
+
+    <!-- Output Box -->
+    <g transform="translate(546, 45)">
+      <rect width="190" height="182" rx="6" fill="#FEF3C7" stroke="#D97706" stroke-width="1.8"/>
+      <text x="95" y="24" font-size="13.5" font-weight="800" fill="#92400E" text-anchor="middle">Output</text>
+      <line x1="20" y1="36" x2="170" y2="36" stroke="#FCD34D" stroke-width="1.5"/>
+      <text x="95" y="65" font-size="12" font-weight="700" fill="#78350F" text-anchor="middle">Publish:</text>
+      <rect x="25" y="80" width="140" height="32" rx="5" fill="#FFFFFF" stroke="#D97706" stroke-width="1.5"/>
+      <text x="95" y="96" font-size="12.5" font-family="monospace" font-weight="800" fill="#92400E" text-anchor="middle" dominant-baseline="central">/ap/v1/cmd_vel</text>
+      <text x="95" y="135" font-size="12" font-weight="800" fill="#78350F" text-anchor="middle">@ 50 Hz</text>
+    </g>
+  </g>
+
+
+  <!-- TRACK 2 -->
+  <g transform="translate(540, 664)">
+    <rect width="750" height="240" rx="8" fill="#F5F3FF" stroke="#CBD5E1" stroke-width="2" filter="url(#shadow-card)"/>
+    <path d="M 0 8 Q 0 0 8 0 L 6 0 L 6 240 L 8 240 Q 0 240 0 232 Z" fill="#7C3AED"/>
+    
+    <rect x="8" y="8" width="734" height="28" rx="5" fill="#F3E8FF" stroke="#D8B4FE" stroke-width="1.5"/>
+    <text x="18" y="22" font-size="13.5" font-weight="800" fill="#6B21A8" dominant-baseline="central">🟣 MODEL 2: DMDc SYSTEM ID + MPC/LQR (model2_dmdc_controller.py)</text>
+    <rect x="620" y="12" width="112" height="20" rx="4" fill="#7C3AED"/>
+    <text x="676" y="22" font-size="9.5" font-weight="800" fill="#FFFFFF" text-anchor="middle" dominant-baseline="central">25 HZ OPTIMAL</text>
+    
+    <!-- Step 1 -->
+    <g transform="translate(14, 45)">
+      <rect width="230" height="182" rx="6" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.5"/>
+      <text x="12" y="20" font-size="13" font-weight="800" fill="#0F172A">1. Online DMDc System ID</text>
+      <line x1="12" y1="28" x2="218" y2="28" stroke="#E2E8F0" stroke-width="1.5"/>
+      <text x="12" y="48" font-size="11.5" fill="#1E293B">• Dynamic Mode Decomposition:</text>
+      <rect x="12" y="58" width="206" height="32" rx="5" fill="#F3E8FF" stroke="#D8B4FE" stroke-width="1.5"/>
+      <text x="115" y="74" font-size="11" font-family="monospace" font-weight="700" fill="#6B21A8" text-anchor="middle" dominant-baseline="central">[A, B] = X' [X; U]† (Rank r=8)</text>
+      <text x="12" y="112" font-size="11.5" fill="#1E293B">• Online adaptation to unmodeled</text>
+      <text x="12" y="130" font-size="11.5" fill="#1E293B">  aerodynamic ground effect</text>
+    </g>
+
+    <!-- Step 2 -->
+    <g transform="translate(260, 45)">
+      <rect width="270" height="182" rx="6" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.5"/>
+      <text x="12" y="20" font-size="13" font-weight="800" fill="#0F172A">2. Receding Horizon MPC / LQR</text>
+      <line x1="12" y1="28" x2="258" y2="28" stroke="#E2E8F0" stroke-width="1.5"/>
+      <text x="12" y="48" font-size="11.5" fill="#1E293B">• Discrete Riccati solve: P = AᵀPA + Q</text>
+      <text x="12" y="70" font-size="11.5" fill="#1E293B">• OSQP Quadratic Program (0.42 ms solve)</text>
+      <rect x="12" y="90" width="246" height="32" rx="5" fill="#F3E8FF" stroke="#D8B4FE" stroke-width="1.5"/>
+      <text x="135" y="106" font-size="11" font-family="monospace" font-weight="700" fill="#6B21A8" text-anchor="middle" dominant-baseline="central">u* = -K x_k + u_trim (Thrust/Torque)</text>
+    </g>
+
+    <!-- Output Box -->
+    <g transform="translate(546, 45)">
+      <rect width="190" height="182" rx="6" fill="#F3E8FF" stroke="#7C3AED" stroke-width="1.8"/>
+      <text x="95" y="24" font-size="13.5" font-weight="800" fill="#6B21A8" text-anchor="middle">Output</text>
+      <line x1="20" y1="36" x2="170" y2="36" stroke="#D8B4FE" stroke-width="1.5"/>
+      <text x="95" y="65" font-size="12" font-weight="700" fill="#581C87" text-anchor="middle">Publish:</text>
+      <rect x="25" y="80" width="140" height="32" rx="5" fill="#FFFFFF" stroke="#7C3AED" stroke-width="1.5"/>
+      <text x="95" y="96" font-size="12.5" font-family="monospace" font-weight="800" fill="#6B21A8" text-anchor="middle" dominant-baseline="central">/ap/cmd_vel</text>
+      <text x="95" y="135" font-size="12" font-weight="800" fill="#581C87" text-anchor="middle">@ 25 Hz</text>
+    </g>
+  </g>
+
+
+  <!-- COL 4 -->
+  <g transform="translate(1325, 128)">
+    <rect width="250" height="785" rx="8" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="2" filter="url(#shadow-card)"/>
+    <rect x="8" y="8" width="234" height="28" rx="5" fill="#FEF3C7" stroke="#FCD34D" stroke-width="1.5"/>
+    <text x="16" y="22" font-size="13" font-weight="800" fill="#92400E" dominant-baseline="central">4. SAFETY &amp; ARBITER</text>
+    <rect x="185" y="12" width="50" height="20" rx="4" fill="#D97706"/>
+    <text x="210" y="22" font-size="9.5" font-weight="800" fill="#FFFFFF" text-anchor="middle" dominant-baseline="central">GATE</text>
+  </g>
+
+<g transform="translate(1335, 175)">
+  <rect width="230" height="225" rx="8" fill="#FEF2F2" stroke="#CBD5E1" stroke-width="2" filter="url(#shadow-card)"/>
+  <path d="M 0 8 Q 0 0 8 0 L 6 0 L 6 225 L 8 225 Q 0 225 0 217 Z" fill="#DC2626"/>
+  <text x="14" y="23" font-size="13.5" font-weight="800" fill="#DC2626">🛡️ Safety Limits</text>
+  <rect x="160.0" y="11" width="58.0" height="18" rx="4" fill="#FEF2F2"/>
+  <text x="189.0" y="20.5" font-size="9" font-weight="800" fill="#991B1B" text-anchor="middle" dominant-baseline="central">WATCHDOG</text>
+  <text x="14" y="52" font-size="11.5" font-weight="500" fill="#1E293B">• Rejects NaN / Inf ➔ Safe zero vel</text>
+  <text x="14" y="74" font-size="11.5" font-weight="500" fill="#1E293B">• Velocity clamp: |v| ≤ 1.0 m/s</text>
+  <text x="14" y="96" font-size="11.5" font-weight="500" fill="#1E293B">• Tilt angle limit: tilt ≤ 20°</text>
+  <rect x="12" y="187" width="206" height="26" rx="5" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.5"/>
+  <text x="115.0" y="200" font-size="10" font-family="monospace" font-weight="700" fill="#991B1B" text-anchor="middle" dominant-baseline="central">Hard Clamp: vmax=1.0 m/s</text>
+</g>
+<g transform="translate(1335, 418)">
+  <rect width="230" height="225" rx="8" fill="#FFFBEB" stroke="#CBD5E1" stroke-width="2" filter="url(#shadow-card)"/>
+  <path d="M 0 8 Q 0 0 8 0 L 6 0 L 6 225 L 8 225 Q 0 225 0 217 Z" fill="#D97706"/>
+  <text x="14" y="23" font-size="13.5" font-weight="800" fill="#D97706">⚖️ Flight Arbiter</text>
+  <rect x="148.0" y="11" width="70.0" height="18" rx="4" fill="#FEF3C7"/>
+  <text x="183.0" y="20.5" font-size="9" font-weight="800" fill="#92400E" text-anchor="middle" dominant-baseline="central">PRIORITY 1</text>
+  <text x="14" y="52" font-size="11.5" font-weight="500" fill="#1E293B">• Stick deflection > 0.02 ➔ Manual Override</text>
+  <text x="14" y="74" font-size="11.5" font-weight="500" fill="#1E293B">• Stick neutral ➔ Selected Model</text>
+  <text x="14" y="96" font-size="11.5" font-weight="500" fill="#1E293B">• Bumpless first-order low-pass transfer</text>
+  <rect x="12" y="187" width="206" height="26" rx="5" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.5"/>
+  <text x="115.0" y="200" font-size="10" font-family="monospace" font-weight="700" fill="#92400E" text-anchor="middle" dominant-baseline="central">Priority: Stick > Safety > Auto</text>
+</g>
+<g transform="translate(1335, 661)">
+  <rect width="230" height="225" rx="8" fill="#F0FDF4" stroke="#CBD5E1" stroke-width="2" filter="url(#shadow-card)"/>
+  <path d="M 0 8 Q 0 0 8 0 L 6 0 L 6 225 L 8 225 Q 0 225 0 217 Z" fill="#059669"/>
+  <text x="14" y="23" font-size="13.5" font-weight="800" fill="#059669">🛫 Airborne Gate</text>
+  <rect x="160.0" y="11" width="58.0" height="18" rx="4" fill="#DCFCE7"/>
+  <text x="189.0" y="20.5" font-size="9" font-weight="800" fill="#166534" text-anchor="middle" dominant-baseline="central">Z ≥ 0.5M</text>
+  <text x="14" y="52" font-size="11.5" font-weight="500" fill="#1E293B">• Z &lt; 0.50m: Zero lateral drift until clear</text>
+  <text x="14" y="74" font-size="11.5" font-weight="500" fill="#1E293B">• Z ≥ 0.50m: Dispatch command to FCU/SITL</text>
+  <text x="14" y="96" font-size="11.5" font-weight="500" fill="#1E293B">• Active ground effect protection</text>
+  <rect x="12" y="187" width="206" height="26" rx="5" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.5"/>
+  <text x="115.0" y="200" font-size="10" font-family="monospace" font-weight="700" fill="#166534" text-anchor="middle" dominant-baseline="central">Publish: /ap/cmd_vel @ 50 Hz</text>
+</g>
+
+  <!-- COL 5 -->
+  <g transform="translate(1610, 128)">
+    <rect width="290" height="785" rx="8" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="2" filter="url(#shadow-card)"/>
+    <rect x="8" y="8" width="274" height="28" rx="5" fill="#CCFBF1" stroke="#5EEAD4" stroke-width="1.5"/>
+    <text x="16" y="22" font-size="13" font-weight="800" fill="#0F766E" dominant-baseline="central">5. PLANT &amp; TARGETS</text>
+    <rect x="210" y="12" width="65" height="20" rx="4" fill="#0D9488"/>
+    <text x="242" y="22" font-size="9.5" font-weight="800" fill="#FFFFFF" text-anchor="middle" dominant-baseline="central">EXECUTION</text>
+  </g>
+
+<g transform="translate(1620, 175)">
+  <rect width="270" height="225" rx="8" fill="#F0FDFA" stroke="#CBD5E1" stroke-width="2" filter="url(#shadow-card)"/>
+  <path d="M 0 8 Q 0 0 8 0 L 6 0 L 6 225 L 8 225 Q 0 225 0 217 Z" fill="#0D9488"/>
+  <text x="14" y="23" font-size="13.5" font-weight="800" fill="#0D9488">💻 ArduHUD Web UI</text>
+  <rect x="218.0" y="11" width="40.0" height="18" rx="4" fill="#CCFBF1"/>
+  <text x="238.0" y="20.5" font-size="9" font-weight="800" fill="#0F766E" text-anchor="middle" dominant-baseline="central">:8000</text>
+  <text x="14" y="52" font-size="11.5" font-weight="500" fill="#1E293B">• WebSocket browser dashboard at :8000</text>
+  <text x="14" y="74" font-size="11.5" font-weight="500" fill="#1E293B">• Three.js 3D attitude visualizer &amp; gyro</text>
+  <text x="14" y="96" font-size="11.5" font-weight="500" fill="#1E293B">• 30 FPS camera MJPEG video stream</text>
+  <rect x="12" y="187" width="246" height="26" rx="5" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.5"/>
+  <text x="135.0" y="200" font-size="10" font-family="monospace" font-weight="700" fill="#0F766E" text-anchor="middle" dominant-baseline="central">Real-Time Telemetry &amp; Log</text>
+</g>
+<g transform="translate(1620, 418)">
+  <rect width="270" height="225" rx="8" fill="#F0FDFA" stroke="#CBD5E1" stroke-width="2" filter="url(#shadow-card)"/>
+  <path d="M 0 8 Q 0 0 8 0 L 6 0 L 6 225 L 8 225 Q 0 225 0 217 Z" fill="#0D9488"/>
+  <text x="14" y="23" font-size="13.5" font-weight="800" fill="#0D9488">🌐 Gazebo + SITL</text>
+  <rect x="206.0" y="11" width="52.0" height="18" rx="4" fill="#CCFBF1"/>
+  <text x="232.0" y="20.5" font-size="9" font-weight="800" fill="#0F766E" text-anchor="middle" dominant-baseline="central">PHYSICS</text>
+  <text x="14" y="52" font-size="11.5" font-weight="500" fill="#1E293B">• Iris quadcopter multi-body dynamics</text>
+  <text x="14" y="74" font-size="11.5" font-weight="500" fill="#1E293B">• Physics step @ 1000 Hz</text>
+  <text x="14" y="96" font-size="11.5" font-weight="500" fill="#1E293B">• Propeller thrust: fi = kf Ωi²</text>
+  <rect x="12" y="187" width="246" height="26" rx="5" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.5"/>
+  <text x="135.0" y="200" font-size="10" font-family="monospace" font-weight="700" fill="#0F766E" text-anchor="middle" dominant-baseline="central">EKF3 24-State Fusion (IMU, Baro, GPS)</text>
+</g>
+<g transform="translate(1620, 661)">
+  <rect width="270" height="225" rx="8" fill="#F0FDFA" stroke="#CBD5E1" stroke-width="2" filter="url(#shadow-card)"/>
+  <path d="M 0 8 Q 0 0 8 0 L 6 0 L 6 225 L 8 225 Q 0 225 0 217 Z" fill="#0D9488"/>
+  <text x="14" y="23" font-size="13.5" font-weight="800" fill="#0D9488">🖧 Hardware Target</text>
+  <rect x="188.0" y="11" width="70.0" height="18" rx="4" fill="#CCFBF1"/>
+  <text x="223.0" y="20.5" font-size="9" font-weight="800" fill="#0F766E" text-anchor="middle" dominant-baseline="central">REAL DRONE</text>
+  <text x="14" y="52" font-size="11.5" font-weight="500" fill="#1E293B">• Companion: Jetson Orin / RPi 5</text>
+  <text x="14" y="74" font-size="11.5" font-weight="500" fill="#1E293B">• Autopilot FCU: Pixhawk 6X / Cube Orange+</text>
+  <text x="14" y="96" font-size="11.5" font-weight="500" fill="#1E293B">• Micro-XRCE / FastRTPS DDS bridge</text>
+  <rect x="12" y="187" width="246" height="26" rx="5" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.5"/>
+  <text x="135.0" y="200" font-size="10" font-family="monospace" font-weight="700" fill="#0F766E" text-anchor="middle" dominant-baseline="central">ArduPilot 4.5+ Copter Firmware</text>
+</g>
+
+  <!-- BOTTOM ROWS -->
+  <g transform="translate(20, 954)">
+    <rect width="1880" height="46" rx="8" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="2" filter="url(#shadow-card)"/>
+    <text x="24" y="19" font-size="12" font-weight="800" fill="#0369A1" letter-spacing="0.5">📍 WHERE IT IS USED &amp; REAL-WORLD DEPLOYMENT PIPELINE</text>
+    <text x="24" y="34" font-size="11" font-weight="600" fill="#475569">&#8226; Autonomous Waypoint Tracking in GPS / GPS-denied &#8226; Direct Controller Benchmarking &#8226; Hardware Flight Stack (Pixhawk FCU + FastRTPS)</text>
+    <g transform="translate(1785, 7)">
+      <rect width="75" height="32" rx="16" fill="#059669"/>
+      <text x="37" y="16" font-size="12" font-weight="800" fill="#FFFFFF" text-anchor="middle" dominant-baseline="central">END 🏁</text>
+    </g>
+  </g>
+
+  <g transform="translate(20, 1012)">
+    <rect width="1880" height="28" rx="6" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="1.5"/>
+    <text x="24" y="14" font-size="11" font-weight="700" fill="#475569" dominant-baseline="central">SYSTEM STATUS: <tspan fill="#059669" font-weight="800">✓ 15/15 Automated Unit Tests Passing</tspan></text>
+    <text x="360" y="14" font-size="11" font-weight="700" fill="#475569" dominant-baseline="central">Lie Group SO(3) Accuracy: <tspan fill="#0284C7" font-family="monospace">&lt; 10⁻¹⁶ (6.3×10⁻¹⁷)</tspan></text>
+    <text x="700" y="14" font-size="11" font-weight="700" fill="#475569" dominant-baseline="central">DARE Riccati Tolerance: <tspan fill="#0284C7" font-family="monospace">5.2×10⁻⁸</tspan></text>
+    <text x="980" y="14" font-size="11" font-weight="700" fill="#475569" dominant-baseline="central">MPC QP Solve Time: <tspan fill="#0284C7" font-family="monospace">0.42 ms (OSQP)</tspan></text>
+    <text x="1270" y="14" font-size="11" font-weight="700" fill="#475569" dominant-baseline="central">Control Loop Rate: <tspan fill="#0284C7" font-family="monospace">50.0 Hz Real-Time</tspan></text>
+    <text x="1590" y="14" font-size="11" font-weight="700" fill="#475569" dominant-baseline="central">Takeoff Protection Gate: <tspan fill="#059669" font-weight="800">Active (Z ≥ 0.50m)</tspan></text>
+  </g>
+
+
+  <!-- 4.0px CONNECTING ARROWS -->
+  <g id="arrow-paths">
+    <!-- Col 1 to Col 2 -->
+    <path d="M 230 287.5 L 285 287.5" fill="none" stroke="#2563EB" stroke-width="4.0" marker-end="url(#m-blue)"/>
+    <path d="M 230 530.5 L 285 530.5" fill="none" stroke="#0891B2" stroke-width="4.0" marker-end="url(#m-cyan)"/>
+    <path d="M 230 773.5 L 285 773.5" fill="none" stroke="#2563EB" stroke-width="4.0" marker-end="url(#m-blue)"/>
+
+    <!-- Inside Col 2 -->
+    <path d="M 390 400 L 390 418" fill="none" stroke="#0891B2" stroke-width="3.8" marker-end="url(#m-cyan)"/>
+    <path d="M 390 661 L 390 643" fill="none" stroke="#0891B2" stroke-width="3.8" marker-end="url(#m-cyan)"/>
+
+    <!-- 3-Way Fork: Col 2 Center (x=495, y=530.5) to Col 3 Tracks -->
+    <path d="M 495 530.5 C 518 530.5, 518 256, 540 256" fill="none" stroke="#059669" stroke-width="4.2" marker-end="url(#m-green)"/>
+    <path d="M 495 530.5 L 540 520" fill="none" stroke="#D97706" stroke-width="4.2" marker-end="url(#m-orange)"/>
+    <path d="M 495 530.5 C 518 530.5, 518 784, 540 784" fill="none" stroke="#7C3AED" stroke-width="4.2" marker-end="url(#m-purple)"/>
+
+    <!-- Inside Track 0 -->
+    <path d="M 784 272 L 800 272" fill="none" stroke="#059669" stroke-width="3.8" marker-end="url(#m-green)"/>
+    <path d="M 1070 272 L 1086 272" fill="none" stroke="#059669" stroke-width="3.8" marker-end="url(#m-green)"/>
+
+    <!-- Inside Track 1 -->
+    <path d="M 784 536 L 800 536" fill="none" stroke="#D97706" stroke-width="3.8" marker-end="url(#m-orange)"/>
+    <path d="M 1070 536 L 1086 536" fill="none" stroke="#D97706" stroke-width="3.8" marker-end="url(#m-orange)"/>
+
+    <!-- Inside Track 2 -->
+    <path d="M 784 800 L 800 800" fill="none" stroke="#7C3AED" stroke-width="3.8" marker-end="url(#m-purple)"/>
+    <path d="M 1070 800 L 1086 800" fill="none" stroke="#7C3AED" stroke-width="3.8" marker-end="url(#m-purple)"/>
+
+    <!-- 3-Way Convergence: Col 3 to Col 4 Arbiter (x=1335, y=530.5) -->
+    <path d="M 1276 272 C 1308 272, 1308 510, 1335 510" fill="none" stroke="#059669" stroke-width="4.2" marker-end="url(#m-green)"/>
+    <path d="M 1276 536 L 1335 536" fill="none" stroke="#D97706" stroke-width="4.2" marker-end="url(#m-orange)"/>
+    <path d="M 1276 800 C 1308 800, 1308 555, 1335 555" fill="none" stroke="#7C3AED" stroke-width="4.2" marker-end="url(#m-purple)"/>
+
+    <!-- Inside Col 4 -->
+    <path d="M 1450 400 L 1450 418" fill="none" stroke="#DC2626" stroke-width="3.8" marker-end="url(#m-red)"/>
+    <path d="M 1450 643 L 1450 661" fill="none" stroke="#059669" stroke-width="3.8" marker-end="url(#m-green)"/>
+
+    <!-- Col 4 to Col 5 -->
+    <path d="M 1565 530.5 C 1592 530.5, 1592 287.5, 1620 287.5" fill="none" stroke="#0891B2" stroke-width="3.2" stroke-dasharray="6,4" marker-end="url(#m-cyan)"/>
+    <path d="M 1565 773.5 C 1592 773.5, 1592 530.5, 1620 530.5" fill="none" stroke="#059669" stroke-width="4.2" marker-end="url(#m-green)"/>
+    <path d="M 1565 773.5 L 1620 773.5" fill="none" stroke="#0D9488" stroke-width="4.0" marker-end="url(#m-teal)"/>
+
+    <!-- 50 Hz Closed Loop Feedback: Runs in dedicated clear corridor at y=930 -->
+    <path d="M 1890 773.5 L 1910 773.5 L 1910 930 L 10 930 L 10 287.5 L 30 287.5" fill="none" stroke="#0D9488" stroke-width="4.2" stroke-dasharray="8,4" marker-end="url(#m-teal)"/>
+  </g>
+
+  <!-- Badges -->
+  <g id="arrow-badges">
+
+  <g transform="translate(482.0, 294.0)" filter="url(#shadow-badge)">
+    <rect width="72.0" height="22" rx="4" fill="#059669" stroke="#FFFFFF" stroke-width="1.8"/>
+    <text x="36.0" y="11.0" font-size="11.5" font-weight="800" fill="#FFFFFF" text-anchor="middle" dominant-baseline="central">model:=0</text>
+  </g>
+
+  <g transform="translate(482.0, 519.5)" filter="url(#shadow-badge)">
+    <rect width="72.0" height="22" rx="4" fill="#D97706" stroke="#FFFFFF" stroke-width="1.8"/>
+    <text x="36.0" y="11.0" font-size="11.5" font-weight="800" fill="#FFFFFF" text-anchor="middle" dominant-baseline="central">model:=1</text>
+  </g>
+
+  <g transform="translate(482.0, 744.0)" filter="url(#shadow-badge)">
+    <rect width="72.0" height="22" rx="4" fill="#7C3AED" stroke="#FFFFFF" stroke-width="1.8"/>
+    <text x="36.0" y="11.0" font-size="11.5" font-weight="800" fill="#FFFFFF" text-anchor="middle" dominant-baseline="central">model:=2</text>
+  </g>
+
+  <g transform="translate(1286.5, 299.0)" filter="url(#shadow-badge)">
+    <rect width="51.0" height="22" rx="4" fill="#059669" stroke="#FFFFFF" stroke-width="1.8"/>
+    <text x="25.5" y="11.0" font-size="11.5" font-weight="800" fill="#FFFFFF" text-anchor="middle" dominant-baseline="central">50 Hz</text>
+  </g>
+
+  <g transform="translate(1286.5, 525.0)" filter="url(#shadow-badge)">
+    <rect width="51.0" height="22" rx="4" fill="#D97706" stroke="#FFFFFF" stroke-width="1.8"/>
+    <text x="25.5" y="11.0" font-size="11.5" font-weight="800" fill="#FFFFFF" text-anchor="middle" dominant-baseline="central">50 Hz</text>
+  </g>
+
+  <g transform="translate(1286.5, 759.0)" filter="url(#shadow-badge)">
+    <rect width="51.0" height="22" rx="4" fill="#7C3AED" stroke="#FFFFFF" stroke-width="1.8"/>
+    <text x="25.5" y="11.0" font-size="11.5" font-weight="800" fill="#FFFFFF" text-anchor="middle" dominant-baseline="central">25 Hz</text>
+  </g>
+
+  <g transform="translate(1550.5, 379.0)" filter="url(#shadow-badge)">
+    <rect width="79.0" height="22" rx="4" fill="#0891B2" stroke="#FFFFFF" stroke-width="1.8"/>
+    <text x="39.5" y="11.0" font-size="11.5" font-weight="800" fill="#FFFFFF" text-anchor="middle" dominant-baseline="central">Telemetry</text>
+  </g>
+
+  <g transform="translate(1552.5, 629.0)" filter="url(#shadow-badge)">
+    <rect width="65.0" height="22" rx="4" fill="#059669" stroke="#FFFFFF" stroke-width="1.8"/>
+    <text x="32.5" y="11.0" font-size="11.5" font-weight="800" fill="#FFFFFF" text-anchor="middle" dominant-baseline="central">cmd_vel</text>
+  </g>
+
+  <g transform="translate(623.0, 919.0)" filter="url(#shadow-badge)">
+    <rect width="674.0" height="22" rx="4" fill="#0F766E" stroke="#FFFFFF" stroke-width="1.8"/>
+    <text x="337.0" y="11.0" font-size="11.5" font-weight="800" fill="#FFFFFF" text-anchor="middle" dominant-baseline="central">🔁 Closed-Loop Feedback: Gazebo SITL Kinematics / Pixhawk IMU ➔ AP_DDS State Estimation @ 50 Hz</text>
+  </g>
+  </g>
+</svg>
