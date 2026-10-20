@@ -11,6 +11,7 @@ Open MATLAB (R2024a, no toolboxes needed) with this folder as the current folder
 | `M2_1_Flight_Data_DMDc.mlx` | Model 2: flight data, DMDc (creates `dmdc_model.mat`) |
 | `M2_2_LQR_Bellman_Riccati_DARE.mlx` | Model 2: Bellman, LQR, Riccati, DARE |
 | `M2_3_MPC_QP_Apply_to_Drone.mlx` | Model 2: MPC, QP, receding horizon, nonlinear flight |
+<<<<<<< HEAD
 | `M2_4_EKF_State_Estimation.mlx` | Model 2: block 11, Extended Kalman Filter that builds the state from camera pixels and the gyro, using the learned model |
 
 `DroneLib.m` holds the shared functions. `pdf/` has every live script already run and exported.
@@ -24,5 +25,10 @@ apply to drone (10) → drone moves → camera + gyro → EKF (11) → x̂ → M
 
 It predicts with the learned DMDc model, takes its process noise from the DMDc residuals, and corrects with
 the nonlinear pinhole-camera model. That last part is why it is an *extended* Kalman filter.
+=======
+
+`DroneLib.m` holds the shared functions. `pdf/` has every live script already run and exported.
+Run the Model 2 files in order (M2_1 → M2_2 → M2_3).
+>>>>>>> 4c951d591d94ff1f7d3adb4a7d4ca7a09b33b6fe
 
 The full explanation of every equation is in `docs/CD2_Drone_Documentation.pdf`.

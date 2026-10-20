@@ -235,8 +235,11 @@ function [x, ok, it] = qp(H, f, G, h, Aeq, beq)
 n = numel(f);
 if nargin < 5, Aeq = zeros(0,n); beq = zeros(0,1); end
 q = size(Aeq,1); mI = size(G,1);
+<<<<<<< HEAD
 ws = warning('off', 'MATLAB:nearlySingularMatrix');   % expected near the optimum, harmless
 restore = onCleanup(@() warning(ws));
+=======
+>>>>>>> 4c951d591d94ff1f7d3adb4a7d4ca7a09b33b6fe
 x = zeros(n,1); y = zeros(q,1); s = max(h - G*x, 1); z = ones(mI,1); ok = false;
 for it = 1:80
     rd = H*x + f + G'*z + Aeq'*y;  re = Aeq*x - beq;  ri = G*x + s - h;  mu = s'*z/mI;
@@ -266,6 +269,7 @@ i = ds < 0; if any(i), a = min(a, min(-s(i)./ds(i))); end
 i = dz < 0; if any(i), a = min(a, min(-z(i)./dz(i))); end
 end
 
+<<<<<<< HEAD
 %% ---------------------------------------------------------------- Model 2 EKF (block 11)
 function C = camera()
 % downward-looking monocular camera + known floor markers (11 x 11 grid, 0.5 m apart)
@@ -315,5 +319,7 @@ IKH = eye(12) - K*H;  Pk = IKH*Pk*IKH' + K*Rn*K';  Pk = (Pk + Pk')/2;
 nis = r'*(S\r);
 end
 
+=======
+>>>>>>> 4c951d591d94ff1f7d3adb4a7d4ca7a09b33b6fe
 end
 end
