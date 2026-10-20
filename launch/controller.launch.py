@@ -10,14 +10,15 @@ from launch_ros.actions import Node
 def generate_launch_description():
     pkg_share = get_package_share_directory('drones_controller')
 
+    controller_config = os.path.join(pkg_share, 'config', 'controller.yaml')
     vehicle_config = os.path.join(pkg_share, 'config', 'vehicle.yaml')
     model1_config = os.path.join(pkg_share, 'config', 'model1_so3.yaml')
     model2_config = os.path.join(pkg_share, 'config', 'model2_dmdc.yaml')
 
     model_arg = DeclareLaunchArgument(
         'model',
-        default_value='1',
-        description='Controller model: "1" (Geometric SO(3) + EKF) or "2" (DMDc + LQR/MPC)'
+        default_value='0',
+        description='Controller model: "0" (Baseline SO(3)), "1" (Geometric SO(3) + EKF), or "2" (DMDc + LQR/MPC)'
     )
 
     mode_arg = DeclareLaunchArgument(
@@ -26,8 +27,22 @@ def generate_launch_description():
         description='Model 2 optimal control mode: "mpc" or "lqr"'
     )
 
+    is_model_0 = PythonExpression(["'", LaunchConfiguration('model'), "' == '0'"])
     is_model_1 = PythonExpression(["'", LaunchConfiguration('model'), "' == '1'"])
     is_model_2 = PythonExpression(["'", LaunchConfiguration('model'), "' == '2'"])
+
+    # Model 0: Baseline Cascaded Position & Geometric SO(3) Controller
+    node_model0 = Node(
+        package='drones_controller',
+        executable='controller_node',
+        name='so3_controller',
+        output='screen',
+        parameters=[
+            controller_config,
+            vehicle_config
+        ],
+        condition=IfCondition(is_model_0)
+    )
 
     # Model 1: Nonlinear Model-Based Estimation and Geometric SO(3) Control
     node_model1 = Node(
@@ -59,6 +74,8 @@ def generate_launch_description():
     return LaunchDescription([
         model_arg,
         mode_arg,
+        node_model0,
         node_model1,
         node_model2
     ])
+
