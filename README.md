@@ -4,7 +4,7 @@
 
 # 3D Environment Mapping & Monocular Visual-Inertial Odometry
 
-### Quaternion-based Geometric Control for Autonomous Multirotor UAVs
+### Geometric Control for Autonomous Multirotor UAVs
 
 **Group CD2 · Amrita Vishwa Vidyapeetham, Coimbatore**
 
@@ -37,7 +37,7 @@
 
 ## ✨ Overview
 
-Drones operating indoors or in GPS-denied environments need reliable state estimation, position control, and a useful representation of the surrounding space. This project explores that broader challenge while implementing a modular multirotor controller built around **rotation matrices, quaternions, and geometric attitude control on SO(3)**.
+Drones operating indoors or in GPS-denied environments need reliable state estimation, position control, and a useful representation of the surrounding space. This project explores that broader challenge while implementing a modular multirotor controller built around **rotation matrices and geometric attitude control on SO(3)**.
 
 The repository combines a ROS 2 Python package, an ArduPilot SITL/Gazebo interface, MATLAB live scripts for staged modelling and experimentation, and saved result images.
 
@@ -53,7 +53,7 @@ The repository combines a ROS 2 Python package, an ArduPilot SITL/Gazebo interfa
 
 ## 🚁 Controller at a glance
 
-The controller avoids Euler angles as its internal attitude representation. It uses rotation matrices and quaternion conversions to represent orientation and computes geometric tracking errors to form control quantities.
+The controller avoids Euler angles as its internal attitude representation. It uses rotation matrices to represent orientation and computes geometric tracking errors to form control quantities.
 
 - **Position and velocity feedback** to track a desired state.
 - **SO(3) attitude handling** using desired rotation matrices and geometric attitude error.
@@ -222,7 +222,7 @@ Selected simulation and controller results are shown below.
 | --- | --- |
 | Position, `p = (x, y, z)` | Vehicle position in the configured local frame |
 | Linear velocity, `v` | Translational velocity feedback |
-| Quaternion, `q` | Orientation representation used by the state adapter |
+| Orientation | Rotation-matrix representation used for geometric attitude control |
 | Rotation matrix, `R ∈ SO(3)` | Geometric attitude representation |
 | Desired force, `F_d` | Translational-control output |
 | Desired moment, `M_d` | Geometric attitude-control quantity |
