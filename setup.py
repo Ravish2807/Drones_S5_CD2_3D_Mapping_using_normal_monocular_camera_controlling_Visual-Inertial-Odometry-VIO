@@ -30,6 +30,11 @@ setup(
         'setuptools',
         'numpy',
     ],
+    extras_require={
+        'test': [
+            'pytest',
+        ],
+    },
     zip_safe=True,
     description='Modular SO(3) closed-loop controller for ArduPilot SITL + Gazebo',
     license='Apache-2.0',
