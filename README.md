@@ -977,17 +977,15 @@ T_k \\
 \tau_{z,k}
 \end{bmatrix}
 $$
-
 $$
+u_{\mathrm{abs},k} =
 \begin{bmatrix}
 mg \\
-0 \\
-0 \\
-0
-\end{bmatrix}
-+ u_k,
-\qquad
-T_k = mg + \Delta T_k.
+\0 \\
+\0 \\
+\0
+\end{bmatrix} +u_k,\qquad
+T_k = mg+\Delta T_k.
 $$
 
 
