@@ -946,19 +946,19 @@ After solving the QP, the optimizer returns the sequence
 
 
 $$
-\mathcal{U}^{*} =
+\mathcal{U}_{\mathrm{opt}} =
 \left(
-u_0^{*},
-u_1^{*},
+u_{0,\mathrm{opt}},
+u_{1,\mathrm{opt}},
 \ldots,
-u_{N-1}^{*}
+u_{N-1,\mathrm{opt}}
 \right)^{\mathsf{T}}
 $$
 
 Only the first input is applied:
 
 $$
-\boxed{u_{\mathrm{applied},k}=u_0^*}.
+u_{\mathrm{applied},k} = u_{0,\mathrm{opt}}.
 $$
 
 At the next sample, the controller obtains a new state estimate, rebuilds the state-dependent objective and constraint bounds, solves the QP again, and applies the new first input. This feedback process accounts for newly observed deviations and avoids executing an entire open-loop plan without correction.
