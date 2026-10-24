@@ -991,6 +991,7 @@ T_k = mg + \Delta T_k.
 $$
 
 
+
 If the model includes a valid four-rotor allocation matrix $\Gamma$, define
 
 $$
