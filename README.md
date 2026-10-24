@@ -967,13 +967,29 @@ At the next sample, the controller obtains a new state estimate, rebuilds the st
 
 Because the MPC input uses thrust deviation from hover, first recover absolute thrust and torque:
 
+
 $$
-u_{\mathrm{abs},k}=
-\begin{bmatrix}T_k\\\tau_{x,k}\\\tau_{y,k}\\\tau_{z,k}\end{bmatrix}
-=
-\begin{bmatrix}mg\\0\\0\\0\end{bmatrix}+u_k,
-\qquad T_k=mg+\delta T_k.
+u_{\mathrm{abs},k} =
+\begin{bmatrix}
+T_k \\
+\tau_{x,k} \\
+\tau_{y,k} \\
+\tau_{z,k}
+\end{bmatrix}
 $$
+
+$$
+\begin{bmatrix}
+mg \\
+0 \\
+0 \\
+0
+\end{bmatrix}
++ u_k,
+\qquad
+T_k = mg + \Delta T_k.
+$$
+
 
 If the model includes a valid four-rotor allocation matrix $\Gamma$, define
 
