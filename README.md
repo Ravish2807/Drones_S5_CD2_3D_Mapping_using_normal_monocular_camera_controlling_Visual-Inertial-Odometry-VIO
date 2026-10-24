@@ -711,12 +711,19 @@ $$
 Stack the state and input data and define the combined model matrix:
 
 $$
-\Omega=\begin{bmatrix}X\\U\end{bmatrix}
-\in\mathbb{R}^{16\times M},\qquad
-G=\begin{bmatrix}A&B\end{bmatrix}
-\in\mathbb{R}^{12\times16}.
+\Omega =
+\begin{bmatrix}
+X \\
+U
+\end{bmatrix}
+\in \mathbb{R}^{16 \times M},
+\qquad
+G =
+\begin{bmatrix}
+A & B
+\end{bmatrix}
+\in \mathbb{R}^{12 \times 16}.
 $$
-
 The data approximately satisfy
 
 $$
@@ -789,35 +796,58 @@ $$
 
 Here $C$ selects the state components that are constrained. For example, if velocity and roll/pitch are constrained, $C\in\mathbb{R}^{5\times12}$ selects $v_x,v_y,v_z,\phi,\theta$, and $x_{\max}\in\mathbb{R}^{5}$. The chosen rows and limits must match the state ordering above.
 
-### 5. Stack the predictions
 
-To express the horizon as one optimization vector, stack the future inputs:
+### 5. Stack the Predictions
 
-$$
-\mathcal{U}=
-\begin{bmatrix}u_0\\u_1\\\vdots\\u_{N-1}\end{bmatrix}
-\in\mathbb{R}^{4N}.
-$$
-
-For $N=25$, $\mathcal{U}\in\mathbb{R}^{100}$. Stack the predicted states:
+To express the prediction horizon as one optimization vector, stack the future inputs:
 
 $$
-\mathcal{X}=
-\begin{bmatrix}x_1\\x_2\\\vdots\\x_N\end{bmatrix}
-\in\mathbb{R}^{12N}.
+\mathcal{U} =
+\begin{bmatrix}
+u_0 \\
+u_1 \\
+\vdots \\
+u_{N-1}
+\end{bmatrix}
+\in \mathbb{R}^{4N}.
 $$
 
-For $N=25$, $\mathcal{X}\in\mathbb{R}^{300}$. Repeated substitution of the state equation gives
+For \(N = 25\), \(\mathcal{U} \in \mathbb{R}^{100}\).
+
+Stack the predicted states:
 
 $$
-\boxed{\mathcal{X}=S_x\hat{x}_k+S_u\mathcal{U}}
+\mathcal{X} =
+\begin{bmatrix}
+x_1 \\
+x_2 \\
+\vdots \\
+x_N
+\end{bmatrix}
+\in \mathbb{R}^{12N}.
 $$
 
-with
+For \(N = 25\), \(\mathcal{X} \in \mathbb{R}^{300}\).
+
+Repeated substitution of the state equation gives:
 
 $$
-S_x=\begin{bmatrix}A\\A^2\\\vdots\\A^N\end{bmatrix}
-\in\mathbb{R}^{12N\times12}
+\boxed{
+\mathcal{X} = S_x \hat{x}_k + S_u \mathcal{U}
+}
+$$
+
+where the state prediction matrix is
+
+$$
+S_x =
+\begin{bmatrix}
+A \\
+A^2 \\
+\vdots \\
+A^N
+\end{bmatrix}
+\in \mathbb{R}^{12N \times 12}.
 $$
 
 and
@@ -836,19 +866,30 @@ $$
 
 For the stated horizon, $S_x$ is $300\times12$, $S_u$ is $300\times100$, and both terms in the prediction equation are $300\times1$.
 
-### 6. Convert the objective to a quadratic program
 
-Define the block-diagonal weight matrices
+### 6. Convert the Objective to a Quadratic Program
 
-$$
-\bar{Q}=\operatorname{diag}(\underbrace{Q,\ldots,Q}_{N-1\text{ blocks}},P_f)
-\in\mathbb{R}^{12N\times12N},
-$$
+Define the block-diagonal weight matrices:
 
 $$
-\bar{R}=\operatorname{diag}(\underbrace{R,\ldots,R}_{N\text{ blocks}})
-\in\mathbb{R}^{4N\times4N}.
+\bar{Q} =
+\mathrm{diag}
+\left(
+\underbrace{Q, \ldots, Q}_{N-1\text{ blocks}},
+P_f
+\right)
+\in \mathbb{R}^{12N \times 12N}.
 $$
+
+$$
+\bar{R} =
+\mathrm{diag}
+\left(
+\underbrace{R, \ldots, R}_{N\text{ blocks}}
+\right)
+\in \mathbb{R}^{4N \times 4N}.
+$$
+
 
 The terminal block in $\bar{Q}$ weights $x_N$; the other blocks weight $x_1,\ldots,x_{N-1}$. The cost term for the fixed current state $x_0=\hat{x}_k$ is constant during the optimization and may be omitted without changing the optimizer.
 
