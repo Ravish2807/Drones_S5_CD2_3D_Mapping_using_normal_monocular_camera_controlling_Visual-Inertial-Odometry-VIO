@@ -944,11 +944,15 @@ and the unconstrained feedback law is $u_k=-Kx_k$. With the dimensions defined a
 
 After solving the QP, the optimizer returns the sequence
 
+
 $$
-\mathcal{U}^{*}=
-\begin{bmatrix}
-u_0^*&u_1^*&\cdots&u_{N-1}^*
-\end{bmatrix}^{T}.
+\mathcal{U}^{*} =
+\left(
+u_0^{*},
+u_1^{*},
+\ldots,
+u_{N-1}^{*}
+\right)^{\mathsf{T}}
 $$
 
 Only the first input is applied:
