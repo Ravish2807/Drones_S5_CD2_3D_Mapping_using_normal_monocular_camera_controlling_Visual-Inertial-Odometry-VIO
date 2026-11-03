@@ -13,9 +13,10 @@
 [![ArduPilot SITL](https://img.shields.io/badge/ArduPilot-SITL-E76F00?style=for-the-badge)](https://ardupilot.org/dev/docs/sitl-simulator-software-in-the-loop.html)
 [![Gazebo](https://img.shields.io/badge/Simulation-Gazebo-264653?style=for-the-badge)](https://gazebosim.org/)
 [![MATLAB](https://img.shields.io/badge/Tools-MATLAB-0076A8?style=for-the-badge)](https://www.mathworks.com/products/ros.html)
+[![Project Videos](https://img.shields.io/badge/Project_Videos-Google_Drive-4285F4?style=for-the-badge&logo=googledrive&logoColor=white)](https://drive.google.com/drive/folders/1iowpdHYk4qTKaGRoWc7l1Y_70IvifeuA)
 [![License](https://img.shields.io/badge/License-Apache--2.0-2A9D8F?style=for-the-badge)](LICENSE)
 
-**Explore the project:** [Controller](#-controller-at-a-glance) · [Architecture](#-system-architecture) · [Quick start](#-quick-start) · [Results](#-results--visual-evidence) · [Team](#-team)
+**Explore the project:** [Controller](#-controller-at-a-glance) · [Architecture](#-system-architecture) · [Quick start](#-quick-start) · [Results](#-results--visual-evidence) · [Project Videos](https://drive.google.com/drive/folders/1iowpdHYk4qTKaGRoWc7l1Y_70IvifeuA) · [Team](#-team)
 
 </div>
 
@@ -50,6 +51,7 @@ The repository combines a ROS 2 Python package, an ArduPilot SITL/Gazebo interfa
 | **Simulation workflow** | ArduPilot SITL and Gazebo integration context |
 | **MATLAB experiments** | Staged live scripts covering waypoints, trajectories, synthetic sensors, state estimation, controller logic, dynamics, and results |
 | **Mapping & VIO** | Project objective and research direction; dedicated end-to-end perception/mapping nodes are not currently included in the main ROS 2 package |
+| **Project Videos** | Recorded flight demonstrations and simulation trials on [Google Drive](https://drive.google.com/drive/folders/1iowpdHYk4qTKaGRoWc7l1Y_70IvifeuA) |
 
 ## 🚁 Controller at a glance
 
@@ -192,6 +194,9 @@ Open the scripts in MATLAB to inspect the assumptions and execute the stages sup
 
 Selected simulation and controller results are shown below.
 
+> [!TIP]
+> 📁 **Project Videos Archive:** All flight tests, simulation recordings, and project demonstration videos are available in the [Google Drive Project Videos Folder](https://drive.google.com/drive/folders/1iowpdHYk4qTKaGRoWc7l1Y_70IvifeuA).
+
 <table>
   <tr>
     <th align="center" width="50%">Result 2</th>
@@ -213,7 +218,7 @@ Selected simulation and controller results are shown below.
   Your browser does not support embedded video. [Watch the SO(3) target-point flight demonstration](https://github.com/user-attachments/assets/9868e487-e9f7-4664-9d9b-47bc433d0293).
 </video>
 
-**Video:** [SO3_TARGET(pt)_FLYING.webm](https://github.com/user-attachments/assets/9868e487-e9f7-4664-9d9b-47bc433d0293)
+**Video:** [SO3_TARGET(pt)_FLYING.webm](https://github.com/user-attachments/assets/9868e487-e9f7-4664-9d9b-47bc433d0293) · [More Project Videos (Google Drive)](https://drive.google.com/drive/folders/1iowpdHYk4qTKaGRoWc7l1Y_70IvifeuA)
 
 
 ## 📐 Key state and control quantities
